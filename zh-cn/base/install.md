@@ -84,7 +84,7 @@ go get -v github.com/uudashr/gopkgs/v2/cmd/gopkgs
 go env -w GO111MODULE=auto
 ```
 
-### 设置终端使用Git Shell
+### 设置终端使用Git Shell (Mac和Linux开发环境的同学忽略此步骤,该步骤仅针对Windows环境)
 
 1. Shift + Ctrl + ` 打开终端
 
@@ -109,8 +109,6 @@ go env -w GO111MODULE=auto
     "git.autofetch": true
 }
 ```
-
-
 
 4. 重启vscode, 可以看到默认打开Git Bash终端、也可选择其他终端
 
