@@ -201,19 +201,25 @@ func main() {
 
 ```sh
 go env -w GO111MODULE=auto // 为了让go install 命令能正常生成静态库到pkg目录下, 我们首先需要关闭go mod
-go install ./pkg/          // 使用go install 安装依赖包, 安装过后静态库会放置到 GOPATH下的pkg/<platform>下
+go install day1/compile/pkg  // 使用go install 安装依赖包, 安装过后静态库会放置到 GOPATH下的pkg/<platform>下
 ```
 
 3. 编译main.go
 
 ```sh
+cd /day1/compile  // 切换到compile目录下 进行编译与链接
 go tool compile -I /e/Golang/pkg/windows_amd64 main.go // 编译原文件, 指定静态库搜索目录
 ```
 
 4. 链接main.o
 
 ```sh
-go tool link -o main.exe -L /e/Golang/pkg/windows_amd64/  main.o // 将目标文件和静态库链接成一个可执行文件
+go tool link -o main.exe -L /e/Golang/pkg/windows_amd64/  main.o // 将目标文件和静态库链接成一个二进制可执行文件
+```
+
+4. 运行我们连接生成的二进制可执行文件
+```sh
+./main.exe
 ```
 
 ## go clean
