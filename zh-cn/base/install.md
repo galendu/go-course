@@ -127,3 +127,10 @@ go install -v github.com/uudashr/gopkgs/v2/cmd/gopkgs@latest
 + 最好用Git工具没有之一: Gitlens
 
 ![gitlens](../../image/vscode_gitlens.png)
+
+### 配置自动保存
+![auto_save](../../image/vscode_auto_save.jpg)
+
+如果要配置自动保存的时间, 打开vscode的设置按钮, 搜索auto save
+
+![auto_save_config](../../image/auto_save_config.png)
