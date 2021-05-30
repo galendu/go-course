@@ -9,7 +9,7 @@
             "type": "go",
             "request": "launch",
             "mode": "auto",
-            "program": "${workspaceFolder}\\day1\\hello.go"
+            "program": "${workspaceFolder}\\day1\\src\\demo\\hello.go"
         }
     ]
 }

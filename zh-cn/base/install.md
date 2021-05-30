@@ -14,6 +14,12 @@
 
 ![go_pkg](../../image/install_go_pkg.png)
 
+安装完成后执行命令, 能看到当前安装的go的版本，恭喜你，go安装成功:
+```sh
+go version
+go version go1.16.4 windows/amd64
+```
+
 
 ## 安装Git
 先安装git, 准备好git shell 具体查看官方文档: https://git-scm.com/
