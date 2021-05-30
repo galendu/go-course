@@ -4,7 +4,16 @@
 
 ## 工作目录
 
-工作目录是一个工程开发的相对参考目录, 我们可以通过GOPATH这个变量查看当前设置的工作目录
+go语言有2种工程结构:
++ GOPATH工程结构
++ GO MODULE工程结构
+
+我们这里先讲解GOPATH工程结构, 等后面引入包的概念后再开始使用GO MODULE工程结构, 而Go1.16默认使用的GO MODULE工程结构, 因此我们需要修改下设置
+```
+go env -w GO111MODULE=auto
+```
+
+工作目录是一个工程开发的相对参考目录, GOPATH工程结构中的工作目录就是GOPATH变量指向的目录 我们可以通过GOPATH这个变量查看当前设置的工作目录
 ```sh
 $ go env GOPATH // 通过go env 可以查看go语言设置相关的所有变量
 E:\Golang       // 这是我的工作目录
@@ -191,28 +200,21 @@ func main() {
 2. 编译并安装我们的pkg包
 
 ```sh
-go env -w GO111MODULE=off // 为了让go install 命令能正常生成静态库到pkg目录下, 我们首先需要关闭go mod
-go install ./pkg/         // 使用go install 
+go env -w GO111MODULE=auto // 为了让go install 命令能正常生成静态库到pkg目录下, 我们首先需要关闭go mod
+go install ./pkg/          // 使用go install 安装依赖包, 安装过后静态库会放置到 GOPATH下的pkg/<platform>下
 ```
 
 3. 编译main.go
 
 ```sh
-go tool compile -I /e/Golang/pkg/windows_amd64 main.go
+go tool compile -I /e/Golang/pkg/windows_amd64 main.go // 编译原文件, 指定静态库搜索目录
 ```
 
 4. 链接main.o
 
 ```sh
-go tool link -o main.exe -L /e/Golang/pkg/windows_amd64/  main.o
+go tool link -o main.exe -L /e/Golang/pkg/windows_amd64/  main.o // 将目标文件和静态库链接成一个可执行文件
 ```
-
-
-## Go 工具链介绍
-
-### go install 与 go tool compile/link
-
-
 
 ## go clean
 
@@ -226,10 +228,6 @@ ls /e/Golang/pkg/windows_amd64/demo
 go clean -i -n
 ```
 
-记得恢复mod模式
-```sh
-go env -w GO111MODULE=on
-```
 
 ## go fmt
 
