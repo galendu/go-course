@@ -1,0 +1,187 @@
+# 变量常量与值
+
+我们经常看到这样的语句
+```go
+var username string = "username"
+```
+
+我们来解读一下该语句:
++ var 关键字 用于声明变量
++ username 标识符, 给变量取的名字
++ string 表示该变量只能存储字符串类型的值
++ = 赋值运算符, 表示给一个变量赋
++ "username" 字面量(值), 这个是一个username的字符串
+
+## 字面量(值)
+
+字面量是值的表示方法，常用与对变量/常量进行初始化，主要分为：
+
++ 标识基础数据类型值的字面量，例如：0, 1.1, true, 3 + 4i, 'a', "我爱中国"
++ 构造自定义的复合数据类型的类型字面量，例如：type Interval int
++ 用于表示符合数据类型值的复合字面量，用来构造 array、slice、map、struct 的值，
+例如：{1, 2, 3}
+
+## 变量
+
+变量是指对一块存储空间定义名称，通过名称对存储空间的内容进行访问或修改
+
+由于Go是强类型语言, 变量需要先声明后使用
+
+### 变量声明
+
+声明变量的一般形式是使用 var 关键字:
+```go
+var identifier type
+```
+
+我们也可以一次声明多个变量, 比如
+```go
+var identifier1, identifier2 type
+```
+
+如果我们一次声明的变量过多，比如:
+```go
+var identifier1 type1
+var identifier2 type2
+var identifier3 type3
+```
+我们可以使用() 进行批量申请
+```go
+var (
+    identifier1 type1
+    identifier2 type2
+    identifier3 type3    
+)
+```
+
+### 变量赋值
+
+变量声明过后如果没有赋值，默认是该类型的初始值
++ 整形(int uint)： 0
++ 浮点型(float32 float64): 0
++ 布尔: false
++ 字符串: ""
++ 字符: ''
+
+```go
+package main
+
+import (
+	"fmt"
+)
+
+func main() {
+	var a float64
+	fmt.Println(a)
+}
+```
+
+变量赋值的语法为: var1 = value1, 如下是一个声明和赋值的过程
+```go
+var a string  // 变量声明
+a = "test"    // 变量赋值
+```
+
+如果我有多个变量需要赋值语法为: var1, var2 = value1, value2
+```go
+var (
+    a string
+    b int
+)
+a, b = "string", 10
+```
+
+### 声明变量并赋值
+
+语法格式为: var identifier type = value
+
+```go
+var a string = "one line"
+```
+
+同样我们已适合批量声明赋值
+```go
+var (
+    a string  = "value1"
+    b int     = 10
+    c float32 = 0.01
+)
+```
+
+### 简单声明
+
+变量的类型使用值类型进行推导，因此我们可以省略类型的定义, 语法格式: a := b
+```go
+a, b, c := "value1", 10, 0.01
+```
+
+`注意：` 简单声明只能用于函数内部, 不用用于全局声明
+
+## 常量
+
+常量用于定义不可被修改的的值，需要在编译过程中进行计算，只能为基础的数据类型布尔、
+数值、字符串，使用 const 进行常量声明，常用语法:
+
++ const 常量名 类型 = 值 定义常量并进行初始化，例如：const pi float64 = 3.1415926
++ const 常量名 = 值 定义常量，类型通过值类型进行推导，例如：const e = 2.7182818
++ 批量定义: const (常量名 1 类型 1 = 值 1 常量名 2 类型 2 = 值 2)
+
+```go
+// 例如：
+const (
+    name string = "silence"
+    age int = 30
+)
+const (
+    name string = "silence"
+    desc
+)
+```
+
+定义多个变量并进行初始化，批量复制中变量类型可省略，并且除了第一个常量值外其他常量可同时省略类型和值，表示使用前一个常量的初始化表达式
+
+常量之间的运算，类型转换，以及对常量调用函数 len、cap、real、imag、complex、unsafe.Sizeof 得到的结果依然为常量
+
+由于常量不能修改，像下面这个就会报错
+```go
+const (
+    a = "sdf"
+)
+a = "bbb"
+```
+
+## 作用域
+
+作用域指变量可以使用范围。go 语言使用大括号显示的标识作用域范围，大括号内包含一
+连串的语句，叫做语句块。语句块可以嵌套，语句块内定义的变量不能在语句块外使用
+常见隐式语句块：
+
++ 全语句块
++ 包语句块
++ 文件语句块
++ if、switch、for、select、case 语句块
+作用域内定义变量只能被声明一次且变量必须使用，否则编译错误。在不同作用域可定义相
+同的变量，此时局部将覆盖全局
+
+
+## vscode test时 打印详情内容
+通过修改 go.testFlags 的配置值为: ["-v"], 就开启了test 打印详细日志功能
+```json
+{
+    "workbench.colorTheme": "One Dark Pro",
+    "terminal.integrated.shell.windows": "C:\\Program Files\\Git\\bin\\bash.exe",
+    "go.useLanguageServer": true,
+    "explorer.confirmDelete": false,
+    "explorer.confirmDragAndDrop": false,
+    "workbench.iconTheme": "vscode-icons",
+    "vsicons.dontShowNewVersionMessage": true,
+    "http.proxySupport": "off",
+    "go.toolsManagement.autoUpdate": true,
+    "terminal.integrated.tabs.enabled": true,
+    "terminal.integrated.defaultProfile.windows": "Git Bash",
+    "git.autofetch": true,
+    "files.autoSave": "afterDelay",
+    "go.testFlags": ["-v"]
+}
+```
+

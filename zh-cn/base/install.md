@@ -93,7 +93,7 @@ go install -v github.com/uudashr/gopkgs/v2/cmd/gopkgs@latest
 ![open_vscode_term](../../image/vscode_term_git1.png)
 
 3. 修改terminal.integrated.shell.windows和terminal.integrated.defaultProfile.windows 为如下值
-```
+```json
 {
     "workbench.colorTheme": "One Dark Pro",
     "terminal.integrated.shell.windows": "C:\\Program Files\\Git\\bin\\bash.exe",
@@ -106,7 +106,7 @@ go install -v github.com/uudashr/gopkgs/v2/cmd/gopkgs@latest
     "go.toolsManagement.autoUpdate": true,
     "terminal.integrated.tabs.enabled": true,
     "terminal.integrated.defaultProfile.windows": "Git Bash",
-    "git.autofetch": true
+    "git.autofetch": true,
 }
 ```
 
