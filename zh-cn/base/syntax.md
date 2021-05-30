@@ -258,9 +258,9 @@ func main() {
 ```
 
 ### 内置函数
-在 buildin/buildin.go内建议了Go所有的内置函数：make、len、cap、new、append、copy、close、delete、complex、real、 imag、panic、recover
+在 buildin/buildin.go内定义了Go所有支持内置函数：make、len、cap、new、append、copy、close、delete、complex、real、 imag、panic、recover
 
-我们在代码里面可以直接使用: 使用len计算字符串的长度
+我们在代码里面可以直接使用: 比如使用len计算字符串的长度
 ```go
 package main
 
