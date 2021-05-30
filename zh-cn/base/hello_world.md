@@ -222,7 +222,40 @@ go tool link -o main.exe -L /e/Golang/pkg/windows_amd64/  main.o // 将目标文
 ./main.exe
 ```
 
-## go clean
+### go get 与 go install
+
+go get 用于拉去外部依赖的包或者工具, 如果是Mod项目, 并将依赖添加至 go.mod中
+
+go get 相当于执行了如下命令:
+1. git clone <PKG_PATH>
+2. cd <GOPATH>/<PKG_PATH> && go install
+
+关键参数:
+-d： 只拉去源码, 不执行 go install <在未来的版本中 该选项默认开启>
+
+外部依赖的包的源码会放置到GOPATH的src下面, 而可执行文件将会编译安装到GOPATH的bin下面
+
+我们之前在安装vscode go的扩展工具时安装了gopls
+```sh
+go get -v golang.org/x/tools/gopls 
+```
+如下是gopls的源码存放位置
+![](../../image/vscode_ext_src_dir.png)
+
+如下下gopls的二进制文件存放位置
+![](../../image/vscode_ext_exe_dir.png)
+
+
+go install 用于编译和安装二进制文件
+1. 如果有main包, 将直接build, 将build好的二进制文件放到GOPATH的bin目录下
+2. 如果不是main包, 将编译静态库, 放到GOPATH/pkg/<platform>目录下面
+
+在Go Module模式下 
+
+
+
+
+### go clean
 
 这个命令是用来移除当前源码包和关联源码包里面编译生成的文件
 
@@ -235,15 +268,11 @@ go clean -i -n
 ```
 
 
-## go fmt
+### go fmt
 
 代码格式化
 
 
-## go get
-
-下载源码包并执行go install
-
-## go vet
+### go vet
 
 语法静态检查

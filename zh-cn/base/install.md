@@ -68,26 +68,20 @@ vscode官网下载最新版: https://code.visualstudio.com/
 `注意: 如果由于墙无法安装, 可以通过设置代理进行手动安装`
 
 ```sh
-// 1. 关闭go mod
-go env -w GO111MODULE=off
-
-// 2. 设置代理
+// 1. 设置代理
 go env -w GOPROXY=https://goproxy.cn
 
-// 3. 下载依赖工具
-go get -v golang.org/x/tools/gopls
-go get -v honnef.co/go/tools/cmd/staticcheck
-go get -v github.com/go-delve/delve/cmd/dlv@master
-go get -v github.com/go-delve/delve/cmd/dlv
-go get -v github.com/haya14busa/goplay/cmd/goplay
-go get -v github.com/josharian/impl
-go get -v github.com/fatih/gomodifytags
-go get -v github.com/cweill/gotests/gotests
-go get -v github.com/ramya-rao-a/go-outline
-go get -v github.com/uudashr/gopkgs/v2/cmd/gopkgs
-
-// 4. 恢复go mod
-go env -w GO111MODULE=auto
+// 2. 下载依赖工具
+go install -v golang.org/x/tools/gopls@latest
+go install -v honnef.co/go/tools/cmd/staticcheck@latest
+go install -v github.com/go-delve/delve/cmd/dlv@master@latest
+go install -v github.com/go-delve/delve/cmd/dlv@latest
+go install -v github.com/haya14busa/goplay/cmd/goplay@latest
+go install -v github.com/josharian/impl@latest
+go install -v github.com/fatih/gomodifytags@latest
+go install -v github.com/cweill/gotests/gotests@latest
+go install -v github.com/ramya-rao-a/go-outline@latest
+go install -v github.com/uudashr/gopkgs/v2/cmd/gopkgs@latest
 ```
 
 ### 设置终端使用Git Shell (Mac和Linux开发环境的同学忽略此步骤,该步骤仅针对Windows环境)
