@@ -20,7 +20,6 @@ go version
 go version go1.16.4 windows/amd64
 ```
 
-
 ## 安装Git
 先安装git, 准备好git shell 具体查看官方文档: https://git-scm.com/
 

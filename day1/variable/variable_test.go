@@ -4,11 +4,63 @@ import (
 	"testing"
 )
 
+const (
+	UNKNOWN = iota
+	FEMALE
+	MALE
+)
+
+func TestValueRef(t *testing.T) {
+	i := "this is a"
+	j := &i
+	*j = "this is j"
+	t.Log(i, *j)
+}
+
+func TestValueCopy(t *testing.T) {
+	i := "this is a"
+	j := i
+	t.Log(i, j)
+	t.Log(&i, &j)
+}
+
+func TestConstOneLine(t *testing.T) {
+	const c1, c2 string = "c1", "c2"
+	t.Log(c1, c2)
+}
+
+func TestConsttMulti2(t *testing.T) {
+	const (
+		PI     float32 = 3.14
+		PILong float32 = 3.14159
+	)
+	t.Log(PI, PILong)
+}
+
+func TestConsttMulti(t *testing.T) {
+	const (
+		PI     float32 = 3.14
+		PILong float32 = 3.14159
+	)
+	t.Log(PI, PILong)
+}
+
+// 变量作用域
+func TestScope(t *testing.T) {
+	{
+		var a string
+		a = "hello"
+		t.Log(a)
+	}
+	// 作用域之外无法使用
+	// t.Log(a)
+}
+
 func TestConst(t *testing.T) {
 	const (
 		a = "sdf"
 	)
-	a = "bbb"
+	// a = "bbb"
 	t.Log(a)
 }
 

@@ -1,3 +1,5 @@
+# 课程
+
 * Day1
   * [初识Go语言](./zh-cn/base/hello_go.md)
   * [开发环境搭建](./zh-cn/base/install.md)
@@ -10,7 +12,6 @@
   * [数组与切片](./zh-cn/base/slice.md)
   * [Go语言Map](./zh-cn/base/map.md)
 * Day2
- 
+
 * [课程作业]
   * [Day1](./day1/README.md)
-
