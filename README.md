@@ -9,6 +9,7 @@
   * [变量常量与值](./zh-cn/base/var_value.md)
   * [语言运算符](./zh-cn/base/operate.md)
 * Day2
+  * [MODULE工程](./zh-cn/base/module.md)
   * [条件语句](./zh-cn/base/if.md)
   * [循环语句](./zh-cn/base/for.md)
   * [Go语言函数](./zh-cn/base/func.md)
