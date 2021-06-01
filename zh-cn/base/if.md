@@ -154,16 +154,27 @@ const (
 gender := 0
 
 if gender == Unknown {
-
 } else if gender == Male {
-
 } else if gender == Female {
-
 } else {
    fmt.Println()
 }
 ```
 
+如果遇到这种对值得比较，我们可以使用switch, 这样逻辑清晰.
+我们switch 改造下:
+```go
+gender := 0
+switch gender {
+case Unknown:
+case Male:
+case Female:
+default:
+   fmt.Println()
+}
+```
+
+### 基本用法
 语法: Go 编程语言中 switch 语句的语法如下:
 
 ```go
@@ -177,74 +188,67 @@ switch var1 {
 }
 ```
 
-实例:
+
+
+
+
+实例1: 给用分数评级, 并打印结果
 
 ```go
-package main
+/* 定义局部变量 */
+var grade string = "B"
+var marks int = 90
 
-import "fmt"
-
-func main() {
-   /* 定义局部变量 */
-   var grade string = "B"
-   var marks int = 90
-
-   switch marks {
-      case 90: grade = "A"
-      case 80: grade = "B"
-      case 50,60,70 : grade = "C"
-      default: grade = "D"  
-   }
-
-   switch {
-      case grade == "A" :
-         fmt.Printf("优秀!\n" )    
-      case grade == "B", grade == "C" :
-         fmt.Printf("良好\n" )      
-      case grade == "D" :
-         fmt.Printf("及格\n" )      
-      case grade == "F":
-         fmt.Printf("不及格\n" )
-      default:
-         fmt.Printf("差\n" );
-   }
-   fmt.Printf("你的等级是 %s\n", grade );      
+switch marks {
+   case 90: grade = "A"
+   case 80: grade = "B"
+   case 50,60,70 : grade = "C"
+   default: grade = "D"  
 }
+
+switch {
+   case grade == "A" :
+      fmt.Printf("优秀!\n" )    
+   case grade == "B", grade == "C" :
+      fmt.Printf("良好\n" )      
+   case grade == "D" :
+      fmt.Printf("及格\n" )      
+   case grade == "F":
+      fmt.Printf("不及格\n" )
+   default:
+      fmt.Printf("差\n" );
+}
+fmt.Printf("你的等级是 %s\n", grade );  
 ```
+
+### fallthrough 的用法
 
 switch 默认情况下 case 最后自带 break 语句，匹配成功后就不会执行其他 case，如果我们需要执行后面的 case，可以使用 fallthrough
 
-实例:
+实例: 下面将打印那些语句? 
 
 ```go
-package main
-
-import "fmt"
-
-func main() {
-
-    switch {
-    case false:
-            fmt.Println("1、case 条件语句为 false")
-            fallthrough
-    case true:
-            fmt.Println("2、case 条件语句为 true")
-            fallthrough
-    case false:
-            fmt.Println("3、case 条件语句为 false")
-            fallthrough
-    case true:
-            fmt.Println("4、case 条件语句为 true")
-    case false:
-            fmt.Println("5、case 条件语句为 false")
-            fallthrough
-    default:
-            fmt.Println("6、默认 case")
-    }
+switch {
+case false:
+      fmt.Println("1、case 条件语句为 false")
+      fallthrough
+case true:
+      fmt.Println("2、case 条件语句为 true")
+      fallthrough
+case false:
+      fmt.Println("3、case 条件语句为 false")
+      fallthrough
+case true:
+      fmt.Println("4、case 条件语句为 true")
+case false:
+      fmt.Println("5、case 条件语句为 false")
+      fallthrough
+default:
+      fmt.Println("6、默认 case")
 }
 ```
 
-支持多条件匹配
+### 多条件匹配
 
 ```go
 switch{
@@ -253,8 +257,14 @@ switch{
 }
 ```
 
-如果想要执行多个 case，需要使用 fallthrough 关键字，也可用 break 终止
+比如我们第一名: 冠军, 第二名: 亚军， 第三名和第四名并列季军， 已经其他排不上号的
+```go
+```
 
+
+### break
+
+如果想要执行多个 case，需要使用 fallthrough 关键字，也可用 break 终止
 ```go
 switch{
     case 1:
@@ -271,8 +281,18 @@ switch{
 }
 ```
 
-## 小练习
+比如一个审批流程
+```go
+```
 
-写一个猜谜游戏
+### 练习1: 写一个单元转换的函数
 
-### 标准库 fmt包讲解
+```go
+// HumanBytesLoaded 单位转换(B KB MB GB TB EB)
+func HumanBytesLoaded(bytesLength int64) string {}
+```
+
+## 练习2: 写一个猜猜你职业的小工具
+
+```go
+```

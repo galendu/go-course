@@ -10,6 +10,7 @@
   * [语言运算符](./zh-cn/base/operate.md)
 * Day2
   * [MODULES工程](./zh-cn/base/modules.md)
+  * [字符串格式化](./zh-cn/base/fmt.md)
   * [条件语句](./zh-cn/base/if.md)
   * [循环语句](./zh-cn/base/for.md)
   * [Go语言函数](./zh-cn/base/func.md)

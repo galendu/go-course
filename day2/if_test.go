@@ -1,4 +1,4 @@
-package ifstmt
+package day2
 
 import (
 	"fmt"
@@ -74,25 +74,5 @@ func TestDeepNested(t *testing.T) {
 		fmt.Println("congratulations! your successed")
 	} else {
 		fmt.Println("not passed")
-	}
-}
-
-func TestIfEnum(t *testing.T) {
-	const (
-		Unknown = iota
-		Male
-		Female
-	)
-
-	gender := 0
-
-	if gender == Unknown {
-
-	} else if gender == Male {
-
-	} else if gender == Female {
-
-	} else {
-		fmt.Println()
 	}
 }
