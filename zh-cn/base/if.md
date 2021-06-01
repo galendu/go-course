@@ -1,6 +1,10 @@
 # 条件语句
 
-![xx](../../image/if.png)
+条件语句需要开发者通过指定一个或多个条件，并通过测试条件是否为 true 来决定是否执行指定语句
+
+下图展示了程序语言中条件语句的结构
+
+![if stmt](../../image/if.png)
 
 ## 单条件模型
 
@@ -40,18 +44,41 @@ func main() {
 }
 ```
 
-## 多条件模型(单选)
+## 多条件模型(else if)
 
-语法: Go 编程语言中 if...else 语句的语法如下:
+如果我们有多个条件需要判断, 可以使用多条件语句
+![if stmt](../../image/ifelse.png)
+
+语法: Go 编程语言中 if...else if...else if...else 语句的语法如下:
 
 ```go
 if 布尔表达式 1 {
    /* 在布尔表达式 1 为 true 时执行 */
-   if 布尔表达式 2 {
-      /* 在布尔表达式 2 为 true 时执行 */
-   }
+} else if 布尔表达式 2 {
+   /* 在布尔表达式 1 为 true 时执行 */
+} else if 布尔表达式 n {
+   /* 在布尔表达式 1 为 true 时执行 */
+} else {
+   /* 以上条件都不满足时执行 */
 }
 ```
+
+```go
+var age int = 18
+if age < 18 {
+   fmt.Println("nice")
+} else if age < 28 {
+   fmt.Println("beauty")
+} else if age < 38 {
+   fmt.Println("sexy")
+} else {
+   fmt.Println("next")
+}
+```
+
+## 条件嵌套
+
+你可以在 if 或 else if 语句中嵌入一个或多个 if 或 else if 语句
 
 实例
 
@@ -78,9 +105,64 @@ func main() {
 }
 ```
 
-## 多条件模型(多选)
+多层嵌套不利于代码的阅读, 比如下面这个:
 
-![xx](../../image/switch.png)
+```go
+// 身高1.8m以上, 25 ~ 35岁, 男
+var (
+   height float32
+   age    uint
+   gender string
+   passed bool
+)
+
+height = 1.9
+age = 30
+gender = "male"
+
+if height > 1.8 {
+   if age > 25 && age <= 35 {
+      if gender == "male" {
+         passed = true
+      }
+   }
+}
+
+if passed {
+   fmt.Println("congratulations! your successed")
+} else {
+   fmt.Println("not passed")
+}
+```
+
+我们可以通过提前返回来优化这段代码
+
+```go
+```
+
+## swith条件判断
+
+我们经常会遇到值的比较判断, 常见与枚举比较:
+
+```go
+const (
+   Unknown = iota
+   Male
+   Female
+)
+
+gender := 0
+
+if gender == Unknown {
+
+} else if gender == Male {
+
+} else if gender == Female {
+
+} else {
+   fmt.Println()
+}
+```
 
 语法: Go 编程语言中 switch 语句的语法如下:
 
@@ -188,3 +270,9 @@ switch{
     case 3:
 }
 ```
+
+## 小练习
+
+写一个猜谜游戏
+
+### 标准库 fmt包讲解
