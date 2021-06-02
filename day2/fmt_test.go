@@ -44,3 +44,50 @@ func Bin2Hex(val string) string {
 
 	return fmt.Sprintf("%x", ui)
 }
+
+func TestFloat(t *testing.T) {
+	fmt.Printf("%e", 12675757563.5345432567)
+	fmt.Println()
+	fmt.Printf("%E", 12675757563.5345432567)
+	fmt.Println()
+	fmt.Printf("%f", 12675757563.5345432567)
+	fmt.Println()
+	fmt.Printf("%g", 12675757563.5345432567)
+	fmt.Println()
+	fmt.Printf("%G", 12675757563.5345432567)
+	fmt.Println()
+}
+
+func TestBool(t *testing.T) {
+	fmt.Printf("%t", true)
+	fmt.Println()
+}
+
+func TestString(t *testing.T) {
+	str := "I'm a boy"
+	fmt.Printf("%s", str)
+	fmt.Println()
+	fmt.Printf("%q", str)
+	fmt.Println()
+	fmt.Printf("%x", str)
+	fmt.Println()
+	fmt.Printf("%X", str)
+	fmt.Println()
+}
+
+func TestPointer(t *testing.T) {
+	a := "I'm a boy"
+	b := &a
+	fmt.Printf("%p", b)
+	fmt.Println()
+}
+
+func TestPos(t *testing.T) {
+	f := 1010.0101
+	s := "hey boy!"
+	fmt.Printf("%v", f)
+	fmt.Println()
+
+	fmt.Printf("%v", s)
+	fmt.Println()
+}
