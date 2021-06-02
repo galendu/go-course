@@ -7,17 +7,19 @@
   * [基础语法](./zh-cn/base/syntax.md)
   * [基础类型](./zh-cn/base/data_struct.md)
   * [变量常量与值](./zh-cn/base/var_value.md)
-  * [语言运算符](./zh-cn/base/operate.md)
+  * [变量作用域](./zh-cn/base/scope.md)
+  * [运算符](./zh-cn/base/operate.md)
 * Day2
   * [MODULES工程](./zh-cn/base/modules.md)
   * [格式化输出](./zh-cn/base/fmt_out.md)
   * [条件语句](./zh-cn/base/if.md)
   * [读取标准输入](./zh-cn/base/fmt_in.md)
   * [循环语句](./zh-cn/base/for.md)
+  * [数据类型转换](./zh-cn/base/strconv.md)
   * [Go语言函数](./zh-cn/base/func.md)
-  * [变量作用域](./zh-cn/base/scope.md)
   * [Go语言指针](./zh-cn/base/pointer.md)
   * [Go语言数组](./zh-cn/base/array.md)
+* Day3
   * [Go语言切片](./zh-cn/base/slice.md)
   * [Go语言Map](./zh-cn/base/map.md)
 
