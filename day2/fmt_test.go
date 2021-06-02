@@ -82,6 +82,10 @@ func TestPointer(t *testing.T) {
 	fmt.Println()
 }
 
+func TestErr(t *testing.T) {
+	// fmt.Printf("this is  %s", 10)
+}
+
 func TestPos(t *testing.T) {
 	f := 1010.0101
 	s := "hey boy!"
@@ -89,5 +93,58 @@ func TestPos(t *testing.T) {
 	fmt.Println()
 
 	fmt.Printf("%v", s)
+	fmt.Println()
+}
+
+type User struct {
+	Name string
+	Age  int
+}
+
+func TestV(t *testing.T) {
+	user := User{"laowang", 33}
+	fmt.Printf("%v", user) // Go默认形式 {laowang 33}
+	fmt.Println()
+	fmt.Printf("%#v", user) //类型+值对象 day2.User{Name:"laowang", Age:33}
+	fmt.Println()
+	fmt.Printf("%+v", user) //输出字段名和字段值形式 {Name:laowang Age:33}
+	fmt.Println()
+	fmt.Printf("%T", user) //值类型的Go语法表示形式, day2.User
+	fmt.Println()
+	fmt.Printf("%%")
+}
+
+func TestWidth(t *testing.T) {
+	fmt.Printf("|%s|", "aa") // 不设置宽度
+	fmt.Println()
+	fmt.Printf("|%5s|", "aa") // 5个宽度,  默认+， 右对齐
+	fmt.Println()
+	fmt.Printf("|%-5s|", "aa") // 5个宽度, 左对齐
+	fmt.Println()
+
+	fmt.Printf("|%.2s|", "xxxx") // 最大宽度为5，超出的部分会被截断
+}
+
+func TestWithdFill(t *testing.T) {
+	fmt.Printf("|%05s|", "aa")
+	fmt.Println()
+}
+
+func TestFloatWidth(t *testing.T) {
+	a := 54.123456
+	fmt.Printf("|%f|", a)
+	fmt.Println()
+	fmt.Printf("|%5.1f|", a)
+	fmt.Println()
+	fmt.Printf("|%-5.1f|", a)
+	fmt.Println()
+	fmt.Printf("|%05.1f|", a)
+	fmt.Println()
+}
+
+func TestWidthMore(t *testing.T) {
+	fmt.Printf("|%2s|", "中国")
+	fmt.Println()
+	fmt.Printf("|%2s|", "ab")
 	fmt.Println()
 }
