@@ -1,4 +1,4 @@
-package variable
+package day1
 
 import (
 	"testing"

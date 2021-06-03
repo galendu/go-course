@@ -1,4 +1,4 @@
-package operate
+package day1
 
 import (
 	"fmt"

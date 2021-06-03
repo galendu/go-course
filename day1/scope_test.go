@@ -1,0 +1,31 @@
+package day1
+
+import (
+	"fmt"
+	"testing"
+)
+
+func TestLocalScope1(t *testing.T) {
+	{
+		var a string
+		a = "local var"
+		fmt.Println(a)
+	}
+	// fmt.Println(a)
+}
+
+func TestLocalScope2(t *testing.T) {
+	var a string
+	a = "parent scope"
+	{
+		fmt.Println(a)
+	}
+}
+
+var (
+	a = "global parent scope var"
+)
+
+func TestGlobal1(t *testing.T) {
+	fmt.Println(a)
+}
