@@ -3,7 +3,9 @@ package day2
 import (
 	"fmt"
 	"reflect"
+	"strconv"
 	"testing"
+	"unsafe"
 )
 
 func TestTypeOf1(t *testing.T) {
@@ -45,4 +47,93 @@ func TestCustom(t *testing.T) {
 	c := Age(10)
 	// 现在c就是Age类型，而不是int类型了
 	fmt.Println(reflect.TypeOf(c))
+}
+
+func TestConvD(t *testing.T) {
+	var a float64 = 5.3232223232323
+	fmt.Println(float32(a))
+	fmt.Println(int(a))
+	fmt.Println(int8(a))
+	fmt.Println(int16(a))
+	fmt.Println(int32(a))
+	fmt.Println(int64(a))
+	fmt.Println(uint(a))
+}
+
+func TestItoa(t *testing.T) {
+	str := strconv.Itoa(100)
+	fmt.Printf("type %v, value: %s\n", reflect.TypeOf(str), str)
+}
+
+func TestPAtoi(t *testing.T) {
+	i, err := strconv.Atoi("100")
+	fmt.Printf("type %v, value: %d, err: %v\n-", reflect.TypeOf(i), i, err)
+}
+
+func TestPAtoiErr(t *testing.T) {
+	i, err := strconv.Atoi("100x")
+	fmt.Printf("type %v, value: %d, err: %v\n-", reflect.TypeOf(i), i, err)
+}
+
+func TestParseBool(t *testing.T) {
+	b, err := strconv.ParseBool("true")
+	fmt.Println(b, err)
+}
+
+func TestParseFloat(t *testing.T) {
+	f1, err := strconv.ParseFloat("3.1", 32)
+	fmt.Println(f1, err)
+	f2, err := strconv.ParseFloat("3.1", 64)
+	fmt.Println(f2, err)
+}
+
+func TestFloat1(t *testing.T) {
+	var n float64 = 0
+	for i := 0; i < 1000; i++ {
+		n += .01
+	}
+	fmt.Println(n)
+}
+
+func bInt8(n int8) string {
+	// fmt.Println(*(*uint8)(unsafe.Pointer(&n)))
+	return strconv.FormatUint(uint64(*(*uint8)(unsafe.Pointer(&n))), 2)
+}
+
+func TestParseInt(t *testing.T) {
+	fmt.Println(bInt8(-1)) // 0000 0001(原码) -> 1111 1110(反码) -> 1111 1111(补码)
+
+	// Parse 二进制字符串
+	i, err := strconv.ParseInt("11111111", 2, 16)
+	fmt.Println(i, err)
+	// Parse 十进制字符串
+	i, err = strconv.ParseInt("-255", 10, 16)
+	fmt.Println(i, err)
+	// Parse 十六进制字符串
+	i, err = strconv.ParseInt("4E2D", 16, 16)
+	fmt.Println(i, err)
+}
+
+func TestParseUint(t *testing.T) {
+	u, err := strconv.ParseUint("11111111", 2, 16)
+	fmt.Println(u, err)
+	u, err = strconv.ParseUint("255", 10, 16)
+	fmt.Println(u, err)
+	u, err = strconv.ParseUint("4E2D", 16, 16)
+	fmt.Println(u, err)
+}
+
+func TestFormatInt(t *testing.T) {
+	fmt.Println(strconv.FormatBool(true))
+
+	// 问题又来了
+	fmt.Println(strconv.FormatInt(255, 2))
+	fmt.Println(strconv.FormatInt(255, 10))
+	fmt.Println(strconv.FormatInt(255, 16))
+
+	fmt.Println(strconv.FormatUint(255, 2))
+	fmt.Println(strconv.FormatUint(255, 10))
+	fmt.Println(strconv.FormatUint(255, 16))
+
+	fmt.Println(strconv.FormatFloat(3.1415, 'E', -1, 64))
 }
