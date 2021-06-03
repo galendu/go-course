@@ -13,11 +13,13 @@ b := int(a)
 
 我们可以通过： 标准库 reflect包中的TypeOf方法查看一个变量的类型, 比如:
 ```go
-type Age int
-var a Age = 10
-var b int = 20
-fmt.Println(reflect.TypeOf(a))
-fmt.Println(reflect.TypeOf(b))
+a := 10
+b := 0.1314
+c := "hello"
+
+fmt.Printf("a type: %v\n", reflect.TypeOf(a))
+fmt.Printf("b type: %v\n", reflect.TypeOf(b))
+fmt.Printf("c type: %v\n", reflect.TypeOf(c))
 ```
 
 ## 自定义类型转换
