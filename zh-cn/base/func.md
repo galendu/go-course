@@ -187,7 +187,8 @@ panic和recover
 ## 递归函数
 
 ### 内置函数
-在 buildin/buildin.go内定义了Go所有支持内置函数：make、len、cap、new、append、copy、close、delete、complex、real、 imag、panic、recover
+
+在 buildin/buildin.go内定义了Go所有支持内置函数：make、len、cap、new、append、copy、close、delete、complex、real、imag、panic、recover
 
 我们在代码里面可以直接使用: 比如使用len计算字符串的长度
 ```go
