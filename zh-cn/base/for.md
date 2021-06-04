@@ -26,37 +26,30 @@ fmt.Println(sum)
 
 init 和 post 参数是可选的，我们可以直接省略它，类似 While 语句
 
-
 实例:
 
 ```go
-package main
-
-import "fmt"
-
-func main() {
-        sum := 1
-        for ; sum <= 10; {
-                sum += sum
-        }
-        fmt.Println(sum)
-
-        // 这样写也可以，更像 While 语句形式
-        for sum <= 10{
-                sum += sum
-        }
-        fmt.Println(sum)
+sum := 1
+for ; sum <= 10; {
+         sum += sum
 }
+fmt.Println(sum)
+
+// 这样写也可以，更像 While 语句形式
+for sum <= 10{
+         sum += sum
+}
+fmt.Println(sum)
 ```
 
-## 无限循环 
+## 无限循环
 
 好几种方式实现for的无限循环。只要省略for的条件判断部分就可以实现无限循环
 
-+ for i := 0;;i++ 
++ for i := 0;;i++
 + for ;; { }
 + for true { }
-+ for { } 
++ for { }
 
 无限循环时，一般在循环体中加上退出语句，如break、os.Exit、return等
 
@@ -114,7 +107,7 @@ for [condition |  ( init; condition; increment ) | Range]
 }
 ```
 
-实例1: 九九乘法表
+实例1: 打印九九乘法表
 
 ```go
 // 1 x 1 = 1
@@ -135,99 +128,117 @@ for m := 1; m < 10; m++ {
 }
 ```
 
-实例2:  2 到 100 间的素数
+实例2: 寻找2~100间的素数
 
-素数：除了能被一和本身整除不能被其它正数整除
+素数：除了能被一和本身整除不能被其它正数整除, 比如 1 ~ 10中的素数:
+
+```go
+2:  1x2
+3:  1x3
+4:  1x4  2x2
+5:  1x5
+6:  1x6  2x3
+7:  1x7
+8:  1x8  2x4
+9:  1x9  2x? 3x3
+10: 1x10 2x? 3x? 4x? 2x5 
+```
+
 所以判断一个数是不是素数只需要将比它小的数进行一个求余的计算
 先把2-100都列出来,再把2的倍数划掉,接着是三,同理向下推,把素数的倍数都划掉,最后剩下的就都是素数了
 
 ```go
-package main
+// 遍历 2 ~ 100
+for m := 2; m <= 100; m++ {
+   // 假定m是素数
+   isP := true
 
-import "fmt"
+   // 判断能不能分解
+   for n := 2; n <= (m / n); n++ {
+      if m%n == 0 {
+         isP = false
+      }
+   }
 
-func main() {
-   /* 定义局部变量 */
-   var i, j int
-   var isP bool
-   for i=2; i < 100; i++ {
-      isP = true 
-      for j=2; j <= (i/j); j++ {
-         fmt.Println(i, j)
-         if(i%j==0) {
-            isP = false
-            break; // 如果发现因子，则不是素数
-         }
-      }
-      if isP {
-         fmt.Printf("%d  是素数\n", i);
-      }
-   }  
+   // 无法分解 为素数
+   if isP {
+      fmt.Println(m)
+   }
 }
 ```
 
 ## 循环中断
 
-> break: 经常用于中断当前 for 循环或跳出 switch 语句
+Go语言中用于控制循环中断语句有 break 和 continue
+
+continue用于退出当前迭代，进入下一轮迭代。continue只能用于for循环中
+
+### break
+
+breake用于退出当前整个循环。如果是嵌套的循环，则退出它所在的那一层循环。
+break除了可以用在for循环中，还可以用在switch结构或select结构
 
 break 语法格式如下:
 
 ```go
-break;
+for {
+   break;
+}
+
+switch v {
+   case xxx:
+   break;
+}
 ```
 
-实例: 在变量 a 大于 15 的时候跳出循环
+实例: 在变量 i == 10 的时候跳出循环
 
 ```go
-package main
-
-import "fmt"
-
-func main() {
-   /* 定义局部变量 */
-   var a int = 10
-
-   /* for 循环 */
-   for a < 20 {
-      fmt.Printf("a 的值为 : %d\n", a);
-      a++;
-      if a > 15 {
-         /* 使用 break 语句跳出循环 */
-         break;
-      }
+i := 0
+for {
+   fmt.Println(i)
+   if i == 10 {
+      break
    }
+   i++
 }
 ```
 
 以下实例有多重循环，演示了使用标记和不使用标记的区别：
 
 ```go
-package main
-
-import "fmt"
-
-func main() {
-
-    // 不使用标记
-    fmt.Println("---- break ----")
-    for i := 1; i <= 3; i++ {
-        fmt.Printf("i: %d\n", i)
-                for i2 := 11; i2 <= 13; i2++ {
-                        fmt.Printf("i2: %d\n", i2)
-                        break
-                }
-        }
-
-    // 使用标记
-    fmt.Println("---- break label ----")
-    re:
-        for i := 1; i <= 3; i++ {
-            fmt.Printf("i: %d\n", i)
+// 不使用标记
+fmt.Println("---- break ----")
+for i := 1; i <= 3; i++ {
+   fmt.Printf("i: %d\n", i)
             for i2 := 11; i2 <= 13; i2++ {
-                fmt.Printf("i2: %d\n", i2)
-                break re
+                  fmt.Printf("i2: %d\n", i2)
+                  break
             }
-        }
+   }
+
+// 使用标记
+fmt.Println("---- break label ----")
+re:
+   for i := 1; i <= 3; i++ {
+      fmt.Printf("i: %d\n", i)
+      for i2 := 11; i2 <= 13; i2++ {
+            fmt.Printf("i2: %d\n", i2)
+            break re
+      }
+   }
+```
+
+### continue
+
+continue用于退出当前迭代，进入下一轮迭代。continue只能用于for循环中
+
+```go
+for i := 0; i <= 10; i++ {
+   if i%2 == 0 {
+      continue
+   }
+   fmt.Println(i)
 }
 ```
 
@@ -251,23 +262,18 @@ label: statement;
 实例: 在变量 a 等于 15 的时候跳过本次循环并回到循环的开始语句 LOOP 处
 
 ```go
-package main
+/* 定义局部变量 */
+var a int = 10
 
-import "fmt"
-
-func main() {
-   /* 定义局部变量 */
-   var a int = 10
-
-   /* 循环 */
-   LOOP: for a < 20 {
-      if a == 15 {
-         /* 跳过迭代 */
-         a = a + 1
-         goto LOOP
-      }
-      fmt.Printf("a的值为 : %d\n", a)
-      a++    
-   }  
+/* 循环 */
+LOOP:
+for a < 20 {
+   if a == 15 {
+      /* 跳过迭代 */
+      a++
+      goto LOOP
+   }
+   fmt.Printf("a的值为 : %d\n", a)
+   a++
 }
 ```

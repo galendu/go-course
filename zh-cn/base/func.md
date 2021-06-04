@@ -1,4 +1,4 @@
-# 函数
+# 函数基础
 
 函数用于对代码块的逻辑封装，提供代码复用的最基本方式
 
@@ -178,7 +178,13 @@ fmt.Println(s1)     // 输出一个值 [4]
 
 ## 延迟计算
 
+defer
+
 ## 错误处理
+
+panic和recover
+
+## 递归函数
 
 ### 内置函数
 在 buildin/buildin.go内定义了Go所有支持内置函数：make、len、cap、new、append、copy、close、delete、complex、real、 imag、panic、recover

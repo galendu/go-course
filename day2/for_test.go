@@ -61,5 +61,96 @@ func TestFor99(t *testing.T) {
 }
 
 func TestForP(t *testing.T) {
+	// 遍历 2 ~ 100
+	for m := 2; m <= 100; m++ {
+		// 假定m是素数
+		isP := true
 
+		// 判断能不能分解
+		for n := 2; n <= (m / n); n++ {
+			if m%n == 0 {
+				isP = false
+			}
+		}
+
+		// 无法分解 为素数
+		if isP {
+			fmt.Println(m)
+		}
+	}
+}
+
+func TestBreak(t *testing.T) {
+	i := 0
+	for {
+		fmt.Println(i)
+		if i == 10 {
+			break
+		}
+		i++
+	}
+}
+
+func TestBreakLalel(t *testing.T) {
+	// 不使用标记
+	fmt.Println("---- break ----")
+	for i := 1; i <= 3; i++ {
+		fmt.Printf("i: %d\n", i)
+		for i2 := 11; i2 <= 13; i2++ {
+			fmt.Printf("i2: %d\n", i2)
+			break
+		}
+	}
+
+	// 使用标记
+	fmt.Println("---- break label ----")
+re:
+	for i := 1; i <= 3; i++ {
+		fmt.Printf("i: %d\n", i)
+		for i2 := 11; i2 <= 13; i2++ {
+			fmt.Printf("i2: %d\n", i2)
+			break re
+		}
+	}
+}
+
+func TestContinue(t *testing.T) {
+	for i := 0; i <= 10; i++ {
+		if i%2 == 0 {
+			continue
+		}
+		fmt.Println(i)
+	}
+}
+
+func TestLabelNext(t *testing.T) {
+	i := 0
+	for {
+		if i > 5 {
+			goto LABEL
+		}
+		i++
+	}
+
+	fmt.Println("balabala!")
+
+LABEL:
+	return
+}
+
+func TestLabelPre(t *testing.T) {
+	/* 定义局部变量 */
+	var a int = 10
+
+	/* 循环 */
+LOOP:
+	for a < 20 {
+		if a == 15 {
+			/* 跳过迭代 */
+			a++
+			goto LOOP
+		}
+		fmt.Printf("a的值为 : %d\n", a)
+		a++
+	}
 }

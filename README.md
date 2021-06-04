@@ -16,12 +16,14 @@
   * [读取标准输入](./zh-cn/base/fmt_in.md)
   * [循环语句](./zh-cn/base/for.md)
   * [数据类型转换](./zh-cn/base/strconv.md)
-  * [Go语言函数](./zh-cn/base/func.md)
+  * [函数基础](./zh-cn/base/func.md)
   * [Go语言指针](./zh-cn/base/pointer.md)
   * [Go语言数组](./zh-cn/base/array.md)
 * Day3
   * [Go语言切片](./zh-cn/base/slice.md)
   * [Go语言Map](./zh-cn/base/map.md)
+  * [Go语言结构体](./zh-cn/base/map.md)
+  * [函数进阶](./zh-cn/base/func.md)
 
 * [课程作业]
   * [Day1](./day1/README.md)
