@@ -22,6 +22,17 @@ func TestLocalScope2(t *testing.T) {
 	}
 }
 
+func TestScopeWrite(t *testing.T) {
+	var a string
+	a = "parent scope"
+	{
+		var a int
+		a = 12
+		fmt.Println(a)
+	}
+	fmt.Println(a)
+}
+
 var (
 	a = "global parent scope var"
 )
