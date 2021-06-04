@@ -7,7 +7,9 @@ a := "string a"
 fmt.Println(&a) // 0xc000044770
 ```
 
-## 声明与初始化
+![pointer_addr_var](../../image/pointer_addr_var.png)
+
+## 声明初始化与赋值
 
 1.指针声明需要指定存储地址中对应数据的类型，并使用*作为类型前缀。
 
@@ -16,13 +18,14 @@ var ip *int        /* 指向整型*/
 var fp *float32    /* 指向浮点型 */
 ```
 
+![pointer_del](../../image/pointer_del.png)
+
 2.指针变量声明后会被初始化为 nil，表示空指针
 
 ```go
 var a *int
 fmt.Println(a) // nil
 ```
-
 
 3.使用 new 函数初始化：new 函数根据数据类型申请内存空间并使用零值填充，并返回申请空间地址
 
@@ -31,6 +34,18 @@ var a *int = new(int)
 fmt.Println(a) // 0xc000014330
 fmt.Println(*a) // 0
 ```
+
+![pointer_del](../../image/pointer_del_fill.png)
+
+4.指针赋值
+
+```go
+var a *int = new(int)
+*a = 10
+fmt.Println(a, *a)
+```
+
+![pointer_del](../../image/pointer_fill1.png)
 
 ## 指针运算
 
@@ -49,4 +64,16 @@ fmt.Println(*a) // 0
 
 用来存储指针变量地址的变量叫做指针的指针
 
-## 指针类型
+```go
+var a ****int
+
+v := 10
+p1 := &v  // *int
+p2 := &p1 // **int
+p3 := &p2 // ***int
+a = &p3   //  ****int
+fmt.Println(v, p1, p2, p3, a)
+```
+
+![pointer_del](../../image/pointer_pppp.png)
+

@@ -16,8 +16,8 @@
   * [读取标准输入](./zh-cn/base/fmt_in.md)
   * [循环语句](./zh-cn/base/for.md)
   * [数据类型转换](./zh-cn/base/strconv.md)
-  * [函数基础](./zh-cn/base/func.md)
   * [Go语言指针](./zh-cn/base/pointer.md)
+  * [函数基础](./zh-cn/base/func.md)
   * [Go语言数组](./zh-cn/base/array.md)
 * Day3
   * [Go语言切片](./zh-cn/base/slice.md)
