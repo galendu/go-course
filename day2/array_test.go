@@ -6,6 +6,10 @@ import (
 	"testing"
 )
 
+func TestMaxint(t *testing.T) {
+	fmt.Println("abc")
+}
+
 func TestArrayType(t *testing.T) {
 	var (
 		a1 [4]int

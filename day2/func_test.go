@@ -41,8 +41,20 @@ func fact(n int) int {
 	return n * fact(n-1)
 }
 
+func fact2(n int) int {
+	current := n
+	for n > 1 {
+		fmt.Printf("%d * (%d-1)\n", current, n)
+		current = current * (n - 1)
+		n--
+	}
+
+	return current
+}
+
 func TestFact(t *testing.T) {
 	fmt.Println(fact(5))
+	fmt.Println(fact2(5))
 }
 
 // f(n)=f(n-1)+f(n-2)且f(2)=f(1)=1, 1 2 3 5	8 13

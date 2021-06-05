@@ -125,7 +125,7 @@ main.go:3:8: package day1/compile/pkg is not in GOROOT (C:\Program Files\Go\src\
 因此如果你有GOPATH的项目需要维护是，建议将GO111MODULE设置为auto
 ```
 go env -w GO111MODULE=auto
-
+```
 
 
 ## vscode 设置工程目录

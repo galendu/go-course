@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+
+	"gitee.com/infraboard/go-course/day1"
 )
 
 var (
@@ -12,6 +14,7 @@ var (
 )
 
 func Scan() {
+	day1.Day1T()
 	fmt.Print("请输入你的姓名和年龄: ")
 	fmt.Scan(&name, &age)
 	fmt.Printf("姓名: %s 年龄: %d", name, age)

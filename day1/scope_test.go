@@ -38,5 +38,10 @@ var (
 )
 
 func TestGlobal1(t *testing.T) {
-	fmt.Println(a)
+	a := 10
+	b := 20
+	fmt.Println(&a, &b)
+	a = b
+	fmt.Print(a, b)
+
 }
