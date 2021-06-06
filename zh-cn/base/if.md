@@ -282,14 +282,5 @@ switch{
 ```go
 ```
 
-### 练习1: 写一个单元转换的函数
 
-```go
-// HumanBytesLoaded 单位转换(B KB MB GB TB EB)
-func HumanBytesLoaded(bytesLength int64) string {}
-```
 
-## 练习2: 写一个猜猜你职业的小工具
-
-```go
-```

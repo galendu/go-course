@@ -63,13 +63,14 @@ func TestFor99(t *testing.T) {
 func TestForP(t *testing.T) {
 	// 遍历 2 ~ 100
 	for m := 2; m <= 100; m++ {
-		// 假定m是素数
+		// 假定m是素数 9
 		isP := true
 
 		// 判断能不能分解
 		for n := 2; n <= (m / n); n++ {
 			if m%n == 0 {
 				isP = false
+				break
 			}
 		}
 
@@ -152,5 +153,43 @@ LOOP:
 		}
 		fmt.Printf("a的值为 : %d\n", a)
 		a++
+	}
+}
+
+func TestForRange1(t *testing.T) {
+	a := "abcdefg"
+	for i, v := range a {
+		fmt.Println(i, v) // rune char
+		if v == 'a' {
+			v = 'x'
+			fmt.Println("change a")
+		}
+	}
+	fmt.Println(a)
+}
+
+func TestForBreakContinue(t *testing.T) {
+	for i := 1; i <= 10; i++ {
+		for k := 1; k <= 10; k++ {
+			if k == 5 {
+				continue
+			}
+			fmt.Print(k)
+		}
+		fmt.Println()
+		// fmt.Println(i)
+	}
+}
+
+func TestFOrLoop1(t *testing.T) {
+	i := 1
+LOOP:
+	for i <= 100 {
+		if i == 50 {
+			i++
+			goto LOOP
+		}
+		i++
+		fmt.Println(i)
 	}
 }

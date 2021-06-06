@@ -96,13 +96,13 @@ func TestFloat1(t *testing.T) {
 }
 
 func bInt8(n int8) string {
-	// fmt.Println(*(*uint8)(unsafe.Pointer(&n)))
+
+	fmt.Println(*(*uint8)(unsafe.Pointer(&n))) // 1111 1111
 	return strconv.FormatUint(uint64(*(*uint8)(unsafe.Pointer(&n))), 2)
 }
 
 func TestParseInt(t *testing.T) {
 	fmt.Println(bInt8(-1)) // 0000 0001(原码) -> 1111 1110(反码) -> 1111 1111(补码)
-
 	// Parse 二进制字符串
 	i, err := strconv.ParseInt("11111111", 2, 16)
 	fmt.Println(i, err)

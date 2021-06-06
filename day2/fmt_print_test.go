@@ -21,7 +21,8 @@ func TestNumber(t *testing.T) {
 
 	fmt.Printf("十六进制: %d\n", Hex2Dec("4E2D"))
 	fmt.Printf("字符: %c\n", 20013)
-	fmt.Printf("Unicode格式: %U\n", '中') // U+4E2D
+	fmt.Printf("Unicode格式: %U\n", '衣') // U+4E2D
+	fmt.Printf("%x", 0b1000100001100011)
 }
 
 func Hex2Dec(val string) int {

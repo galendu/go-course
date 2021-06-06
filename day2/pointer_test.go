@@ -37,3 +37,8 @@ func TestPPP(t *testing.T) {
 	a = &p3
 	fmt.Println(v, p1, p2, p3, a)
 }
+
+func TestPointer11(t *testing.T) {
+	var ip *int = new(int)
+	fmt.Println(&ip, ip, *ip)
+}
