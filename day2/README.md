@@ -13,7 +13,9 @@
 // 0111 1110 1010 0010
 ```
 
-2. 写一个单元转换的函数
+2. 写一个单位转换的函数, 同学只需要把函数逻辑部分编写完成, 
+
+测试方法: main 函数内部 通过HumanBytesLoaded(1024)调用
 
 ```go
 // HumanBytesLoaded 单位转换(B KB MB GB TB EB)
