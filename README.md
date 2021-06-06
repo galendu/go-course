@@ -27,4 +27,4 @@
 
 * [课程作业]
   * [Day1](./day1/README.md)
-  * [Day1](./day2/README.md)
+  * [Day2](./day2/README.md)
