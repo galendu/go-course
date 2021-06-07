@@ -2,6 +2,8 @@ package day2
 
 import (
 	"fmt"
+	"reflect"
+	"strconv"
 	"testing"
 )
 
@@ -72,4 +74,43 @@ func TestFib(t *testing.T) {
 		fmt.Printf("%d\t", fib(i))
 	}
 	fmt.Println()
+}
+
+func ParseInt(str string) (result int64, err error) {
+	result = 10
+	return 20, nil
+}
+
+func TestRetrun(t *testing.T) {
+	fmt.Println(ParseInt(""))
+}
+
+func TestReturnHull(t *testing.T) {
+	i, _ := strconv.ParseInt("10", 10, 64)
+	fmt.Println(i)
+}
+
+func TestAnonymousFunc(t *testing.T) {
+	a := func(x, y int) int {
+		return x + y
+	}
+
+	fmt.Println(a(1, 2))
+}
+
+func TestAnonymousFunc2(t *testing.T) {
+	a := func(x, y int) int {
+		return x + y
+	}(1, 2)
+	fmt.Println(a)
+}
+
+type addFunc func(x, y int) int
+
+func TestFuncType(t *testing.T) {
+	addFunc := func(x, y int) int {
+		return x + y
+	}
+	fmt.Println(reflect.TypeOf(addFunc))
+	fmt.Println(addFunc(10, 20))
 }

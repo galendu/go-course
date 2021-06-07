@@ -110,14 +110,14 @@ func main() {
 }
 
 /* 定义相互交换值的函数 */
-func swap(x, y int) int {
+func swap(x, y int) {
    var temp int
 
    temp = x /* 保存 x 的值 */
    x = y    /* 将 y 值赋给 x */
    y = temp /* 将 temp 值赋给 y*/
 
-   return temp;
+   return;
 }
 ```
 
@@ -178,11 +178,41 @@ fmt.Println(s1)     // 输出一个值 [4]
 
 + 当返回值有多个时，这些返回值必须使用括号包围，逗号分隔
 
+```go
+func ParseInt(str string) (result int64, err error) {
+   return
+}
+```
+
 + return关键字中指定了参数时，返回值可以不用名称。如果return省略参数，则返回值部分必须带名称
+
+```go
+func ParseInt(str string) (int64, error) {
+   var (
+      result int64
+      err error
+   )
+
+   return result, err
+}
+```
 
 + 当返回值有名称时，必须使用括号包围，逗号分隔，即使只有一个返回值
 
+```go
+func add(x, y int) int {}
+
+func add2(x, y int) (result int) {}
+```
+
 + 但即使返回值命名了，return中也可以强制指定其它返回值的名称，也就是说return的优先级更高
+
+```go
+func ParseInt(str string) (result int64, err error) {
+   result = 10
+   return 20, nil
+}
+```
 
 + 命名的返回值是预先声明好的，在函数内部可以直接使用，无需再次声明。命名返回值的名称不能和函数参数名称相同，否则报错提示变量重复定义
 
@@ -195,7 +225,18 @@ func sum(x, y int) (rest int) {
 
 + return中可以有表达式，但不能出现赋值表达式，这和其它语言可能有所不同。例如return a+b是正确的，但return c=a+b是错误的
 
+```go
+func sum(x, y int) (rest int) {
+    return x + y
+}
+```
+
 + 但函数有多个返回值时，如果其中某个或某几个返回值不想使用，可以通过下划线_这个blank identifier来丢弃这些返回值
+
+```go
+i, _ := strconv.ParseInt("10", 10, 64)
+fmt.Println(i)
+```
 
 ## 调用
 
@@ -212,15 +253,67 @@ func main() {
 
 ## 匿名函数
 
-函数参数可以没有名称，例如func myfunc(int,int)
+函数参数可以没有名称，例如func myfunc(int,int), 一般匿名函数嵌套在函数内部，或者赋值给一个变量，或者作为一个表达式
 
-## 延迟计算
+```go
+// 声明匿名函数
+func(args){
+    //
+}
+```
 
-defer
+比如:
 
-## 错误处理
+```go
+   a := func(x, y int) int {
+      return x + y
+   }
 
-panic和recover
+   fmt.Println(a(1, 2))
+```
+
+```go
+// 声明匿名函数并直接执行
+func(args){
+   // 
+}(parameters)
+```
+
+比如:
+
+```go
+a := func(x, y int) int {
+   return x + y
+}(1, 2)
+fmt.Println(a)
+```
+
+## 将函数作为一种类型
+
+Go实现了一级函数(first-class functions), 函数是一个值，可以将函数赋值给变量，使得这个变量也成为函数, 因此我们也可以定义函数的类型
+
+可以将func作为一种type，以后可以直接使用这个type来定义函数
+
+```go
+addFunc := func(x, y int) int {
+   return x + y
+}
+fmt.Println(reflect.TypeOf(addFunc))
+fmt.Println(addFunc(10, 20))
+```
+
+## 延迟计算: defer
+
+defer关键字可以让函数或语句延迟到函数语句块的最结尾时，即即将退出函数时执行，即便函数中途报错结束、即便已经panic()、即便函数已经return了，也都会执行defer所推迟的对象。
+
+其实defer的本质是，当在某个函数中使用了defer关键字，则创建一个独立的defer栈帧，并将该defer语句压入栈中，同时将其使用的相关变量也拷贝到该栈帧中（显然是按值拷贝的）。因为栈是LIFO方式，所以先压栈的后执行。因为是独立的栈帧，所以即使调用者函数已经返回或报错，也一样能在它们之后进入defer栈帧去执行。
+
+
+
+
+
+
+## 错误处理: panic和recover
 
 ## 递归函数
 
