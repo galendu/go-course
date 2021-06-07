@@ -123,43 +123,64 @@ main.go:3:8: package day1/compile/pkg is not in GOROOT (C:\Program Files\Go\src\
 ```
 
 因此如果你有GOPATH的项目需要维护是，建议将GO111MODULE设置为auto
+
 ```
 go env -w GO111MODULE=auto
 ```
 
+## 如何创建一个Go Modules工程
 
-## vscode 设置工程目录
+1. 新建一个目录(不要在GOPATH下创建)
 
-https://github.com/golang/tools/blob/master/gopls/doc/workspace.md
-
-## 编写基础测试用例
-
-引入Go Modules后, 最好不要在一个文件下面放2个main.go，我们讲采用go test的方式快速演示功能，比如:
-![](../../image/go_test_file.png)
-
-关键点:
-+ 文件名命名要求: {pkg_name}_test.go
-+ 函数命名要求: 大写Test开头
-+ 函数参数: (t *testing.T)
-
-比如 variable/variable_test.go
-```go
-package variable
-
-import (
-	"testing"
-)
-
-func TestValueRef(t *testing.T) {
-	i := "this is a"
-	j := &i
-	*j = "this is j"
-	t.Log(i, *j)
-}
+```sh
+mkdir {your_project_workspace}
 ```
 
+2.使用go mod 初始化工程
 
-## vscode test时 打印详情内容
+你当前的目录仅仅是一个目录, 并不是一个go mod工程, 我们通过go mod init {name} 将你的目录初始化为一个go mod工程
+
+```sh
+cd {your_project_workspace}
+go mod init {your_project_workspace}
+```
+
+这样 你该目录下就生产一个go.mod的文件, 现在已经是一个go mod工程了
+
+3.打开工程
+
+使用vscode打开你的{your_project_workspace}文件夹, 然后你就可以在该工程下面 写程序了
+
+## 如何执行课件里面的代码
+
+该课件里面包含课程演示过程中的所有代码, 都放置于根目录:
+
+```sh
+day1
+day2
+...
+```
+
+1.拉取代码到本地(注意: 不要拉倒GOPATH目录下, 因为GOPATH本身就是一个工程, 而课件是一个Go Module工程, 二个工程要分开存放，并单独打开)
+
+```sh
+mkdir {your_gomod_workspace} // 创建一个目录用于存放你所有的go mod工程
+cd {your_gomod_workspace}    // 进入到这个目录
+git clone https://gitee.com/infraboard/go-course.git // 把课件的这个工程 clone到 你的{your_gomod_workspace}
+```
+
+2.使用vscode 打开课件工程, 更多关于vscode 设置打开工程的文档请参考: [vscode workspace setting](https://github.com/golang/tools/blob/master/gopls/doc/workspace.md)
+
+注意: vscode一次只能打开一个工程, 所以你vscode需要打的目录是: {your_gomod_workspace}/go-course)
+
+3.运行课件代码示例
+
+运行示例:
+![vscode_go_test_run](../../image/vscode_go_test_run.png)
+
+由于直接运行时，不会打印fmt.Print的信息, 我们需要如下配置vscode 才可以
+
+4.配置vscode打印run test详情内容
 
 通过修改 go.testFlags 的配置值为: ["-v"], 就开启了test 打印详细日志功能
 
@@ -182,5 +203,31 @@ func TestValueRef(t *testing.T) {
 }
 ```
 
-运行示例:
-![vscode_go_test_run](../../image/vscode_go_test_run.png)
+## 扩展: 课件中的测试用例
+
+引入Go Modules后, 最好不要在一个文件下面放2个main.go，我们讲采用go test的方式快速演示功能，比如:
+
+![go_test_file](../../image/go_test_file.png)
+
+关键点:
+
++ 文件名命名要求: {pkg_name}_test.go
++ 函数命名要求: 大写Test开头
++ 函数参数: (t *testing.T)
+
+比如 variable/variable_test.go
+
+```go
+package variable
+
+import (
+    "testing"
+)
+
+func TestValueRef(t *testing.T) {
+    i := "this is a"
+    j := &i
+    *j = "this is j"
+    t.Log(i, *j)
+}
+```
