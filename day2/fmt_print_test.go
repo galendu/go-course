@@ -166,3 +166,8 @@ func TestInt(t *testing.T) {
 	}
 
 }
+
+func TestPrintln(t *testing.T) {
+	i, err := fmt.Println(1)
+	fmt.Println(i, err)
+}
