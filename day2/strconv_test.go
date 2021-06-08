@@ -137,3 +137,13 @@ func TestFormatInt(t *testing.T) {
 
 	fmt.Println(strconv.FormatFloat(3.1415, 'E', -1, 64))
 }
+
+func TestStrconLost(t *testing.T) {
+	var n float64 = 0
+	for i := 0; i < 100; i++ {
+		n += .01
+		fmt.Println(n)
+	}
+
+	fmt.Println(float64(0.05) + float64(0.01))
+}
