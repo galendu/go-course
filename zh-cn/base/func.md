@@ -1,4 +1,4 @@
-# 函数基础
+# Go语言函数
 
 函数用于对代码块的逻辑封装，提供代码复用的最基本方式, Go中有3种函数:
 
@@ -251,6 +251,41 @@ func main() {
 }
 ```
 
+## 内置函数
+
+在 buildin/buildin.go内定义了Go所有支持内置函数：make、len、cap、new、append、copy、close、delete、complex、real、imag、panic、recover
+
+我们在代码里面可以直接使用: 比如使用len计算字符串的长度
+```go
+package main
+
+import (
+	"fmt"
+)
+
+func main() {
+	fmt.Println(len("asdfsdf"))
+}
+```
+
+内置函数和用户定义函数没有本质上的区别, 我们也可以覆盖它
+```go
+package main
+
+import (
+	"fmt"
+)
+
+func len(a string) string {
+	return "hello"
+}
+
+func main() {
+	fmt.Println(len("asdfsdf"))
+}
+```
+但是你最好不要这样做，你会被打的
+
 ## 匿名函数
 
 函数参数可以没有名称，例如func myfunc(int,int), 一般匿名函数嵌套在函数内部，或者赋值给一个变量，或者作为一个表达式
@@ -288,6 +323,8 @@ a := func(x, y int) int {
 fmt.Println(a)
 ```
 
+## 闭包
+
 ## 将函数作为一种类型
 
 Go实现了一级函数(first-class functions), 函数是一个值，可以将函数赋值给变量，使得这个变量也成为函数, 因此我们也可以定义函数的类型
@@ -302,18 +339,24 @@ fmt.Println(reflect.TypeOf(addFunc))
 fmt.Println(addFunc(10, 20))
 ```
 
-## 延迟计算: defer
+## 函数作为参数
 
-defer关键字可以让函数或语句延迟到函数语句块的最结尾时，即即将退出函数时执行，即便函数中途报错结束、即便已经panic()、即便函数已经return了，也都会执行defer所推迟的对象。
+既然可以声明类型, 那么我们就可以把函数当作一个参数传递给另一个函数，比如：
 
-其实defer的本质是，当在某个函数中使用了defer关键字，则创建一个独立的defer栈帧，并将该defer语句压入栈中，同时将其使用的相关变量也拷贝到该栈帧中（显然是按值拷贝的）。因为栈是LIFO方式，所以先压栈的后执行。因为是独立的栈帧，所以即使调用者函数已经返回或报错，也一样能在它们之后进入defer栈帧去执行。
+```go
+type addFunc func(x, y int) int
 
+func asArg(fn addFunc) int {
+	return fn(2, 2) * 2
+}
 
-
-
-
-
-## 错误处理: panic和recover
+func TestFuncAsArg(t *testing.T) {
+	ret := asArg(func(x, y int) int {
+		return x + y
+	})
+	fmt.Println(ret)
+}
+```
 
 ## 递归函数
 
@@ -360,38 +403,3 @@ func fib(n int) int {
 3.递归一个目录
 
 它的递归基点是文件，只要是文件就返回，只要是目录就进入
-
-### 内置函数
-
-在 buildin/buildin.go内定义了Go所有支持内置函数：make、len、cap、new、append、copy、close、delete、complex、real、imag、panic、recover
-
-我们在代码里面可以直接使用: 比如使用len计算字符串的长度
-```go
-package main
-
-import (
-	"fmt"
-)
-
-func main() {
-	fmt.Println(len("asdfsdf"))
-}
-```
-
-内置函数和用户定义函数没有本质上的区别, 我们也可以覆盖它
-```go
-package main
-
-import (
-	"fmt"
-)
-
-func len(a string) string {
-	return "hello"
-}
-
-func main() {
-	fmt.Println(len("asdfsdf"))
-}
-```
-但是你最好不要这样做，你会被打的

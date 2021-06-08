@@ -18,7 +18,8 @@
   * [数据类型转换](./zh-cn/base/strconv.md)
   * [Go语言指针](./zh-cn/base/pointer.md)
 * Day3
-  * [函数基础](./zh-cn/base/func.md)
+  * [Go语言函数](./zh-cn/base/func.md)
+  * [defer与错误处理](./zh-cn/base/error.md)
   * [Go语言数组](./zh-cn/base/array.md)
   * [Go语言切片](./zh-cn/base/slice.md)
   * [Go语言Map](./zh-cn/base/map.md)

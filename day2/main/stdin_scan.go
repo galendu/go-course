@@ -36,13 +36,13 @@ func Scanf() {
 }
 
 func ScanfFromBufio() {
-	fmt.Print("请输入你的姓名和年龄, 以空格分隔: ")
+	fmt.Print("请输入你的姓名和年龄, 以 : 分隔: ")
 	stdin := bufio.NewReader(os.Stdin)
 	line, _, err := stdin.ReadLine()
 	if err != nil {
 		panic(err)
 	}
-	n, err := fmt.Sscanln(string(line), &name, &age)
+	n, err := fmt.Sscanf(string(line), "%s : %d", &name, &age)
 	if err != nil {
 		panic(err)
 	}

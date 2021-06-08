@@ -105,12 +105,23 @@ func TestAnonymousFunc2(t *testing.T) {
 	fmt.Println(a)
 }
 
-type addFunc func(x, y int) int
-
 func TestFuncType(t *testing.T) {
 	addFunc := func(x, y int) int {
 		return x + y
 	}
 	fmt.Println(reflect.TypeOf(addFunc))
 	fmt.Println(addFunc(10, 20))
+}
+
+type addFunc func(x, y int) int
+
+func asArg(fn addFunc) int {
+	return fn(2, 2) * 2
+}
+
+func TestFuncAsArg(t *testing.T) {
+	ret := asArg(func(x, y int) int {
+		return x + y
+	})
+	fmt.Println(ret)
 }
