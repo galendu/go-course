@@ -1,4 +1,4 @@
-package day2
+package day3
 
 import (
 	"fmt"
@@ -33,4 +33,13 @@ func TestDefer3(t *testing.T) {
 	}()
 	x = 30
 	fmt.Println("func end: ", x)
+}
+
+func TestDefer4(t *testing.T) {
+	fmt.Println("start")
+	defer fmt.Println(1)
+	defer fmt.Println(2)
+	defer fmt.Println(3)
+	defer fmt.Println(4)
+	fmt.Println("end")
 }
