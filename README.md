@@ -21,17 +21,17 @@
   * [Go语言函数](./zh-cn/base/func.md)
   * [defer与错误处理](./zh-cn/base/error.md)
   * [Go语言数组](./zh-cn/base/array.md)
-  * [Go语言结构体](./zh-cn/base/map.md)
+  * [Go语言结构体](./zh-cn/base/struct.md)
   * [日期与时间](./zh-cn/base/string.md)
   * [Go语言切片](./zh-cn/base/slice.md)
   * [字符串处理](./zh-cn/base/string.md)
   * [Go语言Map](./zh-cn/base/map.md)
   * [文件读写](./zh-cn/base/string.md)
-  * [函数式编程](./zh-cn/base/func.md)
+  * [函数式编程](./zh-cn/base/fp.md)
 * Day4
-  * [包与工程](./zh-cn/base/func.md)
+  * [包与工程](./zh-cn/base/pkg.md)
   * [单元测试和基准测试](./zh-cn/base/func.md)
-  * [面向对象](./zh-cn/base/array.md)
+  * [面向对象](./zh-cn/base/oop.md)
 
 * [课程作业]
   * [Day1](./day1/README.md)

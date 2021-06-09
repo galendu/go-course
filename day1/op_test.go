@@ -85,8 +85,17 @@ func TestBit(t *testing.T) {
 	t.Logf("a & b = %d", a&b)   // 0001 0100     2^4 + 2^2
 	t.Logf("a | b = %d", a|b)   // 0111 1101     2^6 + 2^5 + 2^4 + 2^3 + 2^2 + 2^0
 	t.Logf("a ^ b = %d", a^b)   // 0110 1001     2^6 + 2^5 + 2^3 + 2^0
-	t.Logf("a >> 2 = %d", a>>2) // 0000 1111     15
-	t.Logf("a << 2 = %d", a<<2) // 1111 0000     240
+	t.Logf("a >> 2 = %d", a>>2) // 0011 1100  ==> 0000 1111     15
+	t.Logf("a << 2 = %d", a<<2) // 0011 1100  ==> 1111 0000     240
+
+	var (
+		c uint  = 240
+		d uint8 = 255
+	)
+	t.Logf("c << 2 = %d", c<<2) //
+	fmt.Printf("%b ==> %b\n", c, c<<2)
+	fmt.Printf("%b ==> %b\n", d, d<<2)
+
 }
 
 func TestF(t *testing.T) {
