@@ -44,83 +44,53 @@ type Person struct {
 }
 ```
 
-## 声明
+## 声明与初始化
 
 声明结构体变量只需要定义变量类型为结构体名，变量中的每个属性被初始化为对应类型的
-零值。也可声明结构体指针变量，此时变量被初始化为 nil
+零值。
 
-遵循所有类型声明语法
-
-```go
-var req Request
-var reqPointer *Request
-```
-
-## 初始化
+遵循所有类型声明语法: var struct_name struct_type
 
 使用结构体创建的变量叫做对应结构体的实例或者对象
 
-1. 使用结构体零值初始化结构体值对象
+1.只声明不初始化
+
+比如下面我们初始化一个person的实例
 
 ```go
 // 只声明
-var req *Request
-// 声明并赋值
-var req *Request = &Request{}
+var person Person
 ```
 
-2.使用 new 函数进行初始化结构体指针对象
+我们可以看到声明后的结构体的所有属性都是初始值
 
 ```go
-req = new(Request)
+var person Person
+fmt.Printf("%+v\n", person)
+// {Name: Age:0 Gender: Weight:0 FavoriteColor:[]}
 ```
 
-3.使用结构体字面量初始化结构体值对象
+如果我要声明并初始化喃？
+
+2.声明并初始化
 
 ```go
-req := &Request{ 
-    method,
-    url,
-    "HTTP/1.1",
-    1,
-    1,
+var person Person = Person{
+    Name:          "andy",
+    Age:           66,
+    Gender:        "male",
+    Weight:        120,
+    FavoriteColor: []string{"red", "blue"},
 }
+fmt.Printf("%+v\n", person)
+// {Name:andy Age:66 Gender:male Weight:120 FavoriteColor:[red blue]}
 ```
 
-4.使用结构体字面量初始化结构体指针对象
-
-```go
-req := &Request{
-    ctx:        ctx,
-    Method:     method,
-    URL:        u,
-    Proto:      "HTTP/1.1",
-    ProtoMajor: 1,
-    ProtoMinor: 1,
-    Header:     make(Header),
-    Body:       rc,
-    Host:       u.Host,
-}
-```
-
-## New 函数
-
-Go 语言中常定义 N(n)ew+结构体名命名的函数用于创建对应的结构体值对象或指针对象
-
-```go
-// NewRequest wraps NewRequestWithContext using the background context.
-func NewRequest(method, url string, body io.Reader) (*Request, error) {
-    return NewRequestWithContext(context.Background(), method, url, body)
-}
-
-func NewRequestWithContext(ctx context.Context, method, url string, body io.Reader) (*Request, error) {
-    ...
-}
-```
+注意，上面最后一个逗号","不能省略，Go会报错，这个逗号有助于我们去扩展这个结构
 
 ## 属性的访问和修改
 
-通过结构体对象名/结构体指针对象.属性名的方式来访问和修改对象的属性值
+通过结构体对象名.属性名的方式来访问和修改对象的属性值
 
 可以通过结构体指针对象的点操作直接对对象的属性值进行访问和修改
 
@@ -129,6 +99,40 @@ func NewRequestWithContext(ctx context.Context, method, url string, body io.Read
 ```
 
 ```go
+```
+
+## 结构体指针
+
+1.声明
+
+和其他基础数据类型一样，我们也可声明结构体指针变量，此时变量被初始化为 nil
+
+```go
+var person *Person
+fmt.Println(person)
+// <nil>
+```
+
+2.声明并初始化
+
+```go
+var person *Person = &Person{
+    Name:          "andy",
+    Age:           66,
+    Gender:        "male",
+    Weight:        120,
+    FavoriteColor: []string{"red", "blue"},
+}
+fmt.Printf("%p", person)
+```
+
+3.new函数创建指针对象
+
+Go 语言中常定义 N(n)ew+结构体名命名的函数用于创建对应的结构体值对象或指针对象
+
+```go
+person := new(Person)
+fmt.Printf("%p", person)
 ```
 
 ## 匿名结构体
