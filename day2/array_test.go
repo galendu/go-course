@@ -7,7 +7,9 @@ import (
 )
 
 func TestMaxint(t *testing.T) {
-	fmt.Println("abc")
+	var a []int
+	a = append(a, 1)
+	fmt.Println(a)
 }
 
 func TestArrayType(t *testing.T) {
