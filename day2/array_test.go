@@ -104,3 +104,8 @@ func TestArray2x(t *testing.T) {
 	pos[0] = [2]int{10, 10}
 	fmt.Println(pos)
 }
+
+func TestArray(t *testing.T) {
+	a := [2]int{}
+	fmt.Println(a, a[1])
+}

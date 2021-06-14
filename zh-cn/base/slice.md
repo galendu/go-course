@@ -1,6 +1,34 @@
 # Go语言切片
 
+Go中的slice依赖于数组，它的底层就是数组，所以数组具有的优点, slice都有。 且slice支持可以通过append向slice中追加元素，长度不够时会动态扩展，通过再次slice切片，可以得到得到更小的slice结构，可以迭代、遍历等
+
+```go
+// runtime/slice.go
+type slice struct {
+    array unsafe.Pointer // 数组指针
+    len   int // 长度 
+    cap   int // 容量
+}
+```
+
+每一个slice结构都由3部分组成：
++ 容量(capacity): 即底层数组的长度，表示这个slice目前最多能扩展到这么长
++ 长度(length)：表示slice当前的长度，即当前容纳的元素个数
++ 数组指针(array): 指向底层数组的指针
+
+比如创建一个长度为3，容量为5，int类型的切片
+
+```go
+s := make([]int, 3, 4)
+fmt.Println(a, len(s), cap(s)) // [0 0 0] 3 5
+```
+
+![slice_struct](../../image/slice_struct.png)
+
+
 ## 切片
+
+![切片的语法](https://golang.org/ref/spec#Slice_expressions)
 
 切片是长度可变的数组（具有相同数据类型的数据项组成的一组长度可变的序列），切片由
 三部分组成：
