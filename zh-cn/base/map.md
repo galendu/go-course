@@ -332,3 +332,7 @@ key 经过哈希计算后得到哈希值，共 64 个 bit 位, 然后通过这�
 因此搬迁时(插入或修改、删除 key 的时候), 都会尝试进行搬迁 buckets 的工作, 根据bucketmask, 进行重新hash, 然后再次均衡
 所谓的 bucketmask，作用就是将 key 计算出来的哈希值与 bucketmask 相与，得到的结果就是 key 应该落入的桶。比如 B = 5，那么 bucketmask 的低 5 位是 11111，其余位是 0，hash 值与其相与的意思是，只有 hash 值的低 5 位决策 key 到底落入哪个 bucket
 
+
+
+## 作业
+

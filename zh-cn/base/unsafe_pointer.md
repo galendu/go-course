@@ -227,3 +227,22 @@ syscall.Syscall(SYS_READ, uintptr(fd), u, uintptr(n))
 + 将reflect.Value.Pointer或者reflect.Value.UnsafeAddr方法的uintptr返回值立即转换为非类型安全指针
 + 将一个reflect.SliceHeader或者reflect.StringHeader值的Data字段转换为非类型安全指针，以及其逆转换
 
+## 声明与总结
+
+go1 并不保证unsafe的兼容, 我们应该知晓当前的非类型安全机制规则和使用模式可能在以后的Go版本中完全失效, 几率很小， 因此，在实践中，请尽量保证能够将使用了非类型安全机制的代码轻松改为使用安全途径实现
+
+从上面解释中，我们得知，对于某些情形，非类型安全机制可以帮助我们写出运行效率更高的代码。 但是，使用非类型安全指针也使得我们可能轻易地写出一些重现几率非常低的微妙的bug。 一个含有这样的bug的程序很可能在很长一段时间内都运行正常，但是突然变得不正常甚至崩溃。 这样的bug很难发现和调试
+
+
+
+## 作业
+
+通过内存地址访问Tag的值
+```go
+type Book struct {
+	Title  string
+	Author string
+	Page   uint
+	Tag    []string
+}
+```
