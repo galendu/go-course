@@ -96,7 +96,6 @@ func TestFloat1(t *testing.T) {
 }
 
 func bInt8(n int8) string {
-
 	fmt.Println(*(*uint8)(unsafe.Pointer(&n))) // 1111 1111
 	return strconv.FormatUint(uint64(*(*uint8)(unsafe.Pointer(&n))), 2)
 }
