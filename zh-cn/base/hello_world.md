@@ -250,10 +250,6 @@ go install 用于编译和安装二进制文件
 1. 如果有main包, 将直接build, 将build好的二进制文件放到GOPATH的bin目录下
 2. 如果不是main包, 将编译静态库, 放到GOPATH/pkg/<platform>目录下面
 
-在Go Module模式下 
-
-
-
 
 ### go clean
 

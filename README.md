@@ -22,7 +22,7 @@
   * [defer与错误处理](./zh-cn/base/error.md)
   * [Go语言数组](./zh-cn/base/array.md)
   * [Go语言结构体](./zh-cn/base/struct.md)
-  * [日期与时间](./zh-cn/base/string.md)
+  * [日期与时间](./zh-cn/base/time.md)
   * [非类型安全指针](./zh-cn/base/unsafe_pointer.md)
   * [Go语言切片](./zh-cn/base/slice.md)
   * [字符串处理](./zh-cn/base/string.md)

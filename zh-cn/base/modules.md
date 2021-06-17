@@ -1,4 +1,4 @@
-# Modules工程
+# 工作目录
 
 在开始Go Modules工程前，我们需要介绍下GOPATH工程, 它虽然不怎么好用，但是他是你1.11版本之前的唯一选择
 
@@ -151,7 +151,7 @@ go mod init {your_project_workspace}
 
 使用vscode打开你的{your_project_workspace}文件夹, 然后你就可以在该工程下面 写程序了
 
-## 如何执行课件里面的代码
+## 设置你的工作目录
 
 该课件里面包含课程演示过程中的所有代码, 都放置于根目录:
 

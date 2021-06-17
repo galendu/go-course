@@ -50,6 +50,12 @@ vscode官网下载最新版: https://code.visualstudio.com/
 
 ### 安装Go 语言扩展需要的工具集
 
+这些扩展很多被墙了, 需要配置GOPROXY代理才能正常安装:
+```go
+go env -w GOPROXY=https://goproxy.cn
+```
+设置变量过后为了保证vscode能正常使用, 请重启vscode
+
 1. 打开命令面板: Shift + Ctrl + P
 
 2. 输入: Install/Update 搜索 Go扩展依赖工具安装命令
@@ -64,16 +70,10 @@ vscode官网下载最新版: https://code.visualstudio.com/
 
 ![vscode_ext_go_tools3](../../image/vscode_go_ext_tool_ok.png)
 
-`注意: 如果由于墙无法安装, 可以通过设置代理进行手动安装`
-
+2.如果安装失败也可以尝试手动安装
 ```sh
-// 1. 设置代理
-go env -w GOPROXY=https://goproxy.cn
-
-// 2. 下载依赖工具
 go install -v golang.org/x/tools/gopls@latest
 go install -v honnef.co/go/tools/cmd/staticcheck@latest
-go install -v github.com/go-delve/delve/cmd/dlv@latest
 go install -v github.com/go-delve/delve/cmd/dlv@latest
 go install -v github.com/haya14busa/goplay/cmd/goplay@latest
 go install -v github.com/josharian/impl@latest
@@ -121,7 +121,6 @@ go install -v github.com/uudashr/gopkgs/v2/cmd/gopkgs@latest
 + 快捷运行代码的插件: Code Runner
 
 ![code_runner](../../image/vscode_code_runner.png)
-
 
 + 最好用Git工具没有之一: Gitlens
 
