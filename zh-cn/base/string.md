@@ -21,6 +21,7 @@ type stringStruct struct {
 
 
 所以上面的该结构在内存中的存储结构为:
+
 ![string_struct](../../image/string_struct.png)
 
 在Golang语言规范里面，string数据是禁止修改的，试图通过&s[0], &b[0]取得string和slice数据指针地址也是行不通的， 因为编译器读到字符串，会将其标记成只读数据 SRODATA，只读意味着字符串会分配到只读的内存空间, 这些值不能修改
