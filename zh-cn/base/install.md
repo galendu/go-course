@@ -118,6 +118,10 @@ go install -v github.com/uudashr/gopkgs/v2/cmd/gopkgs@latest
 
 ### 插件安装
 
+
++ 单词拼写检查: Code Spell Checker
+
+
 + 快捷运行代码的插件: Code Runner
 
 ![code_runner](../../image/vscode_code_runner.png)
