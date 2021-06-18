@@ -94,8 +94,9 @@ func Start() {
 }
 
 var (
-	rollCount = 100
-	lucky     = rand.Intn(rollCount)
+	rollCount  = 100
+	totalCount = 0
+	lucky      = rand.Intn(rollCount)
 )
 
 func duang() bool {
@@ -103,11 +104,12 @@ func duang() bool {
 	fmt.Printf("你当前获取[%d]次抽奖机会\n", count)
 	for i := 1; i <= count; i++ {
 		ticket := rand.Intn(rollCount)
+		totalCount++
 		if ticket == lucky {
-			fmt.Printf("当前是你第%d次抽奖: 抽奖结果 中奖, 幸运数: %d\n, 你当前号码: %d", i, lucky, ticket)
+			fmt.Printf("当前是你第%d次抽奖: 抽奖结果 中奖, 幸运数: %d\n, 你当前号码: %d", totalCount, lucky, ticket)
 			return true
 		} else {
-			fmt.Printf("当前是你第%d次抽奖: 抽奖结果 未中奖, 幸运数: %d, 你当前号码: %d\n", i, lucky, ticket)
+			fmt.Printf("当前是你第%d次抽奖: 抽奖结果 未中奖, 幸运数: %d, 你当前号码: %d\n", totalCount, lucky, ticket)
 		}
 	}
 
