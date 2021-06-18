@@ -9,6 +9,7 @@
   * [变量常量与值](./zh-cn/base/var_value.md)
   * [变量作用域](./zh-cn/base/scope.md)
   * [运算符](./zh-cn/base/operate.md)
+  * [作业](./day1/README.md)
 * Day2
   * [MODULES工程](./zh-cn/base/modules.md)
   * [格式化输出](./zh-cn/base/fmt_out.md)
@@ -17,6 +18,7 @@
   * [循环语句](./zh-cn/base/for.md)
   * [数据类型转换](./zh-cn/base/strconv.md)
   * [Go语言指针](./zh-cn/base/pointer.md)
+  * [作业](./day2/README.md)
 * Day3
   * [Go语言函数](./zh-cn/base/func.md)
   * [defer与异常](./zh-cn/base/error.md)
@@ -40,7 +42,5 @@
   * [文件读写](./zh-cn/base/string.md)
   * [包与工程](./zh-cn/base/pkg.md)
   * [单元测试和基准测试](./zh-cn/base/func.md)
-  
-* [课程作业]
-  * [Day1](./day1/README.md)
-  * [Day2](./day2/README.md)
+
+
