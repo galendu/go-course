@@ -235,14 +235,4 @@ go1 并不保证unsafe的兼容, 我们应该知晓当前的非类型安全机�
 
 
 
-## 作业
 
-通过内存地址访问Tag的值
-```go
-type Book struct {
-	Title  string
-	Author string
-	Page   uint
-	Tag    []string
-}
-```

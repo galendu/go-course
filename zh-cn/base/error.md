@@ -1,4 +1,4 @@
-# defer与错误处理
+# defer与异常
 
 ## defer
 
@@ -74,4 +74,73 @@ fmt.Println("func end: ", x)
 
 defer有什么用呢？一般用来做善后操作，例如清理垃圾、释放资源，无论是否报错都执行defer对象。另一方面，defer可以让这些善后操作的语句和开始语句放在一起，无论在可读性上还是安全性上都很有改善，毕竟写完开始语句就可以直接写defer语句，永远也不会忘记关闭、善后等操作
 
-## 错误处理: panic和recover
+
+## 异常处理: panic
+
+panic()用于产生错误信息并终止当前的goroutine，一般将其看作是退出panic()所在函数以及退出调用panic()所在函数的函数
+
+```go
+func main) {
+	fn()
+}
+
+func fn() {
+	fmt.Println("start fn")
+	panic("pannic in fn")
+	fmt.Println("end fn")
+}
+
+// panic: pannic in fn
+```
+
+大部分场景下 panic都不是我们可以预判的, 比如下面
+```go
+var a *int
+fmt.Println(*a) 
+// panic: runtime error: invalid memory address or nil pointer dereference
+// [signal 0xc0000005 code=0x0 addr=0x0 pc=0x4675e6]
+```
+
+由于panic会直接导致程序退出, 一般都不是我们期望的，比如:
+```go
+func main() {
+	var x, y *int
+	sum(x, y)
+}
+
+func sum(x, y *int) int {
+	return *x + *y
+}
+```
+
+如果不想panic直接退出程序，我们就需要捕获panic, Go语言内置的recover函数就是干这个的
+
+## 异常捕获: recover
+
+recover()用于捕捉panic()错误，并返回这个错误信息。但注意，即使recover()捕获到了panic()，但调用含有panic()函数的函数也会退出
+
+比如, 如果我们放前面，由于在这个位置并未panic, 捕获为nil
+```go
+var x, y *int
+fmt.Println(recover())
+sum(x, y)
+```
+
+如果 我们放后面，则由于panic提前退出，根本执行不到我们的捕获代码
+```go
+var x, y *int
+sum(x, y)
+fmt.Println(recover())
+```
+
+而且我们写程序的时候 也完全预估不了哪里会panic, 所以正确的用法是, 函数调用后 再尝试捕获， 这时候我们就需要使用defer
+```go
+func main() {
+	defer func() {
+		fmt.Println(recover())
+	}()
+
+	var x, y *int
+	sum(x, y)
+}
+```

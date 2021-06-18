@@ -251,6 +251,7 @@ func main() {
 }
 ```
 
+
 ## 内置函数
 
 在 buildin/buildin.go内定义了Go所有支持内置函数：make、len、cap、new、append、copy、close、delete、complex、real、imag、panic、recover
@@ -399,8 +400,3 @@ func fib(n int) int {
    return fib(n-1) + fib(n-2)
 }
 ```
-
-
-## 作业
-
-递归一个目录：它的递归基点是文件，只要是文件就返回，只要是目录就进入
