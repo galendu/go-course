@@ -137,7 +137,7 @@ s = append(s,50)
 
 ## 通过切片创建新的切片
 
-切片之所以被称为切片，是因为创建一个新的切片，也就是把底层数组切出一部分。通过切片创建新切片的语法如下, 详情请参考: ![切片的语法](https://golang.org/ref/spec#Slice_expressions)
+切片之所以被称为切片，是因为创建一个新的切片，也就是把底层数组切出一部分。通过切片创建新切片的语法如下, 详情请参考: [切片的语法](https://golang.org/ref/spec#Slice_expressions)
 
 ```go
 slice[low : high]
@@ -257,5 +257,5 @@ fmt.Println(s1, s2)
 
 ## 参考
 
-![slices-intro](https://blog.golang.org/slices-intro)
+[slices-intro](https://blog.golang.org/slices-intro)
 
