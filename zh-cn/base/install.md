@@ -130,9 +130,13 @@ go install -v github.com/uudashr/gopkgs/v2/cmd/gopkgs@latest
 
 ![gitlens](../../image/vscode_gitlens.png)
 
++ AI 代码生成: Tabnine AI Code 
+
+
 ### 配置自动保存
 ![auto_save](../../image/vscode_auto_save.jpg)
 
 如果要配置自动保存的时间, 打开vscode的设置按钮, 搜索auto save
 
 ![auto_save_config](../../image/auto_save_config.png)
+

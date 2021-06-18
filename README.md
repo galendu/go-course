@@ -25,7 +25,7 @@
   * [日期与时间](./zh-cn/base/time.md)
   * [非类型安全指针](./zh-cn/base/unsafe_pointer.md)
   * [Go语言切片](./zh-cn/base/slice.md)
-  * [字符串处理](./zh-cn/base/string.md)
+  * [字符串](./zh-cn/base/string.md)
   * [Go语言Map](./zh-cn/base/map.md)
   * [文件读写](./zh-cn/base/string.md)
 * Day4
