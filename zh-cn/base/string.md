@@ -67,3 +67,21 @@ fmt.Println(strings.EqualFold("ab", "AB"))
 ```
 
 ## 是否存在某个字符或子串
+
+```go
+// 子串 substr 在 s 中，返回 true
+func Contains(s, substr string) bool
+// chars 中任何一个 Unicode 代码点在 s 中，返回 true
+func ContainsAny(s, chars string) bool
+// Unicode 代码点 r 在 s 中，返回 true
+func ContainsRune(s string, r rune) bool
+```
+
+
+## 子串出现次数
+
+在 Go 中，查找子串出现次数即字符串模式匹配, Count 函数的签名如下
+
+```go
+func Count(s, sep string) int
+```

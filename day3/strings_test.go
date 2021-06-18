@@ -27,3 +27,13 @@ func TestString4(t *testing.T) {
 	fmt.Println(strings.Compare("ab", "cd"))
 	fmt.Println(strings.EqualFold("ab", "AB"))
 }
+
+func TestString5(t *testing.T) {
+	fmt.Println(strings.Count("cheese", "e"))
+	fmt.Println(len("谷歌中国"), []byte("谷歌中国"))
+	fmt.Println(strings.Count("谷歌中国", ""))
+
+	for _, v := range []byte("谷歌中国") {
+		fmt.Printf("%b\n", v)
+	}
+}
