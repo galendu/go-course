@@ -7,6 +7,25 @@ import (
 	"testing"
 )
 
+// func len(str string) int {
+// 	return 100
+// }
+
+func TestAddFunc(t *testing.T) {
+	x, y := 3, 4
+	fmt.Println(&x, &y)
+	swap(&x, &y) // &y  _ :=  func_name(x,y)
+	fmt.Println(x, y)
+
+	fmt.Println(len("xxxxx"))
+}
+
+// 3, 4 // 0xfffff ->   value
+func swap(x, y *int) {
+	*x, *y = *y, *x // *m
+	return
+}
+
 func max(a, b int, args ...int) int {
 	// 输出args中保存的参数
 	for index, value := range args {
@@ -124,4 +143,33 @@ func TestFuncAsArg(t *testing.T) {
 		return x + y
 	})
 	fmt.Println(ret)
+}
+
+func TestFun5(t *testing.T) {
+	add := func(x, y int) int {
+		return x + y
+	}
+
+	fmt.Printf("%T\n", add) // func(int, int) int
+	add(1, 3)
+
+	m := func(x, y int) int {
+		return x + y
+	}(1, 2)
+	fmt.Println(m)
+}
+
+func TestTT(t *testing.T) {
+	fn := TT()
+	fmt.Println(fn())
+}
+
+func TT() func() int {
+	x, y := 10, 20 // GC  a -> x,  b -> y  ref 1
+
+	add := func() int {
+		return x + y
+	}
+
+	return add // 10
 }

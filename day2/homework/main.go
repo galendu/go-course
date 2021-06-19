@@ -9,7 +9,7 @@ import (
 func main() {
 	Start()
 	// BinToChar()
-	// fmt.Println(HumanBytesLoaded(1024 * 1024 * 1024))
+	// fmt.Println(HumanBytesLoaded(1225))
 }
 
 /*
@@ -41,15 +41,15 @@ func BinToChar() {
 }
 
 const (
-	bu = 1 << 10
-	kb = 1 << 20
-	mb = 1 << 30
+	bu = 1 << 10 // 1024
+	kb = 1 << 20 // 1024 * 1024
+	mb = 1 << 30 // 1024 * 1024 * 1024
 	gb = 1 << 40
 	tb = 1 << 50
 	eb = 1 << 60
 )
 
-// HumanBytesLoaded 单位转换
+// HumanBytesLoaded 单位转换  1023 1023Byte  - 1024  1KB
 func HumanBytesLoaded(bytesLength int64) string {
 	if bytesLength < bu {
 		return fmt.Sprintf("%dB", bytesLength)
@@ -83,7 +83,7 @@ func Start() {
 			return
 		}
 
-		fmt.Println("恭喜你回答正确,即将进入抽奖环节....")
+		fmt.Println("恭喜你回答正确, 即将进入抽奖环节....")
 		if duang() {
 			return
 		}
@@ -100,10 +100,10 @@ var (
 )
 
 func duang() bool {
-	count := rand.Intn(10) + 1
+	count := rand.Intn(10) + 1 // 1 ~ 10
 	fmt.Printf("你当前获取[%d]次抽奖机会\n", count)
 	for i := 1; i <= count; i++ {
-		ticket := rand.Intn(rollCount)
+		ticket := rand.Intn(rollCount) // box 1 ~ 1000  choice 0ne
 		totalCount++
 		if ticket == lucky {
 			fmt.Printf("当前是你第%d次抽奖: 抽奖结果 中奖, 幸运数: %d\n, 你当前号码: %d", totalCount, lucky, ticket)

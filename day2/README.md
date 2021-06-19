@@ -42,5 +42,8 @@ func HumanBytesLoaded(bytesLength int64) string {
 当前是你第3次抽奖. 抽奖结果 未中奖
 ...
 ```
+1. 抽奖
+2. 
+
 
 [答案参考](./homework/main.go)

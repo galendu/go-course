@@ -43,3 +43,24 @@ func TestDefer4(t *testing.T) {
 	defer fmt.Println(4)
 	fmt.Println("end")
 }
+
+func TestDeferN(t *testing.T) {
+	testDefer()
+}
+
+func testDefer() {
+	fmt.Println("start")
+	defer fmt.Println("1") // d1
+	defer fmt.Println("2") // d2
+	defer fmt.Println("3") // d3
+	fmt.Println("end")
+}
+
+func TestDerfer11(t *testing.T) {
+	defer func() {
+		fmt.Println("in recover", recover())
+	}()
+
+	var a *int
+	fmt.Println(*a)
+}
