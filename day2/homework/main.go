@@ -108,9 +108,9 @@ func duang() bool {
 		if ticket == lucky {
 			fmt.Printf("当前是你第%d次抽奖: 抽奖结果 中奖, 幸运数: %d\n, 你当前号码: %d", totalCount, lucky, ticket)
 			return true
-		} else {
-			fmt.Printf("当前是你第%d次抽奖: 抽奖结果 未中奖, 幸运数: %d, 你当前号码: %d\n", totalCount, lucky, ticket)
 		}
+
+		fmt.Printf("当前是你第%d次抽奖: 抽奖结果 未中奖, 幸运数: %d, 你当前号码: %d\n", totalCount, lucky, ticket)
 	}
 
 	return false
