@@ -7,9 +7,7 @@ import (
 )
 
 func TestTime1(t *testing.T) {
-	now := time.Now()
-	fmt.Println(now)
-	fmt.Println(now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute(), now.Second())
+	fmt.Println(time.Now())
 }
 
 func TestTimeParse(t *testing.T) {

@@ -78,10 +78,16 @@ func TestFact(t *testing.T) {
 	fmt.Println(fact2(5))
 }
 
-// f(n)=f(n-1)+f(n-2)且f(2)=f(1)=1, 1 2 3 5	8 13
+// f(n)=f(n-1)+f(n-2)且f(2)=f(1)=1
+// 1 1 2 3 5 8 13
+// 1 2 3 4 5 6 7
+// n = 5;          fib(4)           +             fib(3)
+//         fib(3)    +    fib(2)    +    fib(2)   +    fib(1)
+//  fib(2) +  fib(1) +     1        +      1      +     1
+//   1    +    1     +     1        +      1      +     1
 func fib(n int) int {
 	// 退出点判断
-	if n == 1 || n == 2 {
+	if n <= 2 {
 		return 1
 	}
 	// 递归表达式

@@ -6,6 +6,17 @@ import (
 	"testing"
 )
 
+func TestMain(t *testing.T) {
+	payload := [4]int{1}
+	fmt.Printf("%p\n", &payload)
+	change(payload)
+}
+
+func change(payload [4]int) {
+	fmt.Printf("%p\n", &payload)
+	payload[0] = 10
+}
+
 func TestMaxint(t *testing.T) {
 	var a []int
 	a = append(a, 1)

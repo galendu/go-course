@@ -6,6 +6,22 @@ import (
 	"unsafe"
 )
 
+func TestSliceMain(t *testing.T) {
+	s1 := make([]int, 0, 4)
+	s1 = append(s1, 10, 20, 30, 40) // 10, 20, 30, 40
+	fmt.Println(s1, len(s1), cap(s1))
+
+	fmt.Println(sum1(s1))
+}
+
+func sum1(args []int) int {
+	sum := 0
+	for _, v := range args {
+		sum += v
+	}
+	return sum
+}
+
 func TestSlice1(t *testing.T) {
 	slice := []int{3: 100}
 	fmt.Println(slice, len(slice), cap(slice))
