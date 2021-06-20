@@ -92,3 +92,5 @@ func TestUnsafePointer4(t *testing.T) {
 	ty2 := (*int16)(unsafe.Pointer(uintptr(p) + N + M))
 	fmt.Println(*ty2) // 789
 }
+
+
