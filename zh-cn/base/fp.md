@@ -1,5 +1,7 @@
 # 函数式编程
 
+![](../../image/fp.png)
+
 函数式编程，是指忽略（通常是不允许）可变数据（以避免它处可改变的数据引发的边际效应），忽略程序执行状态（不允许隐式的、隐藏的、不可见的状态），通过函数作为入参，函数作为返回值的方式进行计算，通过不断的推进（迭代、递归）这种计算，从而从输入得到输出的编程范式
 
 虽然 functional 并不易于泛型复用，但在具体类型，又或者是通过 interface 抽象后的间接泛型模型中，它是改善程序结构、外观、内涵、质量的最佳手段。
@@ -7,8 +9,14 @@
 
 下面介绍几种关于使用函数式编程的编程模式
 
+## 算子
+
+![](../../image/functor.png)
+
 
 ## Map-Reduce
+
+![](../../image/map_filter_reduce.jpeg)
 
 这是解耦数据结构和算法最常见的方式
 
@@ -38,6 +46,36 @@ func MapStrToUpper(data []string, fn func(string) string) []string {
 		newData = append(newData, fn(v))
 	}
 
+	return newData
+}
+```
+
+
+### Filter
+
+模式:
+```
+item1 -- reduce func -->   x
+item2 -- reduce func -->   itme2
+item3 -- reduce func -->   x
+```
+
+```go
+func TestFilter(t *testing.T) {
+	list := []string{"abc", "def", "fqp", "abc"}
+	out := ReduceFilter(list, func(s string) bool {
+		return strings.Contains(s, "f")
+	})
+	fmt.Println(out)
+}
+
+func ReduceFilter(data []string, fn func(string) bool) []string {
+	newData := []string{}
+	for _, v := range data {
+		if fn(v) {
+			newData = append(newData, v)
+		}
+	}
 	return newData
 }
 ```
@@ -80,27 +118,6 @@ func ReduceSum(data []string, fn func(string) int) int {
 }
 ```
 
-reduce 还有一种比较常用的模式：过滤器
-```go
-func TestFilter(t *testing.T) {
-	list := []string{"abc", "def", "fqp", "abc"}
-	out := ReduceFilter(list, func(s string) bool {
-		return strings.Contains(s, "f")
-	})
-	fmt.Println(out)
-}
-
-func ReduceFilter(data []string, fn func(string) bool) []string {
-	newData := []string{}
-	for _, v := range data {
-		if fn(v) {
-			newData = append(newData, v)
-		}
-	}
-	return newData
-}
-```
-
 ### 应用
 
 比如我们有这样一个数据集合:
@@ -119,10 +136,12 @@ type Student struct {
 }
 ```
 
-
 ## 修饰器
 
-## 算子
+![](../../image/decorator.png)
+
+这种模式很容易的可以把一些函数装配到另外一些函数上，可以让你的代码更为的简单，也可以让一些“小功能型”的代码复用性更高，让代码中的函数可以像乐高玩具那样自由地拼装, 
+
 
 ## Functional Options
 

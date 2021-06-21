@@ -1,5 +1,7 @@
 # Go语言Map
 
+![](../../image/hmap_1.png)
+
 map 的设计也被称为 “The dictionary problem”，它的任务是设计一种数据结构用来维护一个集合的数据，并且可以同时对集合进行增删查改的操作
 
 Go里的map用于存放key/value对，在其它地方常称为hash、dictionary、关联数组，这几种称呼都是对同一种数据结构的不同称呼，它们都用于将key经过hash函数处理，然后映射到value，实现一一对应的关系
