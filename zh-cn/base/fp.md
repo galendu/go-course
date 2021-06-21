@@ -122,8 +122,6 @@ type Student struct {
 
 ## 修饰器
 
-## Pipeline
-
 ## 算子
 
 ## Functional Options
