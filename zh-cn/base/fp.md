@@ -9,6 +9,10 @@
 
 下面介绍几种关于使用函数式编程的编程模式
 
+## 算子
+
+![](../../image/functor.png)
+
 
 ## Map-Reduce
 
@@ -42,6 +46,36 @@ func MapStrToUpper(data []string, fn func(string) string) []string {
 		newData = append(newData, fn(v))
 	}
 
+	return newData
+}
+```
+
+
+### Filter
+
+模式:
+```
+item1 -- reduce func -->   x
+item2 -- reduce func -->   itme2
+item3 -- reduce func -->   x
+```
+
+```go
+func TestFilter(t *testing.T) {
+	list := []string{"abc", "def", "fqp", "abc"}
+	out := ReduceFilter(list, func(s string) bool {
+		return strings.Contains(s, "f")
+	})
+	fmt.Println(out)
+}
+
+func ReduceFilter(data []string, fn func(string) bool) []string {
+	newData := []string{}
+	for _, v := range data {
+		if fn(v) {
+			newData = append(newData, v)
+		}
+	}
 	return newData
 }
 ```
@@ -84,27 +118,6 @@ func ReduceSum(data []string, fn func(string) int) int {
 }
 ```
 
-reduce 还有一种比较常用的模式：过滤器
-```go
-func TestFilter(t *testing.T) {
-	list := []string{"abc", "def", "fqp", "abc"}
-	out := ReduceFilter(list, func(s string) bool {
-		return strings.Contains(s, "f")
-	})
-	fmt.Println(out)
-}
-
-func ReduceFilter(data []string, fn func(string) bool) []string {
-	newData := []string{}
-	for _, v := range data {
-		if fn(v) {
-			newData = append(newData, v)
-		}
-	}
-	return newData
-}
-```
-
 ### 应用
 
 比如我们有这样一个数据集合:
@@ -123,15 +136,12 @@ type Student struct {
 }
 ```
 
-
 ## 修饰器
 
 ![](../../image/decorator.png)
 
+这种模式很容易的可以把一些函数装配到另外一些函数上，可以让你的代码更为的简单，也可以让一些“小功能型”的代码复用性更高，让代码中的函数可以像乐高玩具那样自由地拼装, 
 
-## 算子
-
-![](../../image/functor.png)
 
 ## Functional Options
 
