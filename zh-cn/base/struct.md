@@ -1,6 +1,6 @@
 # Go语言结构体
 
-![](../../image/struct_title.png)
+![struct_summary](../../image/struct_summary.png)
 
 我们前面介绍的数组 只能保存同一种类型的数据, 当我们需要记录多种不同类型的数据时，我们该怎么办?
 
