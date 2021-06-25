@@ -97,3 +97,8 @@ func TestCopy1(t *testing.T) {
 	fmt.Println(num)
 	fmt.Println(s1, s2)
 }
+
+func TestSliceNil(t *testing.T) {
+	s := make([]int, 0)
+	s[0] = 1
+}

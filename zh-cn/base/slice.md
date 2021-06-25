@@ -1,5 +1,7 @@
 # Go语言切片
 
+![](../../image/go-slice.png)
+
 Go中的slice依赖于数组，它的底层就是数组，所以数组具有的优点, slice都有。 且slice支持可以通过append向slice中追加元素，长度不够时会动态扩展，通过再次slice切片，可以得到得到更小的slice结构，可以迭代、遍历等
 
 ```go
