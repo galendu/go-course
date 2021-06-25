@@ -3,6 +3,7 @@ package day3
 import (
 	"fmt"
 	"testing"
+	"unsafe"
 )
 
 type Person struct {
@@ -123,4 +124,23 @@ func FucnArgsForStructP(p *Person) {
 
 func FucnArgsForStruct(p Person) {
 	p.Name = "func for struct"
+}
+
+type A struct {
+	a bool
+	b int32
+	c string
+	d string
+}
+
+type B struct {
+	b int32
+	c string
+	d string
+	a bool
+}
+
+func TestStructSize(t *testing.T) {
+	fmt.Println(unsafe.Sizeof(A{}))
+	fmt.Println(unsafe.Sizeof(B{}))
 }

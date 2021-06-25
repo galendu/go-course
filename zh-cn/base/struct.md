@@ -320,3 +320,33 @@ b.Author.Name = "xxx"
 
 
 2. 深拷贝
+
+
+## 结构体字段的内存对齐
+
+
+```go
+type A struct {
+	a bool
+	b int32
+	c string
+	d string
+}
+
+type B struct {
+	b int32
+	c string
+	d string
+	a bool
+}
+
+func TestStructSize(t *testing.T) {
+	fmt.Println(unsafe.Sizeof(A{}))  // 多少
+	fmt.Println(unsafe.Sizeof(B{}))  // 多少
+}
+```
+
+
+![struct_size_01](../../image/struct_size_01.png)
+
+![struct_size_02](../../image/struct_size_02.png)
