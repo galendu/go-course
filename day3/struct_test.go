@@ -67,7 +67,6 @@ func TestMain(t *testing.T) {
 	*b2.Titile = *b1.Titile
 
 	b2.Author.Name = "new author"
-
 	fmt.Println(b1.Author.Name, b2.Author.Name)
 
 }
@@ -108,4 +107,20 @@ func TestStructP2(t *testing.T) {
 func TestStructP3(t *testing.T) {
 	person := new(Person)
 	fmt.Printf("%p", person)
+}
+
+func TestFunForArg(t *testing.T) {
+	p := Person{Name: "person"}
+	FucnArgsForStruct(p)
+	fmt.Println(p.Name)
+	FucnArgsForStructP(&p)
+	fmt.Println(p.Name)
+}
+
+func FucnArgsForStructP(p *Person) {
+	p.Name = "func for struct"
+}
+
+func FucnArgsForStruct(p Person) {
+	p.Name = "func for struct"
 }

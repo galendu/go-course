@@ -135,6 +135,20 @@ p1 := (*int64)(unsafe.Pointer(p1Addr))
 
 unsafe标准库包的文档中列出了[六种非类型安全指针的使用模式](https://golang.google.cn/pkg/unsafe/#Pointer)
 
+### 获取地址
+
+模式：Pointer --> uintptr 
+
+此模式不是很有用。一般我们将最终的转换结果uintptr值输出到日志中用来调试，但是有很多其它安全并且简洁的途径也可以实现此目的
+
+```go
+type T struct{ a int }
+var t1 T
+fmt.Printf("%p\n", &t1)                          // 0xc0000a0200
+println(&t1)                                     // 0xc0000a0200
+fmt.Printf("%x\n", uintptr(unsafe.Pointer(&t1))) // c0000a0200
+```
+
 ### 指针类型转换
 
 将类型\*T1的一个值转换为非类型安全指针值，然后将此非类型安全指针值转换为类型\*T2
@@ -154,20 +168,6 @@ func bInt8(n int8) string {
 	fmt.Println(*(*uint8)(unsafe.Pointer(&n))) // 1111 1111
 	return strconv.FormatUint(uint64(*(*uint8)(unsafe.Pointer(&n))), 2)
 }
-```
-
-### 获取地址
-
-模式：Pointer --> uintptr 
-
-此模式不是很有用。一般我们将最终的转换结果uintptr值输出到日志中用来调试，但是有很多其它安全并且简洁的途径也可以实现此目的
-
-```go
-type T struct{ a int }
-var t1 T
-fmt.Printf("%p\n", &t1)                          // 0xc0000a0200
-println(&t1)                                     // 0xc0000a0200
-fmt.Printf("%x\n", uintptr(unsafe.Pointer(&t1))) // c0000a0200
 ```
 
 ### 直接操作内存地址
