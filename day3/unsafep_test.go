@@ -14,8 +14,18 @@ func TestUnsafeMain(t *testing.T) {
 	fmt.Printf("%d\n", s1) // a + 8B  a[1]
 
 	// 1. *[3]int64 --> unsafe.Pointer ---> uintptr(uint64)
-	p1 := &a
+	p1 := &a // *p1
 	fmt.Println(*(*int64)(unsafe.Pointer(uintptr(unsafe.Pointer(p1)) + unsafe.Sizeof(a[0]))))
+	// fmt.Println() 标准输入
+	// int int32 float32  *int *int32 *float64    -->   T -->
+	var x int64 = 10
+	y := int8(x)                   // int64 ---> int8
+	x = int64(y)                   // int8  ---> int64
+	x1 := &x                       // x1 *int64
+	unsafeP1 := unsafe.Pointer(x1) // *int64 ---> Pointer
+	fmt.Println(unsafeP1)
+	intPtr1 := (*int64)(unsafeP1) // Pointer ---> *int64
+	fmt.Println(intPtr1)
 }
 
 func TestSafePointer1(t *testing.T) {
@@ -92,5 +102,3 @@ func TestUnsafePointer4(t *testing.T) {
 	ty2 := (*int16)(unsafe.Pointer(uintptr(p) + N + M))
 	fmt.Println(*ty2) // 789
 }
-
-

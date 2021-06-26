@@ -15,7 +15,19 @@ type Book struct {
 }
 
 func TestHomeWork1(t *testing.T) {
+	// 空结构体 不占用内存空间, 不申请内存
+	fmt.Println(unsafe.Sizeof(struct{}{}))
+
+	// 取得结构体实例的 内存地址
 	b := Book{Tag: []string{"abc", "def", "hjk"}}
+	fmt.Println(&b)
+	p1 := &b
+
+	// offset 怎么计算
+	fmt.Println(unsafe.Offsetof(p1.Tag)) // 40 <成员变量的指针> ----> 访问成员变量的值
+
+	// 结构体实例地址, +  成员变量的偏移量 =  成员变量的内存地址
+	// uintptr --->  Pointer ----> (*[]string) ---> *()
 
 	p := (*[]string)(unsafe.Pointer(uintptr(unsafe.Pointer(&b)) + unsafe.Offsetof(b.Tag)))
 	fmt.Println(*p)
@@ -35,19 +47,27 @@ func TestHomeWork1(t *testing.T) {
 	fmt.Printf("%p -> %v\n", ptr2, *ptr2)
 }
 
+// Student 保存的学员信息
+// Student 名称(Name) 学号(Number) 科目(Subjects) 成绩(Scores)
 type Student struct {
 	Name     string   // 名称
-	Number   uint16   // 学号
+	Number   uint16   // 学号  2 ^ 16
 	Subjects []string // 数学  语文  英语
 	Score    []int    //  88   99   77
 }
 
+// Class 保存的是班级的信息
 type Class struct {
 	Name     string     // 班级名称
 	Number   uint8      // 班级编号
-	Students []*Student // 班级学员
+	Subjects []string   // 数学  语文  英语
+	Students []*Student // 班级学员, []int --> [10, 20, 30]  []*int ---> [0xaabb, 0xccc, oxddd]
 }
 
+//
+
 func (c *Class) AvgScore() []int {
+	// slice   for range
+	// 获取每一个学员的第一个成绩 就是 数据成绩
 	return nil
 }
