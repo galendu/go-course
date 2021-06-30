@@ -29,6 +29,8 @@
   * [Go语言切片](./zh-cn/base/slice.md)
   * [作业](./day3/README.md)
 * Day4
+  * [重点知识回顾与答疑](./day4/README.md)
+* Day5
   * [字符串](./zh-cn/base/string.md)
   * [Go语言Map](./zh-cn/base/map.md)
   * [函数式编程](./zh-cn/base/fp.md)
@@ -39,7 +41,7 @@
   * [面向接口](./zh-cn/base/oop.md)
   * [IO操作](./zh-cn/base/oop.md)
   * [作业](./day4/README.md)
-* Day5
+* Day6
   * [反射与AST](./zh-cn/base/oop.md)
   * [文件读写](./zh-cn/base/string.md)
   * [包与工程](./zh-cn/base/pkg.md)

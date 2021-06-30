@@ -13,6 +13,30 @@
 
 ![](../../image/functor.png)
 
+算子是一个函数空间到函数空间上的映射O：X→X, 简单说来就是进行某种“操作“，动作。与之对应的，就是被操作的对象，称之为操作数, 业务中 往往将可变部分抽象成算子，方便业务逻辑的替换
+
+1.(x) -> x + 3
+
+```go
+func main() {
+	op := []int{1, 2, 3, 4, 5}
+	target := AddThree(op, func(x int) int {
+		return x + 3
+	})
+	fmt.Println(target)
+}
+
+type Functor func(x int) int
+
+func AddThree(operand []int, fn Functor) (target []int) {
+	for _, v := range operand {
+		target = append(target, fn(v))
+	}
+	return
+}
+```
+
+### 应用案例: 
 
 ## Map-Reduce
 
@@ -80,7 +104,6 @@ func ReduceFilter(data []string, fn func(string) bool) []string {
 }
 ```
 
-
 ### Reduce
 
 模式:
@@ -118,7 +141,9 @@ func ReduceSum(data []string, fn func(string) int) int {
 }
 ```
 
-### 应用
+### 应用案例: 班级统计
+
+通过上面的一些示例，你可能有一些明白，Map/Reduce/Filter只是一种控制逻辑，真正的业务逻辑是在传给他们的数据和那个函数来定义的。是的，这也是一种将数据和控制分离经典方式
 
 比如我们有这样一个数据集合:
 ```go
@@ -136,12 +161,95 @@ type Student struct {
 }
 ```
 
+1.统计有多少学生数学成绩大于80
+
+```go
+```
+
+2.列出数学成绩不及格的同学
+
+```go
+```
+
+2.统计所有同学的数学平均分
+
+```go
+```
+
 ## 修饰器
 
 ![](../../image/decorator.png)
 
-这种模式很容易的可以把一些函数装配到另外一些函数上，可以让你的代码更为的简单，也可以让一些“小功能型”的代码复用性更高，让代码中的函数可以像乐高玩具那样自由地拼装, 
+这种模式很容易的可以把一些函数装配到另外一些函数上，可以让你的代码更为的简单，也可以让一些“小功能型”的代码复用性更高，让代码中的函数可以像乐高玩具那样自由地拼装,
 
+比如我们有Hello这样一个函数
+```go
+func main() {
+	Hello("boy")
+}
+
+func Hello(s string) {
+	fmt.Printf("hello, %s\n", s)
+}
+```
+
+需求1: 打印函数执行时间
+
+
+
+### 应用案例: HTTP中间件
+
+```go
+package main
+
+import (
+	"fmt"
+	"net/http"
+)
+
+func main() {
+	http.ListenAndServe(":8848", http.HandlerFunc(hello))
+}
+
+func hello(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "hello, http: %s", r.URL.Path)
+}
+```
+
+需求1: 打印AccessLog
+
+```go
+```
+
+需求2: 为每个请求设置RequestID
+
+```go
+```
+
+需求3: 添加BasicAuth
+
+```go
+```
+
+### 优化: 多个修饰器的Pipeline
+
+在使用上，需要对函数一层层的套起来，看上去好像不是很好看，如果需要 decorator 比较多的话，代码会比较难看了。嗯，我们可以重构一下
+
+重构时，我们需要先写一个工具函数——用来遍历并调用各个 decorator
+
+```go
+type HttpHandlerDecorator func(http.HandlerFunc) http.HandlerFunc
+
+func Handler(h http.HandlerFunc, decors ...HttpHandlerDecorator) http.HandlerFunc {
+	// A, B, C, D, E
+	// E(D(C(B(A))))
+    for i := range decors {
+        d := decors[len(decors)-1-i] // iterate in reverse
+        h = d(h)
+    }
+    return h
+}
+```
 
 ## Functional Options
 
