@@ -36,7 +36,12 @@ func AddThree(operand []int, fn Functor) (target []int) {
 }
 ```
 
-### 应用案例: 
+### 应用案例: 简单表达式解析
+
+```go
+定义运算符: +, -, *, / 对应函数动作
+```
+
 
 ## Map-Reduce
 
@@ -253,4 +258,99 @@ func Handler(h http.HandlerFunc, decors ...HttpHandlerDecorator) http.HandlerFun
 
 ## Functional Options
 
+![](../../image/decorator.png)
 
+问题: 比如我们写一个程序 需要有一个配置
+
+```go
+type Server struct {
+    Addr string
+    Port int
+    conf *Config
+}
+
+type Config struct {
+    Protocol string
+    Timeout  time.Duration
+    Maxconns int
+}
+```
+
+
+### 基础版本: 构造函数
+
+```go
+func NewServer(addr string, port int, conf *Config) {}
+```
+
+1.Server结构体新增字段怎么办?
+
+2.conf为空怎么版?
+
+
+### 进阶版本: 链式调用(参考)
+
+```go
+sb := ServerBuilder{}
+server, err := sb.Create("127.0.0.1", 8080).
+  WithProtocol("udp").
+  WithMaxConn(1024).
+  WithTimeOut(30*time.Second).
+  Build()
+```
+
+1.Builder对象
+
+```go
+//使用一个builder类来做包装
+type ServerBuilder struct {
+  Server
+}
+```
+
+2.构造函数Create
+
+```go
+```
+
+
+3.调用链实现
+
+```go
+```
+
+总结: 不需要额外的Config类，使用链式的函数调用的方式来构造一个对象, 但是写法上有点繁琐, 需要再封装一个Builder类, 
+如果我们想省掉这个包装的结构体，那么就轮到我们的Functional Options上场了
+
+### 最优版本: Functional Options
+
+核心思想, 我们可不可使用一个函数来包裹我们的参数, 在使用的时候才赋值, 比如:
+
+```go
+func NewServer(addr string, port int, options ...func(*Server)) (*Server, error) {}
+```
+
+
+如何使用func(*Server)这个函数来包裹我们的参数:
+```go
+func WithProtocol(s string) func(s *Server) {}
+```
+
+
+如何使用改还是来设置Server: apply
+```go
+server := &Server{Addr: addr, Port: port}
+option(server)
+```
+
+
+最终完成的NewServer就有了:
+
+```go
+```
+
+
+总结:
+
++ 不需要传人config参数, 函数签名优雅(缺省情况传nil很不优雅)
++ 不需要构建一个builder类来辅助
