@@ -258,7 +258,7 @@ func Handler(h http.HandlerFunc, decors ...HttpHandlerDecorator) http.HandlerFun
 
 ## Functional Options
 
-![](../../image/decorator.png)
+![](../../image/functional_options.png)
 
 问题: 比如我们写一个程序 需要有一个配置
 
