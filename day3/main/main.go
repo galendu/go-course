@@ -11,7 +11,6 @@ var (
 )
 
 func main() {
-	c = 1 + 2
 	a := "hello"           // var a string; a = "hello"  "1" 10, 100.1
 	fmt.Printf("%p\n", &a) // &运算符  8Byte uint64 内存地址
 	fmt.Println(a)
