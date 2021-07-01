@@ -65,7 +65,6 @@ type Class struct {
 }
 
 //
-
 func (c *Class) AvgScore() []int {
 	// slice   for range
 	// 获取每一个学员的第一个成绩 就是 数据成绩
