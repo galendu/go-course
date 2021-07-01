@@ -33,15 +33,15 @@
 * Day5
   * [字符串](./zh-cn/base/string.md)
   * [Go语言Map](./zh-cn/base/map.md)
-  * [函数式编程](./zh-cn/base/fp.md)
-  * [面向对象](./zh-cn/base/oop.md)
   * [Go语言接口](./zh-cn/base/oop.md)
   * [错误处理](./zh-cn/base/oop.md)
   * [空接口与类型断言](./zh-cn/base/oop.md)
+  * [函数式编程](./zh-cn/base/fp.md)
+  * [面向对象](./zh-cn/base/oop.md)
   * [面向接口](./zh-cn/base/oop.md)
-  * [IO操作](./zh-cn/base/oop.md)
   * [作业](./day4/README.md)
 * Day6
+  * [IO操作](./zh-cn/base/oop.md)
   * [反射与AST](./zh-cn/base/oop.md)
   * [文件读写](./zh-cn/base/string.md)
   * [包与工程](./zh-cn/base/pkg.md)

@@ -66,6 +66,7 @@ g.GradeAvg()
 ## 类和实例
 
 面向对象的设计思想是从自然界中来的，因为在自然界中, 每一个实体都是对象(Object/Instance), 而这种实体的抽象类别就是类(Class), 比如车就是一个类, 而从你面前路过的福特汽车就是一个实例(Object)
+
 ![](../../image/class-object.png)
 
 面向对象最重要的概念:
@@ -116,17 +117,20 @@ func (s *Student) PrintName() {}
 
 这样一来，我们从外部看Student类，就只需要知道，创建实例需要给出name和score，而如何打印，都是在Student类的内部定义的，这些数据和逻辑被“封装”起来了，调用很容易，但却不用知道内部实现的细节
 
+![](../../image/oop-fz.png)
+
 ## 继承
 
 在OOP程序设计中，当我们定义一个class的时候，可以从某个现有的class继承，新的class称为子类（Subclass），而被继承的class称为基类、父类或超类（Base class、Super class)
 
-Go语言如何实现继承: 结构体嵌套
+![](../../image/oop-jc.png)
 
-
+Go语言如何实现继承: 结构体匿名嵌套
+```go
+```
 
 
 ## 多态
-
 
 
 
