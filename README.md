@@ -33,7 +33,7 @@
 * Day5
   * [字符串](./zh-cn/base/string.md)
   * [Go语言Map](./zh-cn/base/map.md)
-  * [Go语言接口](./zh-cn/base/oop.md)
+  * [Go语言接口](./zh-cn/base/interface.md)
   * [错误处理](./zh-cn/base/oop.md)
   * [空接口与类型断言](./zh-cn/base/oop.md)
   * [函数式编程](./zh-cn/base/fp.md)
