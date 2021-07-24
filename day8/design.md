@@ -47,7 +47,7 @@ aliyun  mini  qclouds
 
 ### 阿里云插件开发(初识TDD)
 
-1. 编写插件骨架
+#### 编写插件骨架
 
 迁移我们之前开发阿里云的上传函数为一个插件实现: provider/aliyun/store.go
 
@@ -68,7 +68,7 @@ func (p *aliyun) UploadFile(bucketName, objectKey, localFilePath string) error {
 这样我们就实现了一个阿里云的uploader实例, 但是这个实例能不能正常工作喃? 对我们需要写测试用例,
 也就是我们常说的DDD的开发流程
 
-2. 为插件编写测试用例
+#### 为插件编写测试用例
 
 编写实例的测试用例: provider/aliyun/store_test.go
 ```go
@@ -100,7 +100,7 @@ FAIL
 FAIL	gitee.com/infraboard/go-course/day8/cloudstation/store/provider/aliyun	0.045s
 ```
 
-3. 完善插件逻辑, 直到测试用例通过
+#### 完善插件逻辑, 直到测试用例通过
 
 3.1 迁移主体函数
 
@@ -263,4 +263,268 @@ func TestUploadFile(t *testing.T) {
 }
 ```
 
+3.3 测试用例的debug调试
+
+如果出现难以理解的调试结果， 你就需要debug了, vscode 测试用例的debug很简单, 总共2步就可以开启debug调试
+
++ 添加断点, 断点处必须有代码
++ 点击测试用例上方的 debug test文字
+
+这是解决疑难杂症的利器，一定要会
+
 到此 我们的aliyun的uploader插件就开发完成, 并且有一个基本的测试用例保证其质量
+
+## 客户端用户接口CLI
+
+我们要把程序 交付给用户使用，需要为其提供交互接口, 交互的方式有很多,  API, CLI, GUI, 现在我们为CLI交付
+
+简单版本中，我们直接使用flag, 简单场景下已经足够我们使用了, 如果我们有很多命令，flag
+用起来就由很多工作了, 比如docker的cli
+```
+$ docker 
+
+Usage:  docker [OPTIONS] COMMAND
+
+A self-sufficient runtime for containers
+
+Management Commands:
+  app*        Docker App (Docker Inc., v0.9.1-beta3)
+  builder     Manage builds
+  buildx*     Build with BuildKit (Docker Inc., v0.5.1-docker)
+  compose*    Docker Compose (Docker Inc., 2.0.0-beta.1)
+  config      Manage Docker configs
+  container   Manage containers
+  context     Manage contexts
+  image       Manage images
+  manifest    Manage Docker image manifests and manifest lists
+  network     Manage networks
+  node        Manage Swarm nodes
+  plugin      Manage plugins
+  scan*       Docker Scan (Docker Inc., v0.8.0)
+  secret      Manage Docker secrets
+  service     Manage services
+  stack       Manage Docker stacks
+  swarm       Manage Swarm
+  system      Manage Docker
+  trust       Manage trust on Docker images
+  volume      Manage volumes
+```
+
+重构版 我们使用 github.com/spf13/cobra 作为我们的cli框架
+
+### 添加root命令, 打印使用说明
+
+```go
+package cmd
+
+import (
+	"errors"
+	"fmt"
+	"os"
+
+	"github.com/spf13/cobra"
+)
+
+var (
+	vers         bool
+	ossProvider  string
+	aliAccessID  string
+	aliAccessKey string
+)
+
+// RootCmd represents the base command when called without any subcommands
+var RootCmd = &cobra.Command{
+	Use:   "cloud-station-cli",
+	Short: "cloud-station-cli 文件中转服务",
+	Long:  `cloud-station-cli ...`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		if vers {
+			fmt.Println("0.0.1")
+			return nil
+		}
+		return errors.New("no flags find")
+	},
+}
+
+// Execute adds all child commands to the root command sets flags appropriately.
+// This is called by main.main(). It only needs to happen once to the rootCmd.
+func Execute() {
+	if err := RootCmd.Execute(); err != nil {
+		fmt.Println(err)
+		os.Exit(-1)
+	}
+}
+
+func init() {
+	RootCmd.PersistentFlags().StringVarP(&ossProvider, "oss_provider", "p", "aliyun", "the oss provider [aliyun/qcloud]")
+	RootCmd.PersistentFlags().StringVarP(&aliAccessID, "ali_access_id", "i", "", "the ali oss access id")
+	RootCmd.PersistentFlags().StringVarP(&aliAccessKey, "ali_access_key", "k", "", "the ali oss access key")
+	RootCmd.PersistentFlags().BoolVarP(&vers, "version", "v", false, "the cloud-station-cli version")
+}
+```
+
+验证下效果
+```
+$ go run cmd/client/main.go 
+Error: no flags find
+Usage:
+  cloud-station-cli [flags]
+
+Flags:
+  -i, --ali_access_id string    the ali oss access id
+  -k, --ali_access_key string   the ali oss access key
+  -h, --help                    help for cloud-station-cli
+  -p, --oss_provider string     the oss provider [aliyun/qcloud] (default "aliyun")
+  -v, --version                 the cloud-station-cli version
+
+no flags find
+exit status 4294967295
+```
+
+### 添加upload命令
+
+```go
+package cmd
+
+import (
+	"fmt"
+	"path"
+	"time"
+
+	"github.com/spf13/cobra"
+
+	"gitee.com/infraboard/go-course/day8/cloudstation/store"
+	"gitee.com/infraboard/go-course/day8/cloudstation/store/provider/aliyun"
+)
+
+const (
+	// BuckName todo
+	defaultBuckName = ""
+	defaultEndpoint = ""
+	defaultALIAK    = ""
+	defaultALISK    = ""
+)
+
+var (
+	buckName       string
+	uploadFilePath string
+	bucketEndpoint string
+)
+
+// uploadCmd represents the start command
+var uploadCmd = &cobra.Command{
+	Use:   "upload",
+	Short: "上传文件到中转站",
+	Long:  `上传文件到中转站`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		p, err := getProvider()
+		if err != nil {
+			return err
+		}
+		if uploadFilePath == "" {
+			return fmt.Errorf("upload file path is missing")
+		}
+		day := time.Now().Format("20060102")
+		fn := path.Base(uploadFilePath)
+		ok := fmt.Sprintf("%s/%s", day, fn)
+		err = p.UploadFile(buckName, ok, uploadFilePath)
+		if err != nil {
+			return err
+		}
+		return nil
+	},
+}
+
+func getProvider() (p store.Uploader, err error) {
+	switch ossProvider {
+	case "aliyun":
+		fmt.Printf("上传云商: 阿里云[%s]\n", defaultEndpoint)
+		if aliAccessID == "" {
+			aliAccessID = defaultALIAK
+		}
+		if aliAccessKey == "" {
+			aliAccessKey = defaultALISK
+		}
+		fmt.Printf("上传用户: %s\n", aliAccessID)
+		p, err = aliyun.NewUploader(bucketEndpoint, aliAccessID, aliAccessKey)
+		return
+	case "qcloud":
+		return nil, fmt.Errorf("not impl")
+	default:
+		return nil, fmt.Errorf("unknown oss privier options [aliyun/qcloud]")
+	}
+}
+
+func init() {
+	uploadCmd.PersistentFlags().StringVarP(&uploadFilePath, "file_path", "f", "", "upload file path")
+	uploadCmd.PersistentFlags().StringVarP(&buckName, "bucket_name", "b", defaultBuckName, "upload oss bucket name")
+	uploadCmd.PersistentFlags().StringVarP(&bucketEndpoint, "bucket_endpoint", "e", defaultEndpoint, "upload oss endpoint")
+	RootCmd.AddCommand(uploadCmd)
+}
+```
+
+我们看下当前cli
+```
+$ go run cmd/client/main.go upload -h
+上传文件到中转站
+
+Usage:
+  cloud-station-cli upload [flags]
+
+Flags:
+  -e, --bucket_endpoint string   upload oss endpoint
+  -b, --bucket_name string       upload oss bucket name
+  -f, --file_path string         upload file path
+  -h, --help                     help for upload
+
+Global Flags:
+  -i, --ali_access_id string    the ali oss access id
+  -k, --ali_access_key string   the ali oss access key
+  -p, --oss_provider string     the oss provider [aliyun/qcloud] (default "aliyun")
+  -v, --version                 the cloud-station-cli version
+```
+
+### 验证cli
+
+程序给了一下默认配置, 当然你可以设置成cli的默认值
+```go
+const (
+	// BuckName todo
+	defaultBuckName = "cloud-station"
+	defaultEndpoint = "http://oss-cn-chengdu.aliyuncs.com"
+	defaultALIAK    = "LTAI5tMvG5NA51eiH3ENZDaa"
+	defaultALISK    = ""
+)
+```
+
+然后验证
+```
+$ go run cmd/client/main.go upload -f go.mod  -k xxxx
+上传云商: 阿里云[http://oss-cn-chengdu.aliyuncs.com]
+上传用户: LTAI5tMvG5NA51eiH3ENZDaa
+下载链接: http://cloud-station.oss-cn-chengdu.aliyuncs.com/20210724%2Fgo.mod?Expires=1627207783&OSSAccessKeyId=LTAI5tMvG5NA51eiH3ENZDaa&Signature=wq%2F%2BWKalz11w3RCWfR1Q6A6p40k%3D
+
+注意: 文件下载有效期为1天, 中转站保存时间为3天, 请及时下载
+```
+
+到此我们基本实现了之前简单版本的功能, 但是扩展性要远远大于之前的简单版本
+
+但是现在还存在如下2个问题:
+
++ access key 这种敏感数据 直接通过参数传入有安全风险, 需要改进
++ 我们的上传需要补充进度条
+
+### 改进一: 敏感信息用户输入
+
+
+### 改进二: 添加进度条
+
+
+## 总结
+
++ 面向对象思维模式
++ 合理组织你的项目结构
++ 如何使用接口解耦程序
++ 测试驱动开发TDD
++ 断点调试(debug)
++ CLI
