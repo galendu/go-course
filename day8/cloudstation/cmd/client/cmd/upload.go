@@ -5,6 +5,7 @@ import (
 	"path"
 	"time"
 
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/spf13/cobra"
 
 	"gitee.com/infraboard/go-course/day8/cloudstation/store"
@@ -35,6 +36,7 @@ var uploadCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+
 		if uploadFilePath == "" {
 			return fmt.Errorf("upload file path is missing")
 		}
@@ -49,6 +51,18 @@ var uploadCmd = &cobra.Command{
 	},
 }
 
+func getAccessKeyFromInput() {
+	fmt.Printf("请输入access key: ")
+	fmt.Scanln(&aliAccessKey)
+}
+
+func getAccessKeyFromInputV2() {
+	prompt := &survey.Password{
+		Message: "请输入access key: ",
+	}
+	survey.AskOne(prompt, &aliAccessKey)
+}
+
 func getProvider() (p store.Uploader, err error) {
 	switch ossProvider {
 	case "aliyun":
@@ -60,6 +74,7 @@ func getProvider() (p store.Uploader, err error) {
 			aliAccessKey = defaultALISK
 		}
 		fmt.Printf("上传用户: %s\n", aliAccessID)
+		getAccessKeyFromInputV2()
 		p, err = aliyun.NewUploader(bucketEndpoint, aliAccessID, aliAccessKey)
 		return
 	case "qcloud":

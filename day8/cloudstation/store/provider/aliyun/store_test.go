@@ -1,7 +1,6 @@
 package aliyun_test
 
 import (
-	"os"
 	"testing"
 
 	"gitee.com/infraboard/go-course/day8/cloudstation/store/provider/aliyun"
@@ -15,8 +14,8 @@ var (
 	localFilePath = "store.go"
 
 	endpoint = "http://oss-cn-chengdu.aliyuncs.com"
-	ak       = os.Getenv("ALI_AK")
-	sk       = os.Getenv("ALI_SK")
+	ak       = "LTAI5tMvG5NA51eiH3ENZDaa"
+	sk       = "vWOGbrPKQGmLVo4CKSgmAB62vdum10"
 )
 
 func TestUploadFile(t *testing.T) {

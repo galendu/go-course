@@ -516,9 +516,233 @@ $ go run cmd/client/main.go upload -f go.mod  -k xxxx
 
 ### 改进一: 敏感信息用户输入
 
+简单的做法是直接使用fmt的scan函数从标准输出获取用户输入:
+```go
+func getAccessKeyFromInput() {
+	fmt.Printf("请输入access key: ")
+	fmt.Scanln(&aliAccessKey)
+}
+```
+
+然后在uploader初始化的时候从终端读取:
+```go
+func getProvider() (p store.Uploader, err error) {
+	...
+	fmt.Printf("上传用户: %s\n", aliAccessID)
+	getAccessKeyFromInput()
+	p, err = aliyun.NewUploader(bucketEndpoint, aliAccessID, aliAccessKey)
+	...
+}
+```
+
+我了防止密码被别人窥见到, 我们可以使用一个第三方库来加密我们的输入: https://github.com/AlecAivazis/survey
+
+```go
+func getAccessKeyFromInputV2() {
+	prompt := &survey.Password{
+		Message: "请输入access key: ",
+	}
+	survey.AskOne(prompt, &aliAccessKey)
+}
+```
+
+这样ak在终端输入的时候就相对安全了, 当然这个库还有很多不错的功能，对做漂亮的CLI交互来说，还是很不错的，有助于提升你工具的使用体验
 
 ### 改进二: 添加进度条
 
+要现在做进度条，我们需要在上传的时候，获取当前上传进度，比如当前发送了多少个bytes的数据, 然后根据当前文件的大小 就可以计算出 当前的一个上传进度.
+
+#### 分析sdk是否可以获取上传中的进度相关信息
+
+但是我们用得sdk, 这个就得看sdk有没有给我们留口子
+```go
+func (bucket Bucket) PutObjectFromFile(objectKey, filePath string, options ...Option) error 
+```
+
+我们搜索支持的Option 可以找到Progress的选项
+```go
+// Progress set progress listener
+func Progress(listener ProgressListener) Option {
+	return addArg(progressListener, listener)
+}
+```
+
+通过查看ProgressListener的定义，我们可以知道，我们可以提供一个lister在上传文件的时候, 他会把上传过程中的事件给我们
+```go
+// ProgressListener listens progress change
+type ProgressListener interface {
+	ProgressChanged(event *ProgressEvent)
+}
+```
+
+我们可以看看能通过这个事件获取到那些信息: 开始, 传输中, 传输完成, 传输失败, 总共需要上传的大小(TotalBytes), 这次event上传成功了多少数据(RwBytes)
+```go
+// ProgressEventType defines transfer progress event type
+type ProgressEventType int
+
+const (
+	// TransferStartedEvent transfer started, set TotalBytes
+	TransferStartedEvent ProgressEventType = 1 + iota
+	// TransferDataEvent transfer data, set ConsumedBytes anmd TotalBytes
+	TransferDataEvent
+	// TransferCompletedEvent transfer completed
+	TransferCompletedEvent
+	// TransferFailedEvent transfer encounters an error
+	TransferFailedEvent
+)
+
+// ProgressEvent defines progress event
+type ProgressEvent struct {
+	ConsumedBytes int64
+	TotalBytes    int64
+	RwBytes       int64
+	EventType     ProgressEventType
+}
+```
+
+#### 实现一个简易版的listner
+
+有了这些数据，基本就够我们展示进度条时使用了.
+接下来我们需要实现一个自己的lister, 用户接收事件, 先简单打印下: provider/aliyun/listener
+```go
+import (
+	"fmt"
+
+	"github.com/aliyun/aliyun-oss-go-sdk/oss"
+)
+
+// NewOssProgressListener todo
+func NewOssProgressListener(fileName string) *OssProgressListener {
+	return &OssProgressListener{}
+}
+
+// OssProgressListener is the progress listener
+type OssProgressListener struct {
+}
+
+// ProgressChanged todo
+func (p *OssProgressListener) ProgressChanged(event *oss.ProgressEvent) {
+	fmt.Println(event.EventType, event.TotalBytes, event.RwBytes)
+}
+```
+
+然后我们把listner作为uploader的一个实例属性, 实例初始化时直接生成, 在上传的时候传递过去
+```go
+// 构造函数
+func NewUploader(endpoint, accessID, accessKey string) (store.Uploader, error) {
+	p := &aliyun{
+		...
+		listner: NewOssProgressListener(),
+	}
+}
+
+type aliyun struct {
+	...
+	listner oss.ProgressListener
+}
+
+func (p *aliyun) UploadFile(bucketName, objectKey, localFilePath string) error {
+	...
+	err = bucket.PutObjectFromFile(objectKey, localFilePath, oss.Progress(p.listner))
+	...
+}
+```
+
+接下来继续我的测试用例:
+```
+=== RUN   TestUploadFile
+1 1918 0
+2 1918 1918
+3 1918 0
+...
+```
+
+#### 找个进度条ui展示出来
+
+比如我们要实现一个这样的进度条, 大家觉得容易不
+```
+[==>             ] 30%
+```
+还是要费点功夫的，核心逻辑是: 通过退格键(\b)删除后重新渲染，视觉上看起来好像中间的部分在挪动一样
+
+这里我们选择一个第三方库：github.com/schollz/progressbar
+我们看下他样例
+```go
+bar := progressbar.Default(100)
+for i := 0; i < 100; i++ {
+    bar.Add(1)
+    time.Sleep(40 * time.Millisecond)
+}
+```
+
+可以看到核心是通过Add来控制进度, 因此我们把需要上传的文件总大小当做total, 然后把每次上传了多个byte Add给bar就可以了
+
+
+```go
+// ProgressChanged todo
+func (p *OssProgressListener) ProgressChanged(event *oss.ProgressEvent) {
+	switch event.EventType {
+	case oss.TransferStartedEvent:
+		p.bar = progressbar.DefaultBytes(
+			event.TotalBytes,
+			"文件上传中",
+		)
+	case oss.TransferDataEvent:
+		p.bar.Add64(event.RwBytes)
+	case oss.TransferCompletedEvent:
+		fmt.Printf("\n上传完成\n")
+	case oss.TransferFailedEvent:
+		fmt.Printf("\n上传失败\n")
+	default:
+	}
+}
+```
+
+我们测试下，看下效果:
+```
+文件上传中 100% |███████████████████████████| (1.9/1.9 kB, 86.513 kB/s)
+```
+
+当然你也可以优化下显示, 直接控制下显示的样式，比如
+```go
+// ProgressChanged todo
+func (p *OssProgressListener) ProgressChanged(event *oss.ProgressEvent) {
+	switch event.EventType {
+	case oss.TransferStartedEvent:
+		p.bar = progressbar.NewOptions64(event.TotalBytes,
+			progressbar.OptionSetWriter(ansi.NewAnsiStdout()),
+			progressbar.OptionEnableColorCodes(true),
+			progressbar.OptionShowBytes(true),
+			progressbar.OptionSetWidth(30),
+			progressbar.OptionSetDescription("开始上传:"),
+			progressbar.OptionSetTheme(progressbar.Theme{
+				Saucer:        "=",
+				SaucerHead:    ">",
+				SaucerPadding: " ",
+				BarStart:      "[",
+				BarEnd:        "]",
+			}),
+		)
+		p.startAt = time.Now()
+		fmt.Printf("文件大小: %s\n", HumanBytesLoaded(event.TotalBytes))
+	case oss.TransferDataEvent:
+		p.bar.Add64(event.RwBytes)
+	case oss.TransferCompletedEvent:
+		fmt.Printf("\n上传完成: 耗时%d秒\n", int(time.Since(p.startAt).Seconds()))
+	case oss.TransferFailedEvent:
+		fmt.Printf("\n上传失败: \n")
+	default:
+	}
+}
+```
+
+最后显示效果如下:
+```
+文件大小: 1.87KB
+开始上传: 100% [==============================] (81.346 kB/s)
+上传完成: 耗时0秒
+...
+```
 
 ## 总结
 
@@ -528,3 +752,4 @@ $ go run cmd/client/main.go upload -f go.mod  -k xxxx
 + 测试驱动开发TDD
 + 断点调试(debug)
 + CLI
++ 合理使用第三方库

@@ -20,6 +20,8 @@ func NewUploader(endpoint, accessID, accessKey string) (store.Uploader, error) {
 		Endpoint:  endpoint,
 		AccessID:  accessID,
 		AccessKey: accessKey,
+
+		listner: NewOssProgressListener(),
 	}
 
 	if err := p.validate(); err != nil {
@@ -33,6 +35,8 @@ type aliyun struct {
 	Endpoint  string `validate:"required,url"`
 	AccessID  string `validate:"required"`
 	AccessKey string `validate:"required"`
+
+	listner oss.ProgressListener
 }
 
 func (p *aliyun) validate() error {
@@ -45,7 +49,7 @@ func (p *aliyun) UploadFile(bucketName, objectKey, localFilePath string) error {
 		return err
 	}
 
-	err = bucket.PutObjectFromFile(objectKey, localFilePath)
+	err = bucket.PutObjectFromFile(objectKey, localFilePath, oss.Progress(p.listner))
 	if err != nil {
 		return fmt.Errorf("upload file to bucket: %s error, %s", bucketName, err)
 	}
