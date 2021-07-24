@@ -15,7 +15,7 @@ var (
 
 	endpoint = "http://oss-cn-chengdu.aliyuncs.com"
 	ak       = "LTAI5tMvG5NA51eiH3ENZDaa"
-	sk       = "vWOGbrPKQGmLVo4CKSgmAB62vdum10"
+	sk       = "xxx"
 )
 
 func TestUploadFile(t *testing.T) {
