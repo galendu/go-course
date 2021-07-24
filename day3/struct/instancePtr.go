@@ -27,4 +27,12 @@ func main() {
 
 	ChangeColor(car)
 	fmt.Println(car.Color)
+
+	c1 := Car{}
+	c2 := &Car{}
+	c3 := new(Car)
+	fmt.Println(c1, c2, c3)
+
+	fmt.Println("c1, ", c1.Color)
+	fmt.Println("c2, ", (*c2).Color)
 }
