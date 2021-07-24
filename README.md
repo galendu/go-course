@@ -46,5 +46,10 @@
   * [文件读写](./zh-cn/base/string.md)
   * [包与工程](./zh-cn/base/pkg.md)
   * [单元测试和基准测试](./zh-cn/base/func.md)
-
-
+* Day8
+  * [反馈问题解答](./day8/question.md)
+  * [重点知识回顾](./zh-cn/base/oop.md)
+  * [实战: 文件中转站]
+    * [简易版工具开发](./day8/problem.md)
+    * [如何设计一个系统而不是工具]
+    * [文件中转站系统开发]
