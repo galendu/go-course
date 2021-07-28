@@ -52,3 +52,6 @@
   * [实战: 文件中转站]
     * [简易版工具开发](./day8/simple_tool.md)
     * [以系统方式开发](./day8/design.md)
+* Day9
+  * [反馈问题解答](./day8/question.md)
+  * [重点知识回顾](./zh-cn/base/oop.md)
