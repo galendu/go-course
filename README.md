@@ -53,4 +53,8 @@
     * [简易版工具开发](./day8/simple_tool.md)
     * [以系统方式开发](./day8/design.md)
 * Day9
-  * [密码学简介与Golang的加密库Crypto的使用](./day9/go-crypto.md)
+  * [密码学简介](./day9/summary.md)
+  * [散列算法](./day9/go-hash.md)
+  * [对称加密算法](./day9/go-cipher.md)
+  * [非对称加密算法](./day9/go-crypto.md)
+  * [密钥交换算法](./day9/go-dh.md)
