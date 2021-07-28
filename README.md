@@ -54,4 +54,3 @@
     * [以系统方式开发](./day8/design.md)
 * Day9
   * [密码学简介与Golang的加密库Crypto的使用](./day9/go-crypto.md)
-  * [重点知识回顾](./zh-cn/base/oop.md)
