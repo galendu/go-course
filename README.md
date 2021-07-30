@@ -58,3 +58,6 @@
   * [对称加密算法](./day9/go-cipher.md)
   * [非对称加密算法](./day9/go-crypto.md)
   * [密钥交换算法](./day9/go-dh.md)
+  * [数据结构之栈](./day9/go-stack.md)
+  * [数据结构之链表](./day9/go-heap.md)
+  * [数据结构之堆](./day9/go-stack.md)
