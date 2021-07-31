@@ -405,8 +405,28 @@ func (l *List) Traverse(fn func(n *Node)) {
 
 测试
 ```go
+func TestListRing(t *testing.T) {
+	l := list.NewIntList(1)
+	n2, n3, n4 := list.NewIntNode(2), list.NewIntNode(3), list.NewIntNode(4)
+	l.AddNode(n2)
+	l.AddNode(n3)
+	l.AddNode(n4)
+	l.Traverse(PrintNode)
+
+	// 测试插入
+	l.ChangeToRing()
+	l.Traverse(PrintNode)
+	fmt.Println()
+	l.InsertAfter(n3, list.NewIntNode(100))
+	l.Traverse(PrintNode)
+}
+```
+
+结果:
+```go
 1 --> 2 --> 3 --> 4
-1 --> 2 --> 3 --> 4 --> 1 --> 2 --> 3 --> 4 --> 1 --> 2 --> 3 --> 4 --> 1 --> 2 --> 3 --> 4 --> 1 --> 2 --> 3 --> 4 --> 
+1 --> 2 --> 3 --> 4 --> 1 --> 2 --> 3 --> 4 --> 1 --> 2 --> 3 --> 4 --> 1 --> 2 --> 3 --> 4 --> 1 --> 2 --> 3 --> 4 -->
+1 --> 2 --> 3 --> 100 --> 4 --> 1 --> 2 --> 3 --> 100 --> 4 --> 1 --> 2 --> 3 --> 100 --> 4 --> 1 --> 2 --> 3 --> 100 --> 4 --> 1 --> 2 --> 3 --> 100 --> 4 --> 
 ```
 
 至于轮播同学们可以自己调整Value数据结构及可
@@ -421,6 +441,19 @@ func (l *List) Traverse(fn func(n *Node)) {
 总体而言, 对于很多数据来讲选择原则大致如下:
 + 频繁的插入和删除用list
 + 频繁的遍历查询选slice
+
+
+## 使用标准库
+
+我们的链表还有很多不完善的地方, 比如
++ Ring时，AddNode没处理头和尾的相连问题, 会无限循环
++ 没有Current 和 Previous这些辅助方法
++ ...
+
+但是原理里面应该都会了, 生产使用请使用标准库
+
+go 的标准库 contianer/list 就是完整的双向链表实现, 如果是循环链表可以使用container/ring
+
 
 ## 总结
 

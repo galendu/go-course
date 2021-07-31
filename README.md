@@ -61,4 +61,4 @@
   * [数据结构之栈](./day9/go-stack.md)
   * [算法的评估](./day9/algorithm-perf.md)
   * [数据结构之链表](./day9/go-chain.md)
-  * [数据结构之堆](./day9/go-stack.md)
+  * [数据结构之堆](./day9/go-heap.md)

@@ -70,4 +70,7 @@ func TestListRing(t *testing.T) {
 	// 测试插入
 	l.ChangeToRing()
 	l.Traverse(PrintNode)
+	fmt.Println()
+	l.InsertAfter(n3, list.NewIntNode(100))
+	l.Traverse(PrintNode)
 }
