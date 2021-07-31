@@ -22,7 +22,7 @@ func TestStackOrder(t *testing.T) {
 	s.Push(0)
 	s.Push(2)
 
-	s.Order()
+	s.Sort()
 	should.Equal(s.Pop(), 9)
 	should.Equal(s.Pop(), 2)
 	should.Equal(s.Pop(), 1)

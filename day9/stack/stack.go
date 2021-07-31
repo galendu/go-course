@@ -2,6 +2,16 @@ package stack
 
 import "fmt"
 
+func NewNumberStack(numbers []int) *Stack {
+	items := make([]Item, 0, len(numbers))
+	for i := range numbers {
+		items = append(items, numbers[i])
+	}
+	return &Stack{
+		items: items,
+	}
+}
+
 func NewStack() *Stack {
 	return &Stack{
 		items: []Item{},
@@ -64,7 +74,7 @@ func (s *Stack) ForEach(fn func(Item)) {
 }
 
 // 把stack的自己完成排序
-func (s *Stack) Order() {
+func (s *Stack) Sort() {
 	// 准备一个辅助的stack, 另一个书堆容器
 	orderdStack := NewStack()
 
