@@ -11,15 +11,20 @@ func Encrypt(plainText string, keyText string) (cipherByte []byte, err error) {
 	// 转换成字节数据, 方便加密
 	plainByte := []byte(plainText)
 	keyByte := []byte(keyText)
+
 	// 创建加密算法aes
 	c, err := aes.NewCipher(keyByte)
 	if err != nil {
 		return nil, err
 	}
+
 	//加密字符串
+	// dst 返回密文
+	// src 明文
 	cfb := cipher.NewCFBEncrypter(c, commonIV)
 	cipherByte = make([]byte, len(plainByte))
 	cfb.XORKeyStream(cipherByte, plainByte)
+
 	return
 }
 func Decrypt(cipherByte []byte, keyText string) (plainText string, err error) {

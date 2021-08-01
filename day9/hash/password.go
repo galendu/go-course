@@ -1,7 +1,8 @@
 package hash
 
 import (
-	"github.com/infraboard/mcube/exception"
+	"fmt"
+
 	"github.com/infraboard/mcube/types/ftime"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -82,10 +83,12 @@ func (p *Password) rotaryHistory(maxHistory uint) {
 }
 
 // CheckPassword 判断password 是否正确
+// 输入的是明文: 123456
+// 需要对比的Hash: $2a$10$ofPPqZ3m37Kp9ROK4ForAOXc5w6SsMKoJ9puCOgIO9yEFFknpYcsO
 func (p *Password) CheckPassword(password string) error {
 	err := bcrypt.CompareHashAndPassword([]byte(p.Password), []byte(password))
 	if err != nil {
-		return exception.NewUnauthorized("user or password not connrect")
+		return fmt.Errorf("user or password not connrect")
 	}
 	return nil
 }
