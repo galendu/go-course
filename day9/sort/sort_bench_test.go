@@ -12,6 +12,7 @@ const (
 	MAX_RAND_LIMIT = 10000
 )
 
+// 准备数据
 func generateRandomArray(arrayLen int) []int {
 	var a []int
 	for i := 0; i < arrayLen; i++ {

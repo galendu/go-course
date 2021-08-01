@@ -1,97 +1,95 @@
 package stack
 
-import "fmt"
-
 func NewNumberStack(numbers []int) *Stack {
 	items := make([]Item, 0, len(numbers))
 	for i := range numbers {
 		items = append(items, numbers[i])
 	}
 	return &Stack{
-		items: items,
+		store: items,
 	}
 }
 
-func NewStack() *Stack {
-	return &Stack{
-		items: []Item{},
-	}
-}
-
+// 范型
 type Item interface{}
 
+// 构建函数
+func NewStack() *Stack {
+	return &Stack{}
+}
+
 type Stack struct {
-	items []Item
+	store []Item
 }
 
-// Push adds an Item to the top of the stack
-func (s *Stack) Push(item Item) {
-	s.items = append(s.items, item)
+func (s *Stack) Len() int {
+	return len(s.store)
 }
 
-// Pop removes an Item from the top of the stack
+// 出栈, 弹出 去除切片尾部元素, 然后删除
 func (s *Stack) Pop() Item {
 	if s.IsEmpty() {
 		return nil
 	}
-	item := s.items[len(s.items)-1]
-	s.items = s.items[0 : len(s.items)-1]
-	return item
+
+	//  [1 2] 2    index 1
+	tail := s.Peek()
+
+	// [1 2] [:1] [)
+	s.store = s.store[:s.Len()-1]
+	return tail
 }
 
-func (s *Stack) Len() int {
-	return len(s.items)
+// 入栈，压栈
+func (s *Stack) Push(item Item) {
+	s.store = append(s.store, item)
 }
 
-func (s *Stack) IsEmpty() bool {
-	return len(s.items) == 0
+// 空的栈
+func (s Stack) IsEmpty() bool {
+	return s.Len() == 0
 }
 
 func (s *Stack) Peek() Item {
 	if s.IsEmpty() {
 		return nil
 	}
-	return s.items[len(s.items)-1]
+
+	return s.store[s.Len()-1]
 }
 
 func (s *Stack) Clear() {
-	s.items = []Item{}
+	s.store = []Item{}
 }
 
-func (s *Stack) Search(item Item) (pos int, err error) {
-	for i := range s.items {
-		if item == s.items[i] {
-			return i, nil
-		}
-	}
-	return 0, fmt.Errorf("item %s not found", item)
-}
-
+// js 遍历
 func (s *Stack) ForEach(fn func(Item)) {
-	for i := range s.items {
-		fn(i)
+	// 4 3 2 1 0
+	for i := s.Len() - 1; i >= 0; i-- {
+		fn(s.store[i])
 	}
 }
 
-// 把stack的自己完成排序
-func (s *Stack) Sort() {
-	// 准备一个辅助的stack, 另一个书堆容器
-	orderdStack := NewStack()
+// 排序的方法
+func (s Stack) Sort() {
+	// 准备一个辅助栈
+	orderedStack := NewStack()
 
 	for !s.IsEmpty() {
-		// 然后开始我们的排序流程
+		// 取出了顶层元素
 		current := s.Pop()
 
-		// 当前元素大于右边, 应该把右边的罗过左边, 直到右边再无小于左边的元素
-		for !orderdStack.IsEmpty() && current.(int) > orderdStack.Peek().(int) {
-			s.Push(orderdStack.Pop())
+		// 放入辅助栈 进行比较, 左边大于右边的比如(1 > 0), 交互该元素的位置
+		for !orderedStack.IsEmpty() && current.(int) > orderedStack.Peek().(int) {
+			s.Push(orderedStack.Pop())
 		}
 
-		// 此时 当前值 一定是 <= 右边的
-		orderdStack.Push(current)
+		// 直接放入
+		orderedStack.Push(current)
 	}
 
-	for !orderdStack.IsEmpty() {
-		s.Push(orderdStack.Pop())
+	//  要把数据倒过来
+	for !orderedStack.IsEmpty() {
+		s.Push(orderedStack.Pop())
 	}
 }

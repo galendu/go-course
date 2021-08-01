@@ -51,7 +51,7 @@ func TestListWithPre(t *testing.T) {
 	l.Traverse(PrintNode)
 
 	// 测试插入
-	l.InsertAfter(n2, list.NewIntNode(20))
+	l.InsertBefore(n2, list.NewIntNode(20))
 	l.Traverse(PrintNode)
 
 	// 测试删除
