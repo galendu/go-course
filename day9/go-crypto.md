@@ -7,7 +7,6 @@
 + ECC(Elliptic Curves Cryptography): 椭圆曲线密码编码学。
 + ECDSA(Elliptic Curve Digital Signature Algorithm): 基于椭圆曲线的DSA签名算法
 
-
 ## DSA
 
 DSA是基于整数有限域离散对数难题的，其安全性与RSA相比差不多。DSA的一个重要特点是两个素数公开，这样，当使用别人的p和q时，即使不知道私钥，你也能确认它们是否是随机产生的，还是作了手脚。RSA算法却做不到

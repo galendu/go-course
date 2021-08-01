@@ -7,6 +7,104 @@
 + AES(Advanced Encryption Standard): 高级加密标准，是下一代的加密算法标准，速度快，安全级别高
 + CBC 分组加密的四种模式之一(ECB、CBC、CFB、OFB)
 
+对称加密又分为分组加密和序列密码。
++ 分组密码，也叫块加密(block cyphers)，一次加密明文中的一个块。是将明文按一定的位长分组，明文组经过加密运算得到密文组，密文组经过解密运算（加密运算的逆运算），还原成明文组。
+
++ 序列密码，也叫流加密(stream cyphers)，一次加密明文中的一个位。是指利用少量的密钥（制乱元素）通过某种复杂的运算（密码算法）产生大量的伪随机位流，用于对明文位流的加密。
+
+## CBC
+
+分组密码，也叫块加密(block cyphers)，一次加密明文中的一个块。是将明文按一定的位长分组，明文组经过加密运算得到密文组，密文组经过解密运算（加密运算的逆运算），还原成明文组。
+序列密码，也叫流加密(stream cyphers)，一次加密明文中的一个位。是指利用少量的密钥（制乱元素）通过某种复杂的运算（密码算法）产生大量的伪随机位流，用于对明文位流的加密。
+解密是指用同样的密钥和密码算法及与加密相同的伪随机位流，用以还原明文位流
+
+分组加密算法中，有ECB,CBC,CFB,OFB这几种算法模式, 我们介绍其中常用的一种CBC
+
+CBC(Cipher Block Chaining)/密文分组链接方式
+
+![](../image/cbc-encrypto.jpg)
+
+加密步骤如下：
++ 首先将数据按照8个字节一组进行分组得到D1D2......Dn（若数据不是8的整数倍，用指定的PADDING数据补位）
++ 第一组数据D1与初始化向量I异或后的结果进行DES加密得到第一组密文C1（初始化向量I为全零）
++ 第二组数据D2与第一组的加密结果C1异或以后的结果进行DES加密，得到第二组密文C2
++ 之后的数据以此类推，得到Cn
++ 按顺序连为C1C2C3......Cn即为加密结果。
+
+```go
+// aesCBCEncrypt aes加密，填充秘钥key的16位，24,32分别对应AES-128, AES-192, or AES-256.
+func aesCBCEncrypt(rawData, key []byte) ([]byte, error) {
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+	//填充原文
+	blockSize := block.BlockSize()
+	rawData = pkcs7Padding(rawData, blockSize)
+	//初始向量IV必须是唯一，但不需要保密
+	cipherText := make([]byte, blockSize+len(rawData))
+	//block大小 16
+	iv := cipherText[:blockSize]
+	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
+		return nil, err
+	}
+
+	//block大小和初始向量大小一定要一致
+	mode := cipher.NewCBCEncrypter(block, iv)
+	mode.CryptBlocks(cipherText[blockSize:], rawData)
+
+	return cipherText, nil
+}
+```
+
+![](../image/cbc-decrypt.jpg)
+
+解密是加密的逆过程，步骤如下：
++ 首先将数据按照8个字节一组进行分组得到C1C2C3......Cn
++ 将第一组数据进行解密后与初始化向量I进行异或得到第一组明文D1（注意：一定是先解密再异或）
++ 将第二组数据C2进行解密后与第一组密文数据进行异或得到第二组数据D2
++ 之后依此类推，得到Dn
++ 按顺序连为D1D2D3......Dn即为解密结果。
+
+```go
+func aesCBCDecrypt(encryptData, key []byte) ([]byte, error) {
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+	blockSize := block.BlockSize()
+
+	if len(encryptData) < blockSize {
+		return nil, errors.New("ciphertext too short")
+	}
+	iv := encryptData[:blockSize]
+	encryptData = encryptData[blockSize:]
+
+	// CBC mode always works in whole blocks.
+	if len(encryptData)%blockSize != 0 {
+		return nil, errors.New("ciphertext is not a multiple of the block size")
+	}
+
+	mode := cipher.NewCBCDecrypter(block, iv)
+
+	// CryptBlocks can work in-place if the two arguments are the same.
+	mode.CryptBlocks(encryptData, encryptData)
+	//解填充
+	encryptData = pkcs7UnPadding(encryptData)
+	return encryptData, nil
+}
+```
+
+
+
+这里注意一点，解密的结果并不一定是我们原来的加密数据，可能还含有你补得位，一定要把补位去掉才是你的原来的数据。
+
+特点：
++ 不容易主动攻击,安全性好于ECB,适合传输长度长的报文,是SSL、IPSec的标准。每个密文块依赖于所有的信息块, 明文消息中一个改变会影响所有密文块
++ 发送方和接收方都需要知道初始化向量 
++ 加密过程是串行的，无法被并行化(在解密时，从两个邻接的密文块中即可得到一个平文块。因此，解密过程可以被并行化)。
 
 ## DES
 
@@ -95,34 +193,5 @@ func main() {
 }
 ```
 
-## CBC
 
-分组密码，也叫块加密(block cyphers)，一次加密明文中的一个块。是将明文按一定的位长分组，明文组经过加密运算得到密文组，密文组经过解密运算（加密运算的逆运算），还原成明文组。
-序列密码，也叫流加密(stream cyphers)，一次加密明文中的一个位。是指利用少量的密钥（制乱元素）通过某种复杂的运算（密码算法）产生大量的伪随机位流，用于对明文位流的加密。
-解密是指用同样的密钥和密码算法及与加密相同的伪随机位流，用以还原明文位流
-
-分组加密算法中，有ECB,CBC,CFB,OFB这几种算法模式, 我们介绍其中常用的一种CBC
-
-CBC(Cipher Block Chaining)/密文分组链接方式
-
-加密步骤如下：
-+ 首先将数据按照8个字节一组进行分组得到D1D2......Dn（若数据不是8的整数倍，用指定的PADDING数据补位）
-+ 第一组数据D1与初始化向量I异或后的结果进行DES加密得到第一组密文C1（初始化向量I为全零）
-+ 第二组数据D2与第一组的加密结果C1异或以后的结果进行DES加密，得到第二组密文C2
-+ 之后的数据以此类推，得到Cn
-+ 按顺序连为C1C2C3......Cn即为加密结果。
-
-解密是加密的逆过程，步骤如下：
-+ 首先将数据按照8个字节一组进行分组得到C1C2C3......Cn
-+ 将第一组数据进行解密后与初始化向量I进行异或得到第一组明文D1（注意：一定是先解密再异或）
-+ 将第二组数据C2进行解密后与第一组密文数据进行异或得到第二组数据D2
-+ 之后依此类推，得到Dn
-+ 按顺序连为D1D2D3......Dn即为解密结果。
-
-这里注意一点，解密的结果并不一定是我们原来的加密数据，可能还含有你补得位，一定要把补位去掉才是你的原来的数据。
-
-特点：
-+ 不容易主动攻击,安全性好于ECB,适合传输长度长的报文,是SSL、IPSec的标准。每个密文块依赖于所有的信息块, 明文消息中一个改变会影响所有密文块
-+ 发送方和接收方都需要知道初始化向量 
-+ 加密过程是串行的，无法被并行化(在解密时，从两个邻接的密文块中即可得到一个平文块。因此，解密过程可以被并行化)。
 

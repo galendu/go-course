@@ -148,3 +148,106 @@ func main() {
     fmt.Println("Match:   ", match)
 }
 ```
+
+## 应用
+
+### 用户名密码校验
+
+密码校验则是一个很常见的问题, 当我们设计用户中心时，是一个必不可少的功能, 为了安全，我们都不会保存用户的明文密码, 最好的方式就是保存为Hash, 这样即使是数据泄露了，也不会导致用户的明文密码泄露(hash的过程是不可逆的)
+
+需求:
+
++ 用户可以修改密码
++ 修改密码时，禁止使用最近已经使用过的密码
++ 能校验密码
+
+
+```go
+// NewHashedPassword 生产hash后的密码对象
+func NewHashedPassword(password string) (*Password, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 10)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Password{
+		Password: string(bytes),
+		CreateAt: ftime.Now().Timestamp(),
+		UpdateAt: ftime.Now().Timestamp(),
+	}, nil
+}
+
+type Password struct {
+	// hash过后的密码
+	Password string
+	// 密码创建时间
+	CreateAt int64
+	// 密码更新时间
+	UpdateAt int64
+	// 密码需要被重置
+	NeedReset bool
+	// 需要重置的原因
+	ResetReason string
+	// 历史密码
+	History []string
+	// 是否过期
+	IsExpired bool
+}
+```
+
+
+```go
+// Update 更新密码
+func (p *Password) Update(new *Password, maxHistory uint, needReset bool) {
+	p.rotaryHistory(maxHistory)
+	p.Password = new.Password
+	p.NeedReset = needReset
+	p.UpdateAt = ftime.Now().Timestamp()
+	if !needReset {
+		p.ResetReason = ""
+	}
+}
+
+// IsHistory 检测是否是历史密码
+func (p *Password) IsHistory(password string) bool {
+	for _, pass := range p.History {
+		err := bcrypt.CompareHashAndPassword([]byte(pass), []byte(password))
+		if err == nil {
+			return true
+		}
+	}
+
+	return false
+}
+
+// HistoryCount 保存了几个历史密码
+func (p *Password) HistoryCount() int {
+	return len(p.History)
+}
+
+func (p *Password) rotaryHistory(maxHistory uint) {
+	if uint(p.HistoryCount()) < maxHistory {
+		p.History = append(p.History, p.Password)
+	} else {
+		remainHistry := p.History[:maxHistory]
+		p.History = []string{p.Password}
+		p.History = append(p.History, remainHistry...)
+	}
+}
+
+// CheckPassword 判断password 是否正确
+func (p *Password) CheckPassword(password string) error {
+	err := bcrypt.CompareHashAndPassword([]byte(p.Password), []byte(password))
+	if err != nil {
+		return exception.NewUnauthorized("user or password not connrect")
+	}
+	return nil
+}
+```
+
+## 总结
+
++ 已经被破解了的Hash
++ 速度较快的Hash，适于与内容摘要
++ 加盐Hash
++ 速度较慢的Hash，适用于密码保存

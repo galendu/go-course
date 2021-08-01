@@ -12,7 +12,7 @@ import (
 	"gitee.com/infraboard/go-course/day8/cloudstation/store/provider/aliyun"
 )
 
-const (
+var (
 	// BuckName todo
 	defaultBuckName = "cloud-station"
 	defaultEndpoint = "http://oss-cn-chengdu.aliyuncs.com"
@@ -32,7 +32,7 @@ var uploadCmd = &cobra.Command{
 	Short: "上传文件到中转站",
 	Long:  `上传文件到中转站`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		p, err := getProvider()
+		p, err := getUploader()
 		if err != nil {
 			return err
 		}
@@ -51,36 +51,20 @@ var uploadCmd = &cobra.Command{
 	},
 }
 
-func getAccessKeyFromInput() {
-	fmt.Printf("请输入access key: ")
-	fmt.Scanln(&aliAccessKey)
-}
-
-func getAccessKeyFromInputV2() {
-	prompt := &survey.Password{
-		Message: "请输入access key: ",
-	}
-	survey.AskOne(prompt, &aliAccessKey)
-}
-
-func getProvider() (p store.Uploader, err error) {
+func getUploader() (store.Uploader, error) {
 	switch ossProvider {
 	case "aliyun":
-		fmt.Printf("上传云商: 阿里云[%s]\n", defaultEndpoint)
-		if aliAccessID == "" {
-			aliAccessID = defaultALIAK
+		prompt := &survey.Password{
+			Message: "请输入阿里云SK: ",
 		}
-		if aliAccessKey == "" {
-			aliAccessKey = defaultALISK
-		}
-		fmt.Printf("上传用户: %s\n", aliAccessID)
-		getAccessKeyFromInputV2()
-		p, err = aliyun.NewUploader(bucketEndpoint, aliAccessID, aliAccessKey)
-		return
+		survey.AskOne(prompt, &aliAccessKey)
+		return aliyun.NewUploader(bucketEndpoint, aliAccessID, aliAccessKey)
 	case "qcloud":
 		return nil, fmt.Errorf("not impl")
+	case "minio":
+		return nil, fmt.Errorf("not impl")
 	default:
-		return nil, fmt.Errorf("unknown oss privier options [aliyun/qcloud]")
+		return nil, fmt.Errorf("unknown uploader %s", ossProvider)
 	}
 }
 
