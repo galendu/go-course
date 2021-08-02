@@ -83,21 +83,23 @@ func (l *List) InsertAfter(after, current *Node) error {
 	return nil
 }
 
-func (l *List) InsertBefore(before, current *Node) error {
+func (l *List) InsertBefore(current, n *Node) error {
 	// 假设我们已经插入，他数据结构应该是啥样的
-	// before --> current --> before_next
+	//   -->   previous  -->     current -->
+	//   previous --> n  --> current
+	//
 
 	// 保存下之前的before next
-	beforeNext := before.Prev
+	previous := current.Prev
 
 	// 插入，修改指向
-	before.Next = current
-	current.Next = beforeNext
+	previous.Next = n
+	n.Next = current
 
 	// 补充Previos指针
 	// before <-- current <-- before_next
-	current.Prev = before
-	beforeNext.Prev = current
+	// current.Prev = before
+	// beforeNext.Prev = current
 	return nil
 }
 
