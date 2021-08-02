@@ -14,8 +14,8 @@ func BubbleSort(numbers []int) []int {
 			if numbers[j+1] < numbers[j] {
 				numbers[j], numbers[j+1] = numbers[j+1], numbers[j]
 			}
-		}
-		// fmt.Printf("第%d趟: %v\n", i+1, numbers)
+
+			// fmt.Printf("第%d趟: %v\n", i+1, numbers)
 	}
 	return numbers
 }
