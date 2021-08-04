@@ -128,7 +128,7 @@ type List struct {
 ```go
 func (l *List) AddNode(n *Node) {
 	// 我需要找到尾节点
-	next := l.head.Next
+	next := l.head
 	for next.Next != nil {
 		next = next.Next
 	}
