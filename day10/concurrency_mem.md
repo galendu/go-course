@@ -214,13 +214,197 @@ P *idlep; // lock-free list
 ## Goroutine
 
 讲了那么多，我该如何创建一个G喃?, 很简单使用go关键字, 比如
+```go
+// 这样我们就把doSomething变成了一个G协程，交由调度器去运行
+go doSomething()
+```
 
+比如我们要执行一个任务, 该任务执行一次好似2s, 如下:
+```go
+func runTask(id int) {
+	time.Sleep(2 * time.Second)
+	fmt.Printf("task %d complete\n", id)
+}
+```
 
+如果我们要顺序执行10次，那么跑一轮下来就得耗时 20秒:
+```go
+func syncRun() {
+	for i := 0; i < 10; i++ {
+		runTask(i + 1)
+	}
+}
 
+func main() {
+	syncRun()
+}
+```
 
+```
+task 1 complete
+task 2 complete
+task 3 complete
+task 4 complete
+task 5 complete
+task 6 complete
+task 7 complete
+task 8 complete
+task 9 complete
+task 10 complete
+```
 
+我如果想让他们并发运行怎么办? 这个时候就可以使用Goroutine了
+```go
+func asyncRun() {
+	for i := 0; i < 10; i++ {
+		go runTask(i + 1)
+	}
+}
 
+func main() {
+	asyncRun()
+}
+```
 
+这样你会发现, 并没有按照我们预期的进行, 为什么? 再看下，下面这张图:
+
+![](../image/c-flow.png)
+
+我们启动了10个协程, 协程启动过后，还没来得急执行，我们的主程序就退出了，所以没有打印任何结果
+
+那我们如何知道协程已经退出? 有过其他语言编程经验的同学应该可以想到，基于共享内存:
+
+因为协程是基于线程运行的，线程又是共享内存的，因此我们可以定义一个遍历, 没启动一个我们就加1, 退出1个我们就减1:
+
+```go
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+var (
+	// 状态计数器
+	goroutineCount = 0
+)
+
+func Add() {
+	goroutineCount++
+}
+
+func Exit() {
+	goroutineCount--
+}
+
+func runTask(id int) {
+	// 推出一个减去1
+	defer Exit()
+
+	fmt.Printf("task %d start..\n", id)
+	time.Sleep(2 * time.Second)
+	fmt.Printf("task %d complete\n", id)
+}
+
+func asyncRun() {
+	for i := 0; i < 10; i++ {
+		go runTask(i + 1)
+		// 没启动一个go routine 就+1
+		Add()
+	}
+}
+
+func main() {
+	asyncRun()
+	for goroutineCount > 0 {
+		time.Sleep(100 * time.Millisecond)
+	}
+}
+```
+
+这样我们的程序运行Task就时并行的了
+
+```
+task 6 start..
+task 2 start..
+task 1 start..
+task 4 start..
+task 8 start..
+task 9 start..
+task 10 start..
+task 3 start..
+task 7 start..
+task 5 start..
+task 5 complete
+task 8 complete
+task 7 complete
+task 3 complete
+task 1 complete
+task 9 complete
+task 6 complete
+task 10 complete
+task 2 complete
+task 4 complete
+```
+
+> 上面还有个问题，就是由于多个goroutine 同时访问共享变量时, 可能导致变量的不准确修改, 最好还是加锁
+
+```go
+var (
+	// 状态计数器
+	goroutineCount = 0
+	mu             sync.Mutex
+)
+
+// 并不是Gorouine进行访问的不需要加锁
+func Add() {
+	goroutineCount++
+}
+
+// Goroutine 并发访问的变量，需要加锁
+func Exit() {
+	mu.Lock()
+	defer mu.Unlock()
+	goroutineCount--
+}
+```
+
+对于这种要等待N个线程完成后再进行下一步的同步操作有一个简单的做法，就是使用sync.WaitGroup来等待一组事件, 其实现逻辑也好我们的方式差不多,
+但是由于是使用的原子锁，比我们使用的互斥锁效率高很多
+
+```go
+package main
+
+import (
+	"fmt"
+	"sync"
+	"time"
+)
+
+var wg sync.WaitGroup
+
+func runTask(id int) {
+	// 推出一个减去1
+	defer wg.Done()
+
+	fmt.Printf("task %d start..\n", id)
+	time.Sleep(2 * time.Second)
+	fmt.Printf("task %d complete\n", id)
+}
+
+func asyncRun() {
+	for i := 0; i < 10; i++ {
+		go runTask(i + 1)
+		// 没启动一个go routine 就+1
+		wg.Add(1)
+	}
+}
+
+func main() {
+	asyncRun()
+	wg.Wait()
+}
+```
 
 ## Channel
 
