@@ -219,6 +219,21 @@ P *idlep; // lock-free list
 go doSomething()
 ```
 
+当我们执行 go func() 时, Go按照上面的GPM模型, 流程应该是什么样的:
+
+![](../image/go-sch.jpg)
+
++ 创建Goroutine
++ 调度器将Goroutine调度入队(本地队列或者全局队列)
++ M获取G执行(绑定的P的队列, 全局队列, 其他P的队列)
++ M 循环的调度 G 执行
++ 如果M阻塞, 创建一个M或者从休眠的M队列中挑选一个M来服务于该P
++ G执行完成, 销毁G, 返回, 此时M空闲, 放入休眠中的M队列
+
+下面通过一个具体的案例来跟踪整个过程
+
+###  具体案例
+
 比如我们要执行一个任务, 该任务执行一次好似2s, 如下:
 ```go
 func runTask(id int) {
@@ -406,58 +421,47 @@ func main() {
 }
 ```
 
-## Channel
+### 过程分析
 
+如何跟踪程序的运行过程？
 
+go提供了一个不错的工具: go tool trace, 用于分析程序的运行过程, 但是在使用这个工具之前，我们需要采集运行过程的数据
 
-
-
-
-
-
-
-## 实战: AB交互打印
-
+改造下我们的main, 加入采集trace过程的库
 ```go
-package main
-
-import (
-	"fmt"
-	"time"
-)
-
-func A(startA, startB chan struct{}) {
-	a := []string{"1", "2", "3"}
-	index := 0
-	for range startA {
-		if index > 2 {
-			return
-		}
-		fmt.Println(a[index])
-		index++
-		startB <- struct{}{}
-	}
-}
-
-func B(startA, startB chan struct{}) {
-	b := []string{"x", "y", "z"}
-	index := 0
-	for range startB {
-		fmt.Println(b[index])
-		index++
-		startA <- struct{}{}
-	}
-}
-
 func main() {
-	startA, startB := make(chan struct{}), make(chan struct{})
-	go A(startA, startB)
-	go B(startA, startB)
+	//创建trace文件
+	f, err := os.Create("trace.out")
+	if err != nil {
+		panic(err)
+	}
 
-	startA <- struct{}{}
-	time.Sleep(1 * time.Second)
+	defer f.Close()
+
+	//启动trace goroutine
+	err = trace.Start(f)
+	if err != nil {
+		panic(err)
+	}
+	defer trace.Stop()
+
+	asyncRun()
+	wg.Wait()
 }
 ```
+
+执行完成后，会生成一个trace.out的文件我们基于这个文件就可以使用 to的trace工具了进行分析了:
+```
+go tool trace trace.out                     
+2021/08/05 20:43:45 Parsing trace...
+2021/08/05 20:43:45 Splitting trace...
+2021/08/05 20:43:45 Opening browser. Trace viewer is listening on http://127.0.0.1:53603
+```
+
+我们可以通过浏览器打开 http://127.0.0.1:53603 网址，点击 view trace 能够看见可视化的调度流程
+![](../image/gpm-trace.jpg)
+
+可以看到G7 ～ G16 就是我们刚才运行Task的10个goroutine
 
 
 ## 总结
@@ -466,5 +470,5 @@ func main() {
 
 ![](../image/p-m-c.png)
 
-+ 如何启动一个goroutine
-+ 如何使用channel通讯
++ Go的GPM模型
++ 运行过程trace
