@@ -1,4 +1,4 @@
-# 并发内存模型
+# 并发调度模型
 
 对于Go语言而言, 一提到并发，可能想到它内建的并发支持, 这也是Go语言最吸引人的地方。 
 
@@ -26,23 +26,261 @@ Go采用的并发编程思想是CSP(Communicating Sequential Process，通讯顺
 + 并发是同一时间应对(dealing with)多件事情的能力, 并发更关注的是程序的设计层面。
 + 并行是同一时间动手(doing)做多件事情的能力, 并行更关注的是程序的运行层面。
 
+## 基于CPU的并行
 
+在早期，CPU都是以单核的形式顺序执行机器指令, Go语言的祖先C语言正是这种顺序编程语言的代表，顺序编程语言中的顺序是指：所有的指令都是以串行的方式执行，在相同的时刻有且仅有一个CPU在顺序执行程序的指令
 
-## 
+随着处理器技术的发展,单核时代以提升处理器频率来提高运行效率的方式遇到了瓶颈,单核CPU的发展的停滞,多核CPU的发展迎来春天, 这个时候我们的代码就可以真正的被并行处理
 
+单核到多核的区别下图:
+
+![](../image/cpu-core.jpg)
+
+但是哪怕是单核CPU，我们也可以跑多个程序, 这是为什么喃?
 
 ## 进程与线程
 
-在早期，CPU都是以单核的形式顺序执行机器指令, Go语言的祖先C语言正是这种顺序编程语言的代表
+进程和线程是操作系统级别的概念, 不要和硬件层(比如CPU的线程混淆了), 单个逻辑核心为啥能同时执行多个程序, 有2个部分原因:
++ CPU是支持分时调度的, 以时间片的形式来跑指令集
++ OS层面操作系统会轮换调度进程(运行中的程序)的一部分指令集给CPU运行
 
-常见的用于执行并行操作的执行体主要有2种:
-+ 进程
-+ 线程
+![](../image/one-core-cpu.jpg)
+
+
+到次可以看出，我们的硬件(CPU)是串行进行处理的, 但是进程在OS层面是并发的, 所以多进程是在操作系统层面的并发模型, 我们如果想要让自己开发的程序也支持并发，可以利用操作系统进程并发的特性, 比如常见的Master/Worker模型: 
+
+![](../image/thread-conc.jpg)
+
+进程是操作系统资源分配的最小单元。因为所有的进程都是有操作系统的内核管理的。所以每个进程之间是独立的，每一个进程都会有自己单独的内存空间以及上下文信息，一个进程挂了不会影响其他进程的运行。这个也是多进程最大的优点，但是它的缺点也很明显, 因为独立，所以进程的结构都需要复制一遍(Fork), 开销很大, 因此我们看到使用多进程来实现并发的案例也不多
+
+那有没有开销更小的方案喃? 
+
+有, 多线程是目前最流行的并发场景的解决方案，由于线程更加轻量级，创建和销毁的成本都很低。并且线程之间通信以及共享内存非常方便，和多进程相比开销要小得多
+
+![](../image/proc-thread.png)
+
+但是多线程也有缺点，一个缺点也是开销。虽然线程的开销要比进程小得多，但是如果创建和销毁频繁的话仍然是不小的负担。
+
+针对这个问题诞生了线程池这种设计。
+
+![](../image/thread-pool.png)
+
+创建一大批线程放入线程池当中，需要用的时候拿出来使用，用完了再放回
+
++ 优点: 复用线程, 回收和领用代替了创建和销毁两个操作，大大提升了性能
++ 缺点: 资源的共享，由于线程之间资源共享更加频繁，所以在一些场景当中我们需要加上锁等设计，避免并发带来的数据紊乱。
+
+所以在很长一段时间里, 基于线程池来实现并发是最常用的一种手段, 下面是一段基于线程池的python代码:
+
+```python
+# coding: utf-8
+from concurrent.futures import ThreadPoolExecutor
+import time
+
+
+def spider(page):
+    time.sleep(page)
+    print(f"crawl task{page} finished")
+    return page
+
+with ThreadPoolExecutor(max_workers=5) as t:  # 创建一个最大容纳数量为5的线程池
+    task1 = t.submit(spider, 1)
+    task2 = t.submit(spider, 2)  # 通过submit提交执行的函数到线程池中
+    task3 = t.submit(spider, 3)
+
+    print(f"task1: {task1.done()}")  # 通过done来判断线程是否完成
+    print(f"task2: {task2.done()}")
+    print(f"task3: {task3.done()}")
+
+    time.sleep(2.5)
+    print(f"task1: {task1.done()}")
+    print(f"task2: {task2.done()}")
+    print(f"task3: {task3.done()}")
+    print(task1.result())  # 通过result来获取返回值
+```
+
+## 协程(coroutine)
+
+协程也叫做轻量级线程，和多线程最大的区别在于，协程的调度不是基于操作系统的而是基于用户空间的程序的, 一般由库或者程序的运行时提供调度
+
+![](../image/c-m-go.png)
+
+也就是说协程更像是程序里的函数，但是在执行的过程当中可以随时挂起、随时继续:
+
+![](../image/c-flow.png)
+
+协程1和协程2的关系是完全对等的，协程1执行过程中可以中断挂起执行另外一个协程2，反之也是可以的，直到最终两个协程都执行完以后再返回回到主程序中，即协程1和协程2相互协作完成了整个任务
+
+```go
+func A() {
+    fmt.Print("1")
+    fmt.Print("2")
+    fmt.Print("3")
+}
+
+func B() {
+    fmt.Print("A")
+    fmt.Print("B")
+    fmt.Print("C")
+}
+```
+
+如果我们在一个线程内执行A和B这两个函数，要么先执行A再执行B要么先执行B再执行A。输出的结果是确定的，但如果我们用写成来执行A和B，有可能A函数执行了一半刚输出了一条语句的时候就转而去执行B，B输出了一条又再回到A继续执行。不管执行的过程当中发生了几次中断和继续，在操作系统当中执行的线程都没有发生变化。也就是说这是程序级的调度
+
+那么和多线程相比，我们创建、销毁线程的开销就完全没有了，整个过程变得非常灵活。但是缺点是由于是程序级别的调度，所以需要编程语言自身的支持，如果语言本身不支持，就很难使用了。目前原生就支持协程的语言并不多，显然golang就是其中一个
+
+那Go是如何实现协程的喃? 协程又是如何交给线程去运行的喃?
+
+
+## Go GPM模型
+
+Go的Runtime实现了一个调度器, 我们叫他协程调度器, 由他将协程调度给操作系统的线程运行，比如:
+
+![](../image/go-mn.jpg)
+
+图中为啥是 M 个协程绑定 N 个线程, 为啥不是N:1 或者 1:1喃:
++ N:1 的缺点: 一旦某协程阻塞，造成线程阻塞
++ 1:1 的缺点: 那我还不如直接使用线程
+
+在Go语言里面，协程叫做Goroutine, 就是Go coroutine的一个合写, 后面我们叫Go里的协程叫: Goroutine
+
+我们来看看这个协程调度器调度器是如何设计的
+
+我们现在使用的调度器是go1.1 (released 2013/05/13),中实现的, 其实在Go刚诞生时 还有1个简单版本的调度器
+
+### Go1.1之前的调度器设计
+
+这个版本的调度器因为性能存在问题, 仅存在很短一短时间
+
+![](../image/old-gm.jpg)
+
+调度过程:
+
+![](../image/old-gm-process.jpg)
+
+M 想要执行、放回 G 都必须访问全局 G 队列，并且 M 有多个，即多线程访问同一资源需要加锁进行保证互斥 / 同步，所以全局 G 队列是有互斥锁进行保护的
+
+这样调度存在2个缺陷:
+
++ 创建、销毁、调度 G 都需要每个 M 获取锁，这就形成了激烈的锁竞争 
++ 系统调用 (CPU 在 M 之间的切换) 导致频繁的线程阻塞和取消阻塞操作增加了系统开销
+
+那新版本是如何改进这2个问题的喃?
+
+### Go1.1的新版调度器设计
+
+面对之前调度器的问题，Go 设计了新的调度器。
+
+
+在新调度器中，除了 M (thread) 和 G (goroutine)，又引进了 P (Processor)
+
+1个P绑定一个1个线程, 这样线程M就不需要频繁的切换了, 只需要消费P中的协程即可, 由于P包含一个本地队列，这样也避免了直接使用全局队列带来的加锁问题
+
+Processor，它包含了运行 goroutine 的资源，如果线程想运行 goroutine，必须先获取 P，P 中还包含了可运行的 G 队列
+```go
+struct P
+{
+Lock;
+G *gfree; // freelist, moved from sched
+G *ghead; // runnable, moved from sched
+G *gtail;
+MCache *mcache; // moved from M
+FixAlloc *stackalloc; // moved from M
+uint64 ncgocall;
+GCStats gcstats;
+// etc
+...
+};
+
+P *allp; // [GOMAXPROCS]
+
+There is also a lock-free list of idle P’s:
+
+P *idlep; // lock-free list
+```
+
+加入了P和P的本地队列后，新的调度流程如下:
+
+![](../image/go-gpm.jpg)
+
++ 全局队列（Global Queue）：存放等待运行的 G。
++ P 的本地队列：同全局队列类似，存放的也是等待运行的 G，存的数量有限，不超过 256 个。新建 G’时，G’优先加入到 P 的本地队列，如果队列满了，则会把本地队列中一半的 G 移动到全局队列。
++ P 列表：所有的 P 都在程序启动时创建，并保存在数组中，最多有 GOMAXPROCS(可配置) 个。
++ M：线程想运行任务就得获取 P，从 P 的本地队列获取 G，P 队列为空时，M 也会尝试从全局队列拿一批 G 放到 P 的本地队列，或从其他 P 的本地队列偷一半放到自己 P 的本地队列。M 运行 G，G 执行之后，M 会从 P 获取下一个 G，不断重复下去
+
+详细细节可以看: [Scalable Go Scheduler Design Doc](https://docs.google.com/document/d/1TTj4T2JO42uD5ID9e89oa0sLKhJYD0Y_kqxDv3I3XMw/edit#heading=h.mmq8lm48qfcw)
 
 
 ## Goroutine
 
+讲了那么多，我该如何创建一个G喃?, 很简单使用go关键字, 比如
 
 
 
-## GPM模型
+
+
+
+
+
+## Channel
+
+
+
+
+
+
+
+
+
+## 实战: AB交互打印
+
+```go
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+func A(startA, startB chan struct{}) {
+	a := []string{"1", "2", "3"}
+	index := 0
+	for range startA {
+		if index > 2 {
+			return
+		}
+		fmt.Println(a[index])
+		index++
+		startB <- struct{}{}
+	}
+}
+
+func B(startA, startB chan struct{}) {
+	b := []string{"x", "y", "z"}
+	index := 0
+	for range startB {
+		fmt.Println(b[index])
+		index++
+		startA <- struct{}{}
+	}
+}
+
+func main() {
+	startA, startB := make(chan struct{}), make(chan struct{})
+	go A(startA, startB)
+	go B(startA, startB)
+
+	startA <- struct{}{}
+	time.Sleep(1 * time.Second)
+}
+```
+
+
+## 总结
+
++ 进程、线程、协程的关系
+
+![](../image/p-m-c.png)
+
++ 如何启动一个goroutine
++ 如何使用channel通讯

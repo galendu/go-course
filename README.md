@@ -64,6 +64,6 @@
   * [数据结构之堆](./day9/go-heap.md)
   * [作业](./day9/homework.md)
 * Day10
-  * [并发内存模型](./day10/concurrency_mem.md)
+  * [并发调度模型](./day10/concurrency_mem.md)
   * [并发编程模型](./day10/concurrency_models.md)
 
