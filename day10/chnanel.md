@@ -524,3 +524,12 @@ func worker(in <-chan *Task, workID int) {
 	}
 }
 ```
+
+
+
+## 总结
+
++ channel基本用法（读/写/关闭)
++ 无缓冲chnannel与同步通信
++ 缓冲channel与异步通信
++ channel的方向
