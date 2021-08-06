@@ -41,6 +41,7 @@ func (h *Heap) Pop() int {
 	}
 	out := h.m[1]
 	h.m[1] = h.m[h.len] //把最后一个元素给堆顶
+	h.m = h.m[:h.len]
 	h.len--
 	//对堆顶节点进行堆化即可
 	heapf(h.m, h.len, 1)

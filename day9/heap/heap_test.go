@@ -17,6 +17,14 @@ func TestHeap(t *testing.T) {
 
 	h.Pop()
 	fmt.Println(h.Items())
+
+	h.Pop()
+	fmt.Println(h.Items())
+
+	h.Pop()
+	fmt.Println(h.Items())
+	h.Pop()
+	fmt.Println(h.Items())
 }
 
 func TestBuildHeap(t *testing.T) {
