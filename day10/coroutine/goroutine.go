@@ -2,37 +2,47 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"runtime/trace"
+	"sync"
 	"time"
 )
 
-func A(startA, startB chan struct{}) {
-	a := []string{"1", "2", "3"}
-	index := 0
-	for range startA {
-		if index > 2 {
-			return
-		}
-		fmt.Println(a[index])
-		index++
-		startB <- struct{}{}
+var wg sync.WaitGroup
+
+func runTask(id int) {
+	// 推出一个减去1
+	defer wg.Done()
+
+	fmt.Printf("task %d start..\n", id)
+	time.Sleep(2 * time.Second)
+	fmt.Printf("task %d complete\n", id)
+}
+
+func asyncRun() {
+	for i := 0; i < 10; i++ {
+		go runTask(i + 1)
+		// 没启动一个go routine 就+1
+		wg.Add(1)
 	}
 }
 
-func B(startA, startB chan struct{}) {
-	b := []string{"x", "y", "z"}
-	index := 0
-	for range startB {
-		fmt.Println(b[index])
-		index++
-		startA <- struct{}{}
+func StartGo() {
+	//创建trace文件
+	f, err := os.Create("trace.out")
+	if err != nil {
+		panic(err)
 	}
-}
 
-func main() {
-	startA, startB := make(chan struct{}), make(chan struct{})
-	go A(startA, startB)
-	go B(startA, startB)
+	defer f.Close()
 
-	startA <- struct{}{}
-	time.Sleep(1 * time.Second)
+	//启动trace goroutine
+	err = trace.Start(f)
+	if err != nil {
+		panic(err)
+	}
+	defer trace.Stop()
+
+	asyncRun()
+	wg.Wait()
 }
