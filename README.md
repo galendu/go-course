@@ -69,5 +69,5 @@
   * [Channel与Select](./day10/select.md)
   * [CSP并发设计模式](./day10/csp-model.md)  
   * [锁和原子操作](./day10/lock.md)
-  * [并发的控制](./day10/controle.md)
+  * [并发注意事项](./day10/tips.md)
 

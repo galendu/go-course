@@ -354,3 +354,8 @@ func Problem() {
 + 锁
 + 互斥锁，读写锁， 以及其区别和应用场景
 + 原子操作
+
+
+## 参考
+
++ [golang 自旋锁](https://studygolang.com/articles/16480)
