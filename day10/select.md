@@ -143,6 +143,50 @@ func SelectOrder() {
 }
 ```
 
+## 为select设置超时时间
+
+谁也无法保证某些情况下的select是否会永久阻塞。很多时候都需要设置一下select的超时时间，可以借助time包的After()实现
+
+```go
+func After(d Duration) <-chan Time
+```
+
+After()函数接受一个时长d，然后它After()等待d时长，等待时间到后，将等待完成时所处时间点写入到channel中并返回这个只读channel
+
+下面是一个例子, 1s后会收到一个事件
+```go
+func TestTimeAfter(t *testing.T) {
+	fmt.Println(time.Now())
+
+	a := time.After(1 * time.Second)
+	fmt.Println(<-a)
+}
+```
+
+比如我们ch1等待 结果的返回, 如果超时我们就退出不等待了
+
+```go
+func SelectTimeout() {
+	ch1 := make(chan string)
+
+	// 激活一个goroutine，但5秒之后才发送数据
+	go func() {
+		time.Sleep(5 * time.Second)
+		ch1 <- "put value into ch1"
+	}()
+
+	select {
+	case val := <-ch1:
+		fmt.Println("recv value from ch1:", val)
+		return
+
+	// 只等待3秒，然后就结束
+	case <-time.After(3 * time.Second):
+		fmt.Println("3 second over, timeover")
+	}
+}
+```
+
 ## for select的性能
 
 我们先聊下，channel的性能:
