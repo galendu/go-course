@@ -1,4 +1,4 @@
-# CSP与Chnanel
+# Chnanel的使用
 
 我们除了可以通过共享内存进行goroutine之间的通信, Go还提供一个特殊的数据类型也可以用于多个goroutine之间通信: chan
 
