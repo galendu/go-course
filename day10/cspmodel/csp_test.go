@@ -9,3 +9,7 @@ func TestBarrierMode(t *testing.T) {
 func TestPipelineMode(t *testing.T) {
 	PipelineMode()
 }
+
+func TestProducerConsumerMode(t *testing.T) {
+	ProducerConsumerMode()
+}

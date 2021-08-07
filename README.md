@@ -70,5 +70,4 @@
   * [CSP并发设计模式](./day10/csp-model.md)  
   * [锁和原子操作](./day10/lock.md)
   * [并发的控制](./day10/controle.md)
-  * [并发编程模型](./day10/concurrency_models.md)
 

@@ -209,6 +209,51 @@ func printRes(in <-chan int) {
 }
 ```
 
+其实写锁 就是独占锁
+
+
+## Producer/Consumer 模式
+
+Producer/Consumer 模式, 也就是我们常见的生产者消费者模型, 该模式主要通过平衡生产线程和消费线程的工作能力来提高程序的整体处理数据的速度
+
+简单地说，就是生产者生产一些数据，然后放到成果队列中，同时消费者从成果队列中来取这些数据。这样就让生产消费变成了异步的两个过程
+
+```go
+func ProducerConsumerMode() {
+	ch := make(chan int, 64) // 成果队列
+
+	go Producer(3, ch) // 生成 3 的倍数的序列
+	go Producer(5, ch) // 生成 5 的倍数的序列
+	go Consumer(ch)    // 消费 生成的队列
+
+	// 运行一定时间后退出
+	time.Sleep(5 * time.Second)
+}
+
+// 生产者: 生成 factor 整数倍的序列
+func Producer(factor int, out chan<- int) {
+	maxCount := 0
+
+	for i := 0; ; i++ {
+		out <- i * factor
+
+		// 最多生成10个
+		maxCount++
+		if maxCount > 10 {
+			break
+		}
+	}
+}
+
+// 消费者
+func Consumer(in <-chan int) {
+	for v := range in {
+		fmt.Println(v)
+	}
+}
+```
+
+
 ## Pub/Sub 模式
 
 ![](../image/pub-sub.png)
