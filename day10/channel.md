@@ -534,9 +534,10 @@ func worker(in <-chan *Task, workID int) {
 
 为了获得更好的性能, 我们可能选择的队列实现方式有:
 + 使用链表实现 FIFO 
-+ 使用2个stack实现FIFO
 + 使用heap实现优先级队列
 + 无锁队列...
+
+
 
 
 ## 总结

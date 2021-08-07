@@ -65,8 +65,9 @@
   * [作业](./day9/homework.md)
 * Day10
   * [并发调度模型与Go GPM调度](./day10/concurrency_mem.md)
-  * [CSP与Channel](./day10/chnanel.md)
-  * [资源竞争与锁](./day10/concurrency_mem.md)
+  * [CSP与Channel](./day10/channel.md)
+  * [Channel与Select](./day10/select.md)
+  * [资源竞争与锁](./day10/lock.md)
   * [并发的控制](./day10/controle.md)
   * [并发编程模型](./day10/concurrency_models.md)
 
