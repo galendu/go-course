@@ -2,7 +2,7 @@ package cspmodel
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"time"
 )
@@ -14,6 +14,7 @@ var (
 )
 
 type SiteResp struct {
+	Site   string
 	Err    error
 	Resp   string
 	Status int
@@ -50,6 +51,8 @@ func BarrierMode() {
 	}
 }
 
+// 1. 从返回管道里面取数据
+// 2. 所有往返的返回了结果, 取了4次数据, 4个网站都返回了数据, 我往外发送一个信号, merge工作完成(down)
 func mergeResponse(resp <-chan SiteResp, ret *[]SiteResp, down chan struct{}) {
 	defer func() {
 		down <- struct{}{}
@@ -68,26 +71,32 @@ func mergeResponse(resp <-chan SiteResp, ret *[]SiteResp, down chan struct{}) {
 
 }
 
-// 构造请求
+// 如何访问一个网站, go http
+// 构造一个并行体
 func doSiteRequest(out chan<- SiteResp, url string) {
-	res := SiteResp{}
+	res := SiteResp{
+		Site: url,
+	}
 	startAt := time.Now()
+
 	defer func() {
 		res.Cost = time.Since(startAt).Milliseconds()
 		out <- res
 	}()
 
+	// 爬取网页
 	resp, err := client.Get(url)
 	if resp != nil {
 		res.Status = resp.StatusCode
 	}
+
 	if err != nil {
 		res.Err = err
 		return
 	}
 
 	// 站不处理结果
-	_, err = ioutil.ReadAll(resp.Body)
+	_, err = io.ReadAll(resp.Body)
 	defer resp.Body.Close()
 	if err != nil {
 		res.Err = err

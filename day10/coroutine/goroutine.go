@@ -5,7 +5,6 @@ import (
 	"os"
 	"runtime/trace"
 	"sync"
-	"time"
 )
 
 var wg sync.WaitGroup
@@ -15,7 +14,7 @@ func runTask(id int) {
 	defer wg.Done()
 
 	fmt.Printf("task %d start..\n", id)
-	time.Sleep(2 * time.Second)
+	// time.Sleep(2 * time.Second)
 	fmt.Printf("task %d complete\n", id)
 }
 
@@ -27,7 +26,7 @@ func asyncRun() {
 	}
 }
 
-func StartGo() {
+func main() {
 	//创建trace文件
 	f, err := os.Create("trace.out")
 	if err != nil {

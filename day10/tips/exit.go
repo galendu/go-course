@@ -15,16 +15,17 @@ func worker(cannel chan struct{}) {
 			time.Sleep(100 * time.Millisecond)
 		case <-cannel:
 			// 退出
+			return
 		}
 	}
 }
 
 func CancelWithChannel() {
-	cannel := make(chan struct{})
-	go worker(cannel)
+	cancel := make(chan struct{})
+	go worker(cancel)
 
 	time.Sleep(time.Second)
-	cannel <- struct{}{}
+	cancel <- struct{}{}
 }
 
 func workerv2(wg *sync.WaitGroup, cancel chan bool) {
@@ -36,6 +37,7 @@ func workerv2(wg *sync.WaitGroup, cancel chan bool) {
 			fmt.Println("hello")
 			time.Sleep(100 * time.Millisecond)
 		case <-cancel:
+			// 清理工作需要进行
 			return
 		}
 	}
@@ -73,19 +75,20 @@ func workerV3(ctx context.Context, wg *sync.WaitGroup) error {
 	}
 }
 func CancelWithCtx() {
+	start := time.Now()
+
+	defer func() {
+		fmt.Print(time.Since(start).Seconds())
+	}()
+
 	// 控制超时
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, _ := context.WithTimeout(context.Background(), 2*time.Second)
 
 	var wg sync.WaitGroup
 	for i := 0; i < 10; i++ {
 		wg.Add(1)
 		go workerV3(ctx, &wg)
 	}
-
-	time.Sleep(time.Second)
-
-	// 取出任务
-	cancel()
 
 	// 等待安全退出
 	wg.Wait()

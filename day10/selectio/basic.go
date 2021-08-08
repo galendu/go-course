@@ -24,7 +24,7 @@ func Basic1() {
 }
 
 func Basic2() {
-	ch1, ch2 := make(chan int), make(chan int)
+	ch1, ch2 := make(chan int, 5), make(chan int, 5)
 	go pump1(ch1)
 	go pump2(ch2)
 	go suck(ch1, ch2)

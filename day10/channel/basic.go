@@ -32,9 +32,9 @@ func recver(ch chan string, down chan struct{}) {
 func Basic() {
 	ch := make(chan string)
 
-	down := make(chan struct{})
-	go sender(ch)       // sender goroutine
-	go recver(ch, down) // recver goroutine
+	down := make(chan struct{}) // bool string struct{}{}
+	go sender(ch)               // sender goroutine
+	go recver(ch, down)         // recver goroutine
 
 	<-down
 }

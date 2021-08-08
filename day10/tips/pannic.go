@@ -2,7 +2,6 @@ package tips
 
 import (
 	"fmt"
-	"net/http"
 	"sync"
 )
 
@@ -17,7 +16,6 @@ func DealPanic() {
 		}
 	}()
 
-	http.ListenAndServe(":8080", nil)
 	arr := []int{0}
 	_ = arr[2]
 }

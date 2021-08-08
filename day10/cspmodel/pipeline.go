@@ -10,6 +10,7 @@ var wg sync.WaitGroup
 
 func PipelineMode() {
 	wg.Add(3)
+
 	// 创建两个channel
 	ch1 := make(chan int)
 	ch2 := make(chan int)

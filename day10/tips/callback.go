@@ -32,9 +32,10 @@ func CallBackMode() {
 	respChan := make(chan SiteResp, len(endpoints))
 	defer close(respChan)
 
-	ret := make([]SiteResp, 0, len(endpoints))
-	cb := func(resp SiteResp) {
-		ret = append(ret, resp)
+	// 回调处理逻辑
+	ret := []SiteResp{}
+	cb := func(v SiteResp) {
+		ret = append(ret, v)
 	}
 
 	// 并行爬取
@@ -51,10 +52,10 @@ func CallBackMode() {
 	}
 }
 
-type SiteRespCallBack func(SiteResp)
+type SiteRespCallback func(SiteResp)
 
 // 构造请求
-func doSiteRequest(cb SiteRespCallBack, url string) {
+func doSiteRequest(cb SiteRespCallback, url string) {
 	res := SiteResp{}
 	startAt := time.Now()
 	defer func() {

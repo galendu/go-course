@@ -32,7 +32,32 @@ func atomicAdd() {
 	wg.Done()
 }
 
-func Problem() {
+func ProblemV1() {
+	var sum int
+
+	// 使用WaitGroup等待1000个goroutine完成
+	var wg sync.WaitGroup
+	wg.Add(1000)
+
+	for i := 0; i < 1000; i++ {
+		go func() {
+			defer wg.Done()
+			// 对变量count执行1000次加1
+			for j := 0; j < 10; j++ {
+				lock.Lock()
+				sum++
+				lock.Unlock()
+			}
+		}()
+	}
+	// 等待10个goroutine完成
+	wg.Wait()
+
+	// 结果出错，而且不稳定。
+	fmt.Println(sum)
+}
+
+func ProblemV2() {
 	// 目的是 记录程序消耗时间
 	start := time.Now()
 	defer func() {

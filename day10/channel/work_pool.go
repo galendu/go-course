@@ -7,6 +7,8 @@ import (
 	"time"
 )
 
+var wg sync.WaitGroup
+
 type Task struct {
 	ID         int
 	JobID      int
@@ -20,10 +22,8 @@ func (t *Task) Run() {
 	t.Status = "Completed"
 }
 
-var wg sync.WaitGroup
-
 // worker的数量，即使用多少goroutine执行任务
-const workerNum = 3
+const workerNum = 4
 
 func RunTaskWithPool() {
 	wg.Add(workerNum)
@@ -36,22 +36,26 @@ func RunTaskWithPool() {
 		go worker(taskQueue, workID)
 	}
 
+	// 生成消息
 	produceTask(taskQueue)
 
-	wg.Wait()
-
-	//记得关闭channel
+	// 5秒后 关闭管道，通知所有worker退出
+	time.Sleep(5 * time.Second)
 	close(taskQueue)
+
+	wg.Wait()
 }
 
 func produceTask(out chan<- *Task) {
 	// 将待执行任务放进buffered channel，共15个任务
 	for i := 1; i <= 15; i++ {
+		fmt.Println(i)
 		out <- &Task{
 			ID:         i,
 			JobID:      100 + i,
 			CreateTime: time.Now(),
 		}
+
 	}
 }
 

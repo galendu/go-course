@@ -48,7 +48,7 @@ func CancelWithChannel() {
 }
 ```
 
-当每个Goroutine收到退出指令退出时一般会进行一定的清理工作，但是退出的清理工作并不能保证被完成，
+当Goroutine收到退出指令, 退出时一般会进行一定的清理工作，但是退出的清理工作并不能保证被完成，
 因为main线程并没有等待各个工作Goroutine退出工作完成的机制，我们可以结合sync.WaitGroup来改进
 
 ```go

@@ -12,6 +12,7 @@ func senderV2(ch chan string, down chan struct{}) {
 
 	// 同步模式等待recver 处理完成
 	<-down
+	
 	// 处理完成后关闭channel
 	close(ch)
 }

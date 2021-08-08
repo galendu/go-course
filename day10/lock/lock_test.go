@@ -1,9 +1,13 @@
 package lock
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 func TestProblem(t *testing.T) {
-	Problem()
+	fmt.Println("xx")
+	ProblemV2()
 }
 
 func TestRWLock(t *testing.T) {
