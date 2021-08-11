@@ -2,7 +2,7 @@ package chnanel
 
 import "fmt"
 
-func senderV2(ch chan string, down chan struct{}) {
+func senderV2(ch chan string, down chan struct{}, senderDown chan struct{}) {
 	ch <- "hello"
 	ch <- "this"
 	ch <- "is"
@@ -11,8 +11,12 @@ func senderV2(ch chan string, down chan struct{}) {
 	ch <- "EOF"
 
 	// 同步模式等待recver 处理完成
+	fmt.Println("sender wait ...")
 	<-down
-	
+	fmt.Println("sender down ...")
+
+	senderDown <- struct{}{}
+
 	// 处理完成后关闭channel
 	close(ch)
 }
@@ -35,9 +39,10 @@ func recverV2(ch chan string, down chan struct{}) {
 func BufferedChan() {
 	ch := make(chan string, 5)
 
-	down := make(chan struct{})
-	go senderV2(ch, down) // sender goroutine
-	go recverV2(ch, down) // recver goroutine
+	senderdown := make(chan struct{})
+	recverdown := make(chan struct{})
+	go senderV2(ch, recverdown, senderdown) // sender goroutine
+	go recverV2(ch, recverdown)             // recver goroutine
 
-	<-down
+	<-recverdown
 }
