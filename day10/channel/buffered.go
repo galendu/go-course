@@ -15,6 +15,7 @@ func senderV2(ch chan string, down chan struct{}, senderDown chan struct{}) {
 	<-down
 	fmt.Println("sender down ...")
 
+	// sender 退出
 	senderDown <- struct{}{}
 
 	// 处理完成后关闭channel
@@ -44,5 +45,6 @@ func BufferedChan() {
 	go senderV2(ch, recverdown, senderdown) // sender goroutine
 	go recverV2(ch, recverdown)             // recver goroutine
 
-	<-recverdown
+	// 等待sender执行完成
+	<-senderdown
 }
