@@ -2,7 +2,7 @@
 
 ![](../image/internerte.jpeg)
 
-+ 流媒体直播: RMTP(TCP), HLS(HTTP), HTTP-FLV
++ 直播服务: RMTP(TCP), HLS(HTTP), HTTP-FLV
 + 邮件服务: SMTP, POP3, IMAP
 + 微信,QQ: 自定义协议(基于TCP)
 + 物联网设备: 自定义协议(基于TCP)
