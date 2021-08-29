@@ -13,3 +13,7 @@ type QueryHostRequest struct {
 	PageSize   uint64 `json:"page_size,omitempty"`
 	PageNumber uint64 `json:"page_number,omitempty"`
 }
+
+func (q *QueryHostRequest) OffSet() int64 {
+	return int64((q.PageNumber - 1) * q.PageSize)
+}

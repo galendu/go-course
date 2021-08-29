@@ -24,7 +24,7 @@ func (s *service) Config() error {
 	if err != nil {
 		return err
 	}
-	s.l = zap.L().Named("Policy")
+	s.l = zap.L().Named("Host")
 	s.db = db
 	return nil
 }
