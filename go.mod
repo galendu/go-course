@@ -4,6 +4,9 @@ go 1.16
 
 require (
 	fyne.io/fyne/v2 v2.0.4
+	github.com/BurntSushi/toml v0.3.1
+	github.com/caarlos0/env/v6 v6.6.2
+	github.com/go-sql-driver/mysql v1.5.0
 	github.com/infraboard/mcube v1.3.6
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/stretchr/testify v1.7.0

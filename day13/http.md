@@ -103,6 +103,46 @@ HTTP的响应同样分为：响应行、响应头和响应体。和请求报文�
 
 响应实体中包含的就是客户端从服务器中获取的数据了。数据的格式和长度都会在响应体中描述
 
+
+## 实战验证
+
+基于标准库写个简单的http 接口服务
+
+```go
+package main
+
+import (
+	"fmt"
+	"net/http"
+)
+
+func IndexHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintln(w, "hello, world")
+}
+
+func main() {
+	http.HandleFunc("/", IndexHandler)
+	http.ListenAndServe(":8080", nil)
+}
+```
+
+启动后使用telent来进行验证
+```sh
+$telnet localhost 8080
+Trying ::1...
+Connected to localhost.
+Escape character is '^]'.
+GET / HTTP/1.1
+HOST:localhost
+
+HTTP/1.1 200 OK
+Date: Sun, 29 Aug 2021 05:58:49 GMT
+Content-Length: 13
+Content-Type: text/plain; charset=utf-8
+
+hello, world
+```
+
 ## 参考
 
 + [rfc2616](https://datatracker.ietf.org/doc/html/rfc2616)

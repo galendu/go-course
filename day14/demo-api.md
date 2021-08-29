@@ -1,3 +1,28 @@
+# Demo后端
+
+功能: CMDB主机信息录入与查询
+
+涉及到的技能:
+
++ go http标准库
++ 第三方路由库: [httprouter](https://github.com/julienschmidt/httprouter)
++ go 操作mysql
+
+
+## 项目骨架介绍
+
+
+## 数据结构与接口定义
+
+
+## 基于MySQL存储的接口实现
+
+
+## HTTP API暴露
+
+我们以RestFull风格来设计我们的接口
+
+```go
 package main
 
 import (
@@ -38,3 +63,9 @@ func main() {
 	log.Printf("listen on %s", addr)
 	log.Fatal(http.ListenAndServe(addr, router))
 }
+```
+
+## 如何管理项目配置
+
+
+
