@@ -1,12 +1,8 @@
 package http
 
 import (
-	"net/http"
-
 	"github.com/julienschmidt/httprouter"
 
-	"github.com/infraboard/mcube/http/request"
-	"github.com/infraboard/mcube/http/response"
 	"github.com/infraboard/mcube/logger"
 	"github.com/infraboard/mcube/logger/zap"
 
@@ -29,35 +25,10 @@ func (h *handler) Config() error {
 	return nil
 }
 
-func (h *handler) QueryUser(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	query := host.NewQueryHostRequestFromHTTP(r)
-	set, err := h.service.QueryHost(r.Context(), query)
-	if err != nil {
-		response.Failed(w, err)
-		return
-	}
-	response.Success(w, set)
-}
-
-func (h *handler) CreateUser(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	ins := host.NewDefaultHost()
-
-	if err := request.GetDataFromRequest(r, ins); err != nil {
-		response.Failed(w, err)
-		return
-	}
-
-	ins, err := h.service.SaveHost(r.Context(), ins)
-	if err != nil {
-		response.Failed(w, err)
-		return
-	}
-
-	response.Success(w, ins)
-}
-
 func RegistAPI(r *httprouter.Router) {
 	api.Config()
-	r.GET("/hosts", api.QueryUser)
-	r.POST("/hosts", api.CreateUser)
+	r.GET("/hosts", api.QueryHost)
+	r.POST("/hosts", api.CreateHost)
+	r.GET("/hosts/:id", api.DescribeHost)
+	r.DELETE("/hosts/:id", api.DeleteHost)
 }

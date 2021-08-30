@@ -9,6 +9,8 @@ import (
 type Service interface {
 	SaveHost(context.Context, *Host) (*Host, error)
 	QueryHost(context.Context, *QueryHostRequest) (*HostSet, error)
+	DescribeHost(context.Context, *DescribeHostRequest) (*Host, error)
+	DeleteHost(context.Context, *DeleteHostRequest) (*Host, error)
 }
 
 const (
@@ -46,4 +48,20 @@ type QueryHostRequest struct {
 
 func (q *QueryHostRequest) OffSet() int64 {
 	return int64((q.PageNumber - 1) * q.PageSize)
+}
+
+func NewDescribeHostRequestWithID(id string) *DescribeHostRequest {
+	return &DescribeHostRequest{Id: id}
+}
+
+type DescribeHostRequest struct {
+	Id string `json:"id"`
+}
+
+func NewDeleteHostRequestWithID(id string) *DeleteHostRequest {
+	return &DeleteHostRequest{Id: id}
+}
+
+type DeleteHostRequest struct {
+	Id string `json:"id"`
 }
