@@ -651,51 +651,96 @@ func (s *service) QueryHost(ctx context.Context, req *host.QueryHostRequest) (*h
 
 ## HTTP API暴露
 
-我们以RestFull风格来设计我们的接口
+我们服务核心逻辑已经编码完成, 剩下得就是通过我们想要的协议暴露给用户使用, 我们通过HTTP协议暴力, API以[RestFull风格来设计](http://www.nbtuan.vip/2017/10/03/restful-vs-soap/)
+
+我们以我们的接口
+
+### 控制反转(IOC)
+
+控制反转（Inversion of Control）是一种是面向对象编程中的一种设计原则，用来减低计算机代码之间的耦合度。其基本思想是：借助于“第三方”实现具有依赖关系的对象之间的解耦
+
+![](./images/ioc.png)
+
+由于引进了中间位置的“第三方”，也就是IOC容器，使得A、B、C、D这4个对象没有了耦合关系，齿轮之间的传动全部依靠“第三方”了
+
+借助于此实现，我们设计了一个pkg包, 用来管理所有的实例: pkg/service.go
 
 ```go
-package main
+package pkg
 
 import (
-	"fmt"
-	"log"
-	"net/http"
-
-	"github.com/julienschmidt/httprouter"
+	"gitee.com/infraboard/go-course/day14/demo/api/pkg/host"
 )
-
-func QueryUser(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	fmt.Fprint(w, "query user!\n")
-}
-
-func CreateUser(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	fmt.Fprint(w, "create user!\n")
-}
-
-func DescribeUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	fmt.Fprintf(w, "describe, %s!\n", ps.ByName("name"))
-}
-
-func DeleteUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	fmt.Fprintf(w, "delete, %s!\n", ps.ByName("name"))
-}
 
 var (
-	addr = ":8080"
+	Host host.Service
+)
+```
+
+所有服务依赖，都是用pkg中管理的实例, 我们在暴露API服务时，需要依赖该服务的实例, 比如
+
+```go
+var (
+	api = &handler{}
 )
 
-func main() {
-	router := httprouter.New()
-	router.GET("/users", QueryUser)
-	router.POST("/users", CreateUser)
-	router.GET("/users/:id", DescribeUser)
-	router.DELETE("/users/:id", DeleteUser)
-
-	log.Printf("listen on %s", addr)
-	log.Fatal(http.ListenAndServe(addr, router))
+type handler struct {
+	service host.Service
+	log     logger.Logger
 }
 ```
 
+然后我们实现HTTP协议处理逻辑，并暴露出去, 这里选用httprouter路由库, 标准库自带的默认路由是不支持路径匹配的[HTTP 协议](../day13/http.md)
+
+```go
+func (h *handler) QueryUser(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	fmt.Fprint(w, "query user!\n")
+}
+
+func (h *handler) CreateUser(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	fmt.Fprint(w, "create user!\n")
+}
+
+func RegistAPI(r *httprouter.Router) {
+	r.GET("/users", api.QueryUser)
+	r.POST("/users", api.CreateUser)
+}
+```
+
+### 利用依赖实现接口
+
+我们请求和响应 使用JSON, 为了标准化接口数据结构, 封装了轻量级的request和response工具库
+
+```go
+func (h *handler) QueryUser(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	query := host.NewQueryHostRequest()
+	set, err := h.service.QueryHost(r.Context(), query)
+	if err != nil {
+		response.Failed(w, err)
+		return
+	}
+	response.Success(w, set)
+}
+
+func (h *handler) CreateUser(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	ins := host.NewDefaultHost()
+
+	if err := request.GetDataFromRequest(r, ins); err != nil {
+		response.Failed(w, err)
+		return
+	}
+
+	ins, err := h.service.SaveHost(r.Context(), ins)
+	if err != nil {
+		response.Failed(w, err)
+		return
+	}
+
+	response.Success(w, ins)
+}
+```
+
+## 组装功能, 实现启动入口
 
 
 

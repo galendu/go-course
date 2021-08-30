@@ -9,6 +9,13 @@ type Service interface {
 	QueryHost(context.Context, *QueryHostRequest) (*HostSet, error)
 }
 
+func NewQueryHostRequest() *QueryHostRequest {
+	return &QueryHostRequest{
+		PageSize:   20,
+		PageNumber: 1,
+	}
+}
+
 type QueryHostRequest struct {
 	PageSize   uint64 `json:"page_size,omitempty"`
 	PageNumber uint64 `json:"page_number,omitempty"`

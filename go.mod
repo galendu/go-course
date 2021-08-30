@@ -10,6 +10,7 @@ require (
 	github.com/infraboard/mcube v1.4.3
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/rs/xid v1.3.0
+	github.com/spf13/cobra v1.2.1
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97
 )
