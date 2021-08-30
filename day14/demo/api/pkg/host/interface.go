@@ -4,11 +4,19 @@ import (
 	"context"
 	"net/http"
 	"strconv"
+
+	"github.com/go-playground/validator/v10"
+)
+
+// use a single instance of Validate, it caches struct info
+var (
+	validate = validator.New()
 )
 
 type Service interface {
 	SaveHost(context.Context, *Host) (*Host, error)
 	QueryHost(context.Context, *QueryHostRequest) (*HostSet, error)
+	UpdateHost(context.Context, *UpdateHostRequest) (*Host, error)
 	DescribeHost(context.Context, *DescribeHostRequest) (*Host, error)
 	DeleteHost(context.Context, *DeleteHostRequest) (*Host, error)
 }
@@ -64,4 +72,34 @@ func NewDeleteHostRequestWithID(id string) *DeleteHostRequest {
 
 type DeleteHostRequest struct {
 	Id string `json:"id"`
+}
+
+type UpdateMode int
+
+const (
+	PUT UpdateMode = iota
+	PATCH
+)
+
+type UpdateHostData struct {
+	*Resource
+	*Describe
+}
+
+func NewUpdateHostRequest(id string) *UpdateHostRequest {
+	return &UpdateHostRequest{
+		Id:             id,
+		UpdateMode:     PUT,
+		UpdateHostData: &UpdateHostData{},
+	}
+}
+
+type UpdateHostRequest struct {
+	Id             string          `json:"id" validate:"required"`
+	UpdateMode     UpdateMode      `json:"update_mode"`
+	UpdateHostData *UpdateHostData `json:"data" validate:"required"`
+}
+
+func (req *UpdateHostRequest) Validate() error {
+	return validate.Struct(req)
 }

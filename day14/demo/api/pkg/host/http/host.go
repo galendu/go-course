@@ -57,3 +57,38 @@ func (h *handler) DeleteHost(w http.ResponseWriter, r *http.Request, ps httprout
 	}
 	response.Success(w, set)
 }
+
+func (h *handler) PutHost(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	req := host.NewUpdateHostRequest(ps.ByName("id"))
+
+	if err := request.GetDataFromRequest(r, req.UpdateHostData); err != nil {
+		response.Failed(w, err)
+		return
+	}
+
+	ins, err := h.service.UpdateHost(r.Context(), req)
+	if err != nil {
+		response.Failed(w, err)
+		return
+	}
+
+	response.Success(w, ins)
+}
+
+func (h *handler) PatchHost(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	req := host.NewUpdateHostRequest(ps.ByName("id"))
+	req.UpdateMode = host.PATCH
+
+	if err := request.GetDataFromRequest(r, req); err != nil {
+		response.Failed(w, err)
+		return
+	}
+
+	ins, err := h.service.UpdateHost(r.Context(), req)
+	if err != nil {
+		response.Failed(w, err)
+		return
+	}
+
+	response.Success(w, ins)
+}

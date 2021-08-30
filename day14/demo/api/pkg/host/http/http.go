@@ -31,4 +31,6 @@ func RegistAPI(r *httprouter.Router) {
 	r.POST("/hosts", api.CreateHost)
 	r.GET("/hosts/:id", api.DescribeHost)
 	r.DELETE("/hosts/:id", api.DeleteHost)
+	r.PUT("/hosts/:id", api.PutHost)
+	r.PATCH("/hosts/:id", api.PatchHost)
 }

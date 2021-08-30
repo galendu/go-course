@@ -16,7 +16,7 @@ const (
 	insertResourceSQL = `INSERT INTO resource (
 		id,vendor,region,zone,create_at,expire_at,category,type,instance_id,
 		name,description,status,update_at,sync_at,sync_accout,public_ip,
-		private_ip,pay_type,describe_hash
+		private_ip,pay_type,describe_hash,resource_hash
 	) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);`
 	insertHostSQL = `INSERT INTO host (
 		resource_id,cpu,memory,gpu_amount,gpu_spec,os_type,os_name,
@@ -30,67 +30,10 @@ const (
 )
 
 func (s *service) SaveHost(ctx context.Context, h *host.Host) (*host.Host, error) {
-	var (
-		stmt *sql.Stmt
-		err  error
-	)
-
 	h.Id = xid.New().String()
 	h.ResourceId = h.Id
 
-	// 开启一个事物
-	// 文档请参考: http://cngolib.com/database-sql.html#db-begintx
-	// 关于事物级别可以参考文章: https://zhuanlan.zhihu.com/p/117476959
-	tx, err := s.db.BeginTx(ctx, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	// 执行结果提交或者回滚事务
-	// 当使用sql.Tx的操作方式操作数据后，需要我们使用sql.Tx的Commit()方法显式地提交事务，
-	// 如果出错，则可以使用sql.Tx中的Rollback()方法回滚事务，保持数据的一致性
-	defer func() {
-		if err != nil {
-			tx.Rollback()
-			return
-		}
-		tx.Commit()
-	}()
-
-	// 避免SQL注入, 请使用Prepare
-	stmt, err = tx.Prepare(insertResourceSQL)
-	if err != nil {
-		return nil, err
-	}
-	defer stmt.Close()
-
-	_, err = stmt.Exec(
-		h.Id, h.Vendor, h.Region, h.Zone, h.CreateAt, h.ExpireAt, h.Category, h.Type, h.InstanceId,
-		h.Name, h.Description, h.Status, h.UpdateAt, h.SyncAt, h.SyncAccount, h.PublicIP,
-		h.PrivateIP, h.PayType, h.DescribeHash,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	// 生成描写信息的Hash
-	if err := h.GenHash(); err != nil {
-		return nil, err
-	}
-
-	// 避免SQL注入, 请使用Prepare
-	stmt, err = tx.Prepare(insertHostSQL)
-	if err != nil {
-		return nil, err
-	}
-	defer stmt.Close()
-
-	_, err = stmt.Exec(
-		h.ResourceId, h.CPU, h.Memory, h.GPUAmount, h.GPUSpec, h.OSType, h.OSName,
-		h.SerialNumber, h.ImageID, h.InternetMaxBandwidthOut,
-		h.InternetMaxBandwidthIn, h.KeyPairName, h.SecurityGroups,
-	)
-	if err != nil {
+	if err := s.save(ctx, h); err != nil {
 		return nil, err
 	}
 
@@ -101,6 +44,7 @@ func (s *service) QueryHost(ctx context.Context, req *host.QueryHostRequest) (*h
 	query := sqlbuilder.NewQuery(queryHostSQL)
 	querySQL, args := query.Order("create_at").Desc().Limit(req.OffSet(), uint(req.PageSize)).BuildQuery()
 	s.l.Debugf("sql: %s", querySQL)
+
 	queryStmt, err := s.db.Prepare(querySQL)
 	if err != nil {
 		return nil, exception.NewInternalServerError("prepare query host error, %s", err.Error())
@@ -120,7 +64,7 @@ func (s *service) QueryHost(ctx context.Context, req *host.QueryHostRequest) (*h
 			&ins.Id, &ins.Vendor, &ins.Region, &ins.Zone, &ins.CreateAt, &ins.ExpireAt,
 			&ins.Category, &ins.Type, &ins.InstanceId, &ins.Name, &ins.Description,
 			&ins.Status, &ins.UpdateAt, &ins.SyncAt, &ins.SyncAccount,
-			&ins.PublicIP, &ins.PrivateIP, &ins.PayType, &ins.DescribeHash, &ins.ResourceId,
+			&ins.PublicIP, &ins.PrivateIP, &ins.PayType, &ins.DescribeHash, &ins.ResourceHash, &ins.ResourceId,
 			&ins.CPU, &ins.Memory, &ins.GPUAmount, &ins.GPUSpec, &ins.OSType, &ins.OSName,
 			&ins.SerialNumber, &ins.ImageID, &ins.InternetMaxBandwidthOut, &ins.InternetMaxBandwidthIn,
 			&ins.KeyPairName, &ins.SecurityGroups,
@@ -162,7 +106,7 @@ func (s *service) DescribeHost(ctx context.Context, req *host.DescribeHostReques
 		&ins.Id, &ins.Vendor, &ins.Region, &ins.Zone, &ins.CreateAt, &ins.ExpireAt,
 		&ins.Category, &ins.Type, &ins.InstanceId, &ins.Name, &ins.Description,
 		&ins.Status, &ins.UpdateAt, &ins.SyncAt, &ins.SyncAccount,
-		&ins.PublicIP, &ins.PrivateIP, &ins.PayType, &ins.DescribeHash, &ins.ResourceId,
+		&ins.PublicIP, &ins.PrivateIP, &ins.PayType, &ins.DescribeHash, &ins.ResourceHash, &ins.ResourceId,
 		&ins.CPU, &ins.Memory, &ins.GPUAmount, &ins.GPUSpec, &ins.OSType, &ins.OSName,
 		&ins.SerialNumber, &ins.ImageID, &ins.InternetMaxBandwidthOut, &ins.InternetMaxBandwidthIn,
 		&ins.KeyPairName, &ins.SecurityGroups,
@@ -180,55 +124,49 @@ func (s *service) DescribeHost(ctx context.Context, req *host.DescribeHostReques
 
 func (s *service) DeleteHost(ctx context.Context, req *host.DeleteHostRequest) (
 	*host.Host, error) {
-	var (
-		stmt *sql.Stmt
-		err  error
-	)
 
 	ins, err := s.DescribeHost(ctx, host.NewDescribeHostRequestWithID(req.Id))
 	if err != nil {
 		return nil, err
 	}
 
-	// 开启一个事物
-	// 文档请参考: http://cngolib.com/database-sql.html#db-begintx
-	// 关于事物级别可以参考文章: https://zhuanlan.zhihu.com/p/117476959
-	tx, err := s.db.BeginTx(ctx, nil)
+	if err := s.delete(ctx, req); err != nil {
+		return nil, err
+	}
+
+	return ins, nil
+}
+
+func (s *service) UpdateHost(ctx context.Context, req *host.UpdateHostRequest) (
+	*host.Host, error) {
+	if err := req.Validate(); err != nil {
+		return nil, exception.NewBadRequest("validate update host error, %s", err)
+	}
+
+	ins, err := s.DescribeHost(ctx, host.NewDescribeHostRequestWithID(req.Id))
 	if err != nil {
 		return nil, err
 	}
 
-	// 执行结果提交或者回滚事务
-	// 当使用sql.Tx的操作方式操作数据后，需要我们使用sql.Tx的Commit()方法显式地提交事务，
-	// 如果出错，则可以使用sql.Tx中的Rollback()方法回滚事务，保持数据的一致性
-	defer func() {
-		if err != nil {
-			tx.Rollback()
-			return
-		}
-		tx.Commit()
-	}()
+	oldRH, oldDH := ins.ResourceHash, ins.DescribeHash
 
-	stmt, err = tx.Prepare(deleteHostSQL)
-	if err != nil {
-		return nil, exception.NewInternalServerError(err.Error())
-	}
-	defer stmt.Close()
-
-	_, err = stmt.Exec(req.Id)
-	if err != nil {
-		return nil, exception.NewInternalServerError(err.Error())
+	switch req.UpdateMode {
+	case host.PATCH:
+		ins.Patch(req.UpdateHostData)
+	default:
+		ins.Put(req.UpdateHostData)
 	}
 
-	stmt, err = s.db.Prepare(deleteResourceSQL)
-	if err != nil {
-		return nil, exception.NewInternalServerError(err.Error())
-	}
-	defer stmt.Close()
+	if oldRH == ins.ResourceHash {
 
-	_, err = stmt.Exec(req.Id)
-	if err != nil {
-		return nil, exception.NewInternalServerError(err.Error())
+	} else {
+		s.l.Debug("resource data hash not changed, needn't update")
+	}
+
+	if oldDH == ins.DescribeHash {
+
+	} else {
+		s.l.Debug("describe data hash not changed, needn't update")
 	}
 
 	return ins, nil
