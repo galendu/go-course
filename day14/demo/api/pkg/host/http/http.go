@@ -30,7 +30,7 @@ func (h *handler) Config() error {
 }
 
 func (h *handler) QueryUser(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	query := host.NewQueryHostRequest()
+	query := host.NewQueryHostRequestFromHTTP(r)
 	set, err := h.service.QueryHost(r.Context(), query)
 	if err != nil {
 		response.Failed(w, err)
@@ -57,6 +57,7 @@ func (h *handler) CreateUser(w http.ResponseWriter, r *http.Request, _ httproute
 }
 
 func RegistAPI(r *httprouter.Router) {
-	r.GET("/users", api.QueryUser)
-	r.POST("/users", api.CreateUser)
+	api.Config()
+	r.GET("/hosts", api.QueryUser)
+	r.POST("/hosts", api.CreateUser)
 }

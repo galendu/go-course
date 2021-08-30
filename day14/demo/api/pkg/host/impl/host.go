@@ -21,8 +21,8 @@ const (
 		resource_id,cpu,memory,gpu_amount,gpu_spec,os_type,os_name,
 		serial_number,image_id,internet_max_bandwidth_out,
 		internet_max_bandwidth_in,key_pair_name,security_groups
-	) VALUES (?,?,?,?,?,?,?,?,?,?,?,?);`
-	queryHostSQL = `SELECT * FROM resource as r LEFT JOIN host h ON r.id=h.resource_id;`
+	) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?);`
+	queryHostSQL = `SELECT * FROM resource as r LEFT JOIN host h ON r.id=h.resource_id`
 )
 
 func (s *service) SaveHost(ctx context.Context, h *host.Host) (*host.Host, error) {
@@ -67,6 +67,7 @@ func (s *service) SaveHost(ctx context.Context, h *host.Host) (*host.Host, error
 func (s *service) QueryHost(ctx context.Context, req *host.QueryHostRequest) (*host.HostSet, error) {
 	query := sqlbuilder.NewQuery(queryHostSQL)
 	querySQL, args := query.Order("create_at").Desc().Limit(req.OffSet(), uint(req.PageSize)).BuildQuery()
+	s.l.Debugf("sql: %s", querySQL)
 	queryStmt, err := s.db.Prepare(querySQL)
 	if err != nil {
 		return nil, exception.NewInternalServerError("prepare query job task error, %s", err.Error())
@@ -84,8 +85,8 @@ func (s *service) QueryHost(ctx context.Context, req *host.QueryHostRequest) (*h
 		ins := host.NewDefaultHost()
 		err := rows.Scan(
 			&ins.Id, &ins.Vendor, &ins.Region, &ins.Zone, &ins.CreateAt, &ins.ExpireAt,
-			&ins.Category, &ins.Category, &ins.Type, &ins.InstanceId, &ins.Name,
-			&ins.Description, &ins.Status, &ins.UpdateAt, &ins.SyncAt, &ins.SyncAccount,
+			&ins.Category, &ins.Type, &ins.InstanceId, &ins.Name, &ins.Description,
+			&ins.Status, &ins.UpdateAt, &ins.SyncAt, &ins.SyncAccount,
 			&ins.PublicIP, &ins.PrivateIP, &ins.PayType, &ins.ResourceId, &ins.CPU,
 			&ins.Memory, &ins.GPUAmount, &ins.GPUSpec, &ins.OSType, &ins.OSName,
 			&ins.SerialNumber, &ins.ImageID, &ins.InternetMaxBandwidthOut, &ins.InternetMaxBandwidthIn,

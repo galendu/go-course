@@ -14,8 +14,11 @@
 项目组织的核心思路是: 每个业务模块尽量独立, 方便后期扩展和迁移成独立的服务
 
 ```
-conf  程序配置对象
-pkg   业务领域包
+cmd        程序cli工具包
+conf       程序配置对象
+protocol   程序监听的协议
+version    程序自身的版本信息
+pkg        业务领域包
   - host
 	- model     业务需要的数据模型
 	- interface 业务接口(领域方法)
@@ -517,7 +520,7 @@ DROP TABLE IF EXISTS `host`;
 CREATE TABLE `host` (
   `resource_id` varchar(64) NOT NULL,
   `cpu` tinyint(4) NOT NULL,
-  `mem` int(13) NOT NULL,
+  `memory` int(13) NOT NULL,
   `gpu_amount` tinyint(4) DEFAULT NULL,
   `gpu_spec` varchar(255) DEFAULT NULL,
   `os_type` varchar(255) DEFAULT NULL,
@@ -549,7 +552,7 @@ const (
 		serial_number,image_id,internet_max_bandwidth_out,
 		internet_max_bandwidth_in,key_pair_name,security_groups
 	) VALUES (?,?,?,?,?,?,?,?,?,?,?,?);`
-	queryHostSQL = `SELECT * FROM resource as r LEFT JOIN host h ON r.id=h.resource_id;`
+	queryHostSQL = `SELECT * FROM resource as r LEFT JOIN host h ON r.id=h.resource_id`
 )
 ```
 
@@ -702,8 +705,8 @@ func (h *handler) CreateUser(w http.ResponseWriter, r *http.Request, _ httproute
 }
 
 func RegistAPI(r *httprouter.Router) {
-	r.GET("/users", api.QueryUser)
-	r.POST("/users", api.CreateUser)
+	r.GET("/hosts", api.QueryUser)
+	r.POST("/hosts", api.CreateUser)
 }
 ```
 
