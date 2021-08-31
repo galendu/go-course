@@ -289,3 +289,12 @@ axios
 我们将请求回来的数据保存到tableData, table这个视图绑定了变量tableData, 这样视图会跟随数据的变化而变化
 
 ![](./images/table-data.jpg)
+
+最后我们调整需要展示的字段
+
+
+## 添加分页
+
+
+
+## 添加搜索
