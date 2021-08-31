@@ -10,6 +10,7 @@ import (
 	"github.com/infraboard/mcube/logger"
 	"github.com/infraboard/mcube/logger/zap"
 	"github.com/julienschmidt/httprouter"
+	"github.com/rs/cors"
 
 	"gitee.com/infraboard/go-course/day14/demo/api/conf"
 	hostAPI "gitee.com/infraboard/go-course/day14/demo/api/pkg/host/http"
@@ -18,6 +19,7 @@ import (
 // NewHTTPService 构建函数
 func NewHTTPService() *HTTPService {
 	r := httprouter.New()
+
 	server := &http.Server{
 		ReadHeaderTimeout: 60 * time.Second,
 		ReadTimeout:       60 * time.Second,
@@ -25,7 +27,7 @@ func NewHTTPService() *HTTPService {
 		IdleTimeout:       60 * time.Second,
 		MaxHeaderBytes:    1 << 20,
 		Addr:              conf.C().App.Addr(),
-		Handler:           r,
+		Handler:           cors.AllowAll().Handler(r),
 	}
 	return &HTTPService{
 		r:      r,

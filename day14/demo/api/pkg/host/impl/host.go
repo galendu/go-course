@@ -9,6 +9,7 @@ import (
 
 	"github.com/infraboard/mcube/exception"
 	"github.com/infraboard/mcube/sqlbuilder"
+	"github.com/infraboard/mcube/types/ftime"
 
 	"gitee.com/infraboard/go-course/day14/demo/api/pkg/host"
 )
@@ -43,6 +44,7 @@ const (
 func (s *service) SaveHost(ctx context.Context, h *host.Host) (*host.Host, error) {
 	h.Id = xid.New().String()
 	h.ResourceId = h.Id
+	h.SyncAt = ftime.Now().Timestamp()
 
 	if err := s.save(ctx, h); err != nil {
 		return nil, err
@@ -53,7 +55,7 @@ func (s *service) SaveHost(ctx context.Context, h *host.Host) (*host.Host, error
 
 func (s *service) QueryHost(ctx context.Context, req *host.QueryHostRequest) (*host.HostSet, error) {
 	query := sqlbuilder.NewQuery(queryHostSQL)
-	querySQL, args := query.Order("create_at").Desc().Limit(req.OffSet(), uint(req.PageSize)).BuildQuery()
+	querySQL, args := query.Order("sync_at").Desc().Limit(req.OffSet(), uint(req.PageSize)).BuildQuery()
 	s.l.Debugf("sql: %s", querySQL)
 
 	queryStmt, err := s.db.Prepare(querySQL)
