@@ -3,6 +3,7 @@ package impl
 import (
 	"context"
 	"database/sql"
+	"fmt"
 
 	"github.com/rs/xid"
 
@@ -17,12 +18,22 @@ const (
 		id,vendor,region,zone,create_at,expire_at,category,type,instance_id,
 		name,description,status,update_at,sync_at,sync_accout,public_ip,
 		private_ip,pay_type,describe_hash,resource_hash
-	) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);`
+	) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);`
 	insertHostSQL = `INSERT INTO host (
 		resource_id,cpu,memory,gpu_amount,gpu_spec,os_type,os_name,
 		serial_number,image_id,internet_max_bandwidth_out,
 		internet_max_bandwidth_in,key_pair_name,security_groups
 	) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?);`
+	updateResourceSQL = `UPDATE resource SET 
+		expire_at=?,category=?,type=?,name=?,description=?,
+		status=?,update_at=?,sync_at=?,sync_accout=?,
+		public_ip=?,private_ip=?,pay_type=?,describe_hash=?,resource_hash=?
+	WHERE id = ?`
+	updateHostSQL = `UPDATE host SET 
+		cpu=?,memory=?,gpu_amount=?,gpu_spec=?,os_type=?,os_name=?,
+		image_id=?,internet_max_bandwidth_out=?,
+		internet_max_bandwidth_in=?,key_pair_name=?,security_groups=?
+	WHERE resource_id = ?`
 
 	queryHostSQL      = `SELECT * FROM resource as r LEFT JOIN host h ON r.id=h.resource_id`
 	deleteHostSQL     = `DELETE FROM host WHERE resource_id = ?;`
@@ -139,8 +150,18 @@ func (s *service) DeleteHost(ctx context.Context, req *host.DeleteHostRequest) (
 
 func (s *service) UpdateHost(ctx context.Context, req *host.UpdateHostRequest) (
 	*host.Host, error) {
+	var (
+		stmt *sql.Stmt
+		err  error
+	)
+
 	if err := req.Validate(); err != nil {
 		return nil, exception.NewBadRequest("validate update host error, %s", err)
+	}
+
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, fmt.Errorf("start tx error, %s", err)
 	}
 
 	ins, err := s.DescribeHost(ctx, host.NewDescribeHostRequestWithID(req.Id))
@@ -149,24 +170,65 @@ func (s *service) UpdateHost(ctx context.Context, req *host.UpdateHostRequest) (
 	}
 
 	oldRH, oldDH := ins.ResourceHash, ins.DescribeHash
-
 	switch req.UpdateMode {
 	case host.PATCH:
 		ins.Patch(req.UpdateHostData)
+		fmt.Println("new", ins.ResourceHash, ins.Name)
 	default:
 		ins.Put(req.UpdateHostData)
 	}
 
-	if oldRH == ins.ResourceHash {
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+			return
+		}
+	}()
 
+	if oldRH != ins.ResourceHash {
+		// 避免SQL注入, 请使用Prepare
+		stmt, err = tx.Prepare(updateResourceSQL)
+		if err != nil {
+			return nil, err
+		}
+		defer stmt.Close()
+
+		_, err = stmt.Exec(
+			ins.ExpireAt, ins.Category, ins.Type, ins.Name, ins.Description,
+			ins.Status, ins.UpdateAt, ins.SyncAt, ins.SyncAccount,
+			ins.PublicIP, ins.PrivateIP, ins.PayType, ins.DescribeHash, ins.ResourceHash,
+			ins.ResourceId,
+		)
+		if err != nil {
+			return nil, err
+		}
 	} else {
 		s.l.Debug("resource data hash not changed, needn't update")
 	}
 
-	if oldDH == ins.DescribeHash {
+	if oldDH != ins.DescribeHash {
+		// 避免SQL注入, 请使用Prepare
+		stmt, err = tx.Prepare(updateHostSQL)
+		if err != nil {
+			return nil, err
+		}
+		defer stmt.Close()
 
+		_, err = stmt.Exec(
+			ins.CPU, ins.Memory, ins.GPUAmount, ins.GPUSpec, ins.OSType, ins.OSName,
+			ins.ImageID, ins.InternetMaxBandwidthOut,
+			ins.InternetMaxBandwidthIn, ins.KeyPairName, ins.SecurityGroups,
+			ins.Id,
+		)
+		if err != nil {
+			return nil, err
+		}
 	} else {
 		s.l.Debug("describe data hash not changed, needn't update")
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, err
 	}
 
 	return ins, nil

@@ -79,7 +79,7 @@ func (h *handler) PatchHost(w http.ResponseWriter, r *http.Request, ps httproute
 	req := host.NewUpdateHostRequest(ps.ByName("id"))
 	req.UpdateMode = host.PATCH
 
-	if err := request.GetDataFromRequest(r, req); err != nil {
+	if err := request.GetDataFromRequest(r, req.UpdateHostData); err != nil {
 		response.Failed(w, err)
 		return
 	}

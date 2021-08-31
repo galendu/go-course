@@ -16,6 +16,7 @@ func (s *service) save(ctx context.Context, h *host.Host) error {
 	// 开启一个事物
 	// 文档请参考: http://cngolib.com/database-sql.html#db-begintx
 	// 关于事物级别可以参考文章: https://zhuanlan.zhihu.com/p/117476959
+	// wiki: https://en.wikipedia.org/wiki/Isolation_(database_systems)#Isolation_levels
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
@@ -29,7 +30,6 @@ func (s *service) save(ctx context.Context, h *host.Host) error {
 			tx.Rollback()
 			return
 		}
-		tx.Commit()
 	}()
 
 	// 避免SQL注入, 请使用Prepare
@@ -42,7 +42,7 @@ func (s *service) save(ctx context.Context, h *host.Host) error {
 	_, err = stmt.Exec(
 		h.Id, h.Vendor, h.Region, h.Zone, h.CreateAt, h.ExpireAt, h.Category, h.Type, h.InstanceId,
 		h.Name, h.Description, h.Status, h.UpdateAt, h.SyncAt, h.SyncAccount, h.PublicIP,
-		h.PrivateIP, h.PayType, h.DescribeHash,
+		h.PrivateIP, h.PayType, h.DescribeHash, h.ResourceHash,
 	)
 	if err != nil {
 		return err
@@ -69,7 +69,7 @@ func (s *service) save(ctx context.Context, h *host.Host) error {
 		return err
 	}
 
-	return nil
+	return tx.Commit()
 }
 
 func (s *service) delete(ctx context.Context, req *host.DeleteHostRequest) error {
@@ -94,7 +94,6 @@ func (s *service) delete(ctx context.Context, req *host.DeleteHostRequest) error
 			tx.Rollback()
 			return
 		}
-		tx.Commit()
 	}()
 
 	stmt, err = tx.Prepare(deleteHostSQL)
@@ -119,5 +118,5 @@ func (s *service) delete(ctx context.Context, req *host.DeleteHostRequest) error
 		return exception.NewInternalServerError(err.Error())
 	}
 
-	return nil
+	return tx.Commit()
 }

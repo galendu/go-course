@@ -2,6 +2,7 @@ package host
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -101,5 +102,9 @@ type UpdateHostRequest struct {
 }
 
 func (req *UpdateHostRequest) Validate() error {
+	if req.UpdateHostData == nil {
+		return fmt.Errorf("update data required")
+	}
+
 	return validate.Struct(req)
 }
