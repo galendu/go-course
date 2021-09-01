@@ -47,12 +47,14 @@ func NewQueryHostRequestFromHTTP(r *http.Request) *QueryHostRequest {
 	return &QueryHostRequest{
 		PageSize:   psUint64,
 		PageNumber: pnUint64,
+		Keywords:   qs.Get("keywords"),
 	}
 }
 
 type QueryHostRequest struct {
 	PageSize   uint64 `json:"page_size,omitempty"`
 	PageNumber uint64 `json:"page_number,omitempty"`
+	Keywords   string `json:"keywords"`
 }
 
 func (q *QueryHostRequest) OffSet() int64 {

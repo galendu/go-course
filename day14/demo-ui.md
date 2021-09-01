@@ -295,6 +295,196 @@ axios
 
 ## 添加分页
 
+我们先验证后端API接口的分页功能
+
+![](./images/server-page-query.jpg)
 
 
-## 添加搜索
+参照官方文档: [Pagination 分页](https://element.eleme.cn/#/zh-CN/component/pagination)
+
+调整后的模版:
+
+```js
+  <template>
+  <div>
+    <el-table
+      :data="tableData"
+      style="width: 100%">
+      <el-table-column
+        prop="id"
+        label="资产ID"
+        width="180">
+      </el-table-column>
+      <el-table-column
+        prop="name"
+        label="主机名称"
+        width="180">
+      </el-table-column>
+      <el-table-column
+        prop="region"
+        label="地址">
+      </el-table-column>
+    </el-table>
+    <el-pagination
+      @size-change="handleSizeChange"
+      @current-change="handleCurrentChange"
+      :current-page="query.page_number"
+      :page-sizes="[2, 10, 20, 30, 50]"
+      :page-size="query.page_size"
+      layout="total, sizes, prev, pager, next, jumper"
+      :total="total">
+    </el-pagination>
+  </div>
+
+  </template>
+
+<script>
+import axios from 'axios';
+
+export default {
+  data() {
+    return {
+      query: {
+        page_size: 20,
+        page_number: 1,
+      },
+      total: 0,
+      tableData: []
+    }
+  },
+  mounted() {
+    this.getHosts()
+  },
+  methods: {
+    getHosts() {
+      axios
+        .get('http://localhost:8050/hosts', {params: this.query})
+        .then(response => {
+          this.tableData = response.data.data.items
+          this.total = response.data.data.total
+          console.log(this.tableData)
+        })
+        .catch(function (error) { // 请求失败处理
+          console.log(error);
+        });
+    },
+    handleSizeChange(val) {
+      this.getHosts()
+    },
+    handleCurrentChange(val) {
+      this.getHosts()
+    }
+  },
+}
+</script>
+```
+
+打开控制台，我们的请求已经携带参数了:
+
+![](./images/network-query.jpg)
+
+现在分页效果基本已经出来, 但是切换缺没有效果
+
+![](./images/page-effect.jpg)
+
+我们需要切换时修改参数并再次向服务端 请求数据
+
+```js
+  methods: {
+    getHosts() {
+      axios
+        .get('http://localhost:8050/hosts', {params: this.query})
+        .then(response => {
+          this.tableData = response.data.data.items
+          this.total = response.data.data.total
+          console.log(this.tableData)
+        })
+        .catch(function (error) { // 请求失败处理
+          console.log(error);
+        });
+    },
+    handleSizeChange(val) {
+      this.query.page_size = val
+      this.getHosts()
+    },
+    handleCurrentChange(val) {
+      this.query.page_number = val
+      this.getHosts()
+    }
+  },
+```
+
+## 后端添加关键字搜索
+
+后端支持关键字搜索, 添加keyworkds查询参数:
+
+```go
+type QueryHostRequest struct {
+	PageSize   uint64 `json:"page_size,omitempty"`
+	PageNumber uint64 `json:"page_number,omitempty"`
+	Keywords   string `json:"keywords"`
+}
+```
+
+添加过滤逻辑
+```go
+func (s *service) QueryHost(ctx context.Context, req *host.QueryHostRequest) (*host.HostSet, error) {
+	query := sqlbuilder.NewQuery(queryHostSQL)
+	if req.Keywords != "" {
+		query.Where("r.name LIKE ?", "%"+req.Keywords+"%")
+	}
+  ...
+}
+```
+
+http 协议处理处, 接收该参数
+```go
+func NewQueryHostRequestFromHTTP(r *http.Request) *QueryHostRequest {
+	qs := r.URL.Query()
+
+  ...
+
+	return &QueryHostRequest{
+		PageSize:   psUint64,
+		PageNumber: pnUint64,
+		Keywords:   qs.Get("keywords"),
+	}
+}
+```
+
+![](./images/keywords-query.jpg)
+
+## 前端添加关键字搜索框
+
+我们使用输入框接收用户输入的关键字参数: [Input 输入框](https://element.eleme.cn/#/zh-CN/component/input)
+
+```js
+  <template>
+  <div>
+    <el-input v-model="query.keywords" placeholder="请输入内容"></el-input>
+    ...
+  </div>
+</template>
+
+export default {
+  data() {
+    return {
+      query: {
+        keywords: '',
+        page_size: 20,
+        page_number: 1,
+      },
+      ...
+    }
+  },
+```
+
+然后我们绑定下 键盘回车键(enter), 当用户输入完成 回车时触发搜索
+
+```js
+<el-input v-model="query.keywords" @keyup.enter.native="getHosts" placeholder="请输入内容"></el-input>
+```
+
+最好验证界面效果:
+
+![](./images/keyword-input.jpg)

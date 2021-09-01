@@ -55,6 +55,10 @@ func (s *service) SaveHost(ctx context.Context, h *host.Host) (*host.Host, error
 
 func (s *service) QueryHost(ctx context.Context, req *host.QueryHostRequest) (*host.HostSet, error) {
 	query := sqlbuilder.NewQuery(queryHostSQL)
+	if req.Keywords != "" {
+		query.Where("r.name LIKE ?", "%"+req.Keywords+"%")
+	}
+
 	querySQL, args := query.Order("sync_at").Desc().Limit(req.OffSet(), uint(req.PageSize)).BuildQuery()
 	s.l.Debugf("sql: %s", querySQL)
 
