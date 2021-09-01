@@ -745,6 +745,388 @@ func (h *handler) CreateUser(w http.ResponseWriter, r *http.Request, _ httproute
 
 ## 组装功能, 实现启动入口
 
+为程序提供cli启动命令, 类似于
+```
+demo-api start
+```
+
+### 使用cobra实现服务启动命令
+
+服务启动流程大致如下:
+
++ 读取配置, 初始化全局变量
++ 初始化全局日志配置, 加载全局日志实例
++ 初始化服务层, 将我们的服务实例注册到 Ioc
++ 创建服务, 监听中断信号
++ 启动服务
+
+```go
+// startCmd represents the start command
+var serviceCmd = &cobra.Command{
+	Use:   "start",
+	Short: "Demo后端API服务",
+	Long:  `Demo后端API服务`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// 初始化全局变量
+		if err := loadGlobalConfig(confType); err != nil {
+			return err
+		}
+		// 初始化全局日志配置
+		if err := loadGlobalLogger(); err != nil {
+			return err
+		}
+
+		// 初始化服务层 Ioc初始化
+		if err := impl.Service.Config(); err != nil {
+			return err
+		}
+		pkg.Host = impl.Service
+
+		// 启动服务
+		ch := make(chan os.Signal, 1)
+		signal.Notify(ch, syscall.SIGTERM, syscall.SIGINT, syscall.SIGHUP, syscall.SIGQUIT)
+
+		// 初始化服务
+		svr, err := newService(conf.C())
+		if err != nil {
+			return err
+		}
+
+		// 等待信号处理
+		go svr.waitSign(ch)
+		// 启动服务
+		if err := svr.start(); err != nil {
+			if !strings.Contains(err.Error(), "http: Server closed") {
+				return err
+			}
+		}
+		return nil
+	},
+}
+```
+
+根据读取的配置, 选择合适的方式加载程序的配置文件
+```go
+// config 为全局变量, 只需要load 即可全局可用户
+func loadGlobalConfig(configType string) error {
+	// 配置加载
+	switch configType {
+	case "file":
+		err := conf.LoadConfigFromToml(confFile)
+		if err != nil {
+			return err
+		}
+	case "env":
+		err := conf.LoadConfigFromEnv()
+		if err != nil {
+			return err
+		}
+	case "etcd":
+		return errors.New("not implemented")
+	default:
+		return errors.New("unknown config type")
+	}
+	return nil
+}
+```
+
+根据当前日志配置, 初始化日志实例, 这里是封装过后的zap库
+
+```go
+// log 为全局变量, 只需要load 即可全局可用户, 依赖全局配置先初始化
+func loadGlobalLogger() error {
+	var (
+		logInitMsg string
+		level      zap.Level
+	)
+	lc := conf.C().Log
+	lv, err := zap.NewLevel(lc.Level)
+	if err != nil {
+		logInitMsg = fmt.Sprintf("%s, use default level INFO", err)
+		level = zap.InfoLevel
+	} else {
+		level = lv
+		logInitMsg = fmt.Sprintf("log level: %s", lv)
+	}
+	zapConfig := zap.DefaultConfig()
+	zapConfig.Level = level
+	zapConfig.Files.RotateOnStartup = false
+	switch lc.To {
+	case conf.ToStdout:
+		zapConfig.ToStderr = true
+		zapConfig.ToFiles = false
+	case conf.ToFile:
+		zapConfig.Files.Name = "api.log"
+		zapConfig.Files.Path = lc.PathDir
+	}
+	switch lc.Format {
+	case conf.JSONFormat:
+		zapConfig.JSON = true
+	}
+	if err := zap.Configure(zapConfig); err != nil {
+		return err
+	}
+	zap.L().Named("INIT").Info(logInitMsg)
+	return nil
+}
+```
+
+最后我们配置http服务，加载我们实现的业务模块的http路由, 并启动他
+```go
+// NewHTTPService 构建函数
+func NewHTTPService() *HTTPService {
+	r := httprouter.New()
+
+	server := &http.Server{
+		ReadHeaderTimeout: 60 * time.Second,
+		ReadTimeout:       60 * time.Second,
+		WriteTimeout:      60 * time.Second,
+		IdleTimeout:       60 * time.Second,
+		MaxHeaderBytes:    1 << 20, // 1M
+		Addr:              conf.C().App.Addr(),
+		Handler:           cors.AllowAll().Handler(r),
+	}
+	return &HTTPService{
+		r:      r,
+		server: server,
+		l:      zap.L().Named("API"),
+		c:      conf.C(),
+	}
+}
+
+// HTTPService http服务
+type HTTPService struct {
+	r      *httprouter.Router
+	l      logger.Logger
+	c      *conf.Config
+	server *http.Server
+}
+
+// Start 启动服务
+func (s *HTTPService) Start() error {
+	// 装置子服务路由
+	hostAPI.RegistAPI(s.r)
+
+	// 启动 HTTP服务
+	s.l.Infof("HTTP服务启动成功, 监听地址: %s", s.server.Addr)
+	if err := s.server.ListenAndServe(); err != nil {
+		if err == http.ErrServerClosed {
+			s.l.Info("service is stopped")
+		}
+		return fmt.Errorf("start service error, %s", err.Error())
+	}
+	return nil
+}
+
+// Stop 停止server
+func (s *HTTPService) Stop() error {
+	s.l.Info("start graceful shutdown")
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	// 优雅关闭HTTP服务
+	if err := s.server.Shutdown(ctx); err != nil {
+		s.l.Errorf("graceful shutdown timeout, force exit")
+	}
+	return nil
+}
+```
+
+最后我们就可以启动服务了
+
+```sh
+$ go run main.go -f etc/demo-api.toml start
+2021-09-01T21:04:34.939+0800    INFO    [INIT]  cmd/start.go:139        log level: debug
+2021-09-01T21:04:35.129+0800    INFO    [API]   protocol/http.go:53     HTTP服务启动成功, 监听地址: 0.0.0.0:8050
+```
+
+### 编译优化
+
+正常情况下我们这样编译我们的程序 
+
+```sh
+$ go build -o demo-api main.go
+```
+
+打包出来的程序有13M的样子, 如果想要编译的产物变小可以 通过编译进行一些优化:
+
+通过ldflags可以传染一些参数，控制编译的过程
+
++ -s 的作用是去掉符号信息。去掉符号表，golang panic 时 stack trace 就看不到文件名及出错行号信息了。
++ -w 的作用是去掉 DWARF tables 调试信息。结果就是得到的程序就不能用 gdb 调试了
+
+```sh
+go build -ldflags "-s -w" -o demo-api main.go
+```
+
+产物从 13M --> 11M, 如果你程序越来越复杂，产物越大, 优化后还是很可观的
+
+
+
+## 工程化
+
+刚开始我们这样run和build
+```
+go run main.go -f etc/demo-api.toml start
+go build -ldflags "-s -w" -o demo-api main.go
+```
+
+但是虽然你工程越来越复杂, 需要的周边工具和脚本会越来越多, 比如:
++ 代码风格检查
++ 覆盖率测试
++ 静态检查
++ ...
+
+因此我们需要引入Makefile来管理我们的工程
+
+```
+```
+
+### Makefile
+
+我们把常用的功能添加成make指令如下:
+
+```makefile
+PROJECT_NAME=api
+MAIN_FILE=main.go
+PKG := "gitee.com/infraboard/go-course/day14/demo/$(PROJECT_NAME)"
+MOD_DIR := $(shell go env GOMODCACHE)
+PKG_LIST := $(shell go list ${PKG}/... | grep -v /vendor/)
+GO_FILES := $(shell find . -name '*.go' | grep -v /vendor/ | grep -v _test.go)
+
+.PHONY: all dep lint vet test test-coverage build clean
+
+all: build
+
+dep: ## Get the dependencies
+	@go mod tidy
+
+lint: ## Lint Golang files
+	@golint -set_exit_status ${PKG_LIST}
+
+vet: ## Run go vet
+	@go vet ${PKG_LIST}
+
+test: ## Run unittests
+	@go test -short ${PKG_LIST}
+
+test-coverage: ## Run tests with coverage
+	@go test -short -coverprofile cover.out -covermode=atomic ${PKG_LIST} 
+	@cat cover.out >> coverage.txt
+
+build: dep ## Build the binary file
+	@go build -ldflags "-s -w" -o dist/demo-api $(MAIN_FILE)
+
+linux: dep ## Build the binary file
+	@GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o dist/demo-api $(MAIN_FILE)
+
+run: # Run Develop server
+	@go run $(MAIN_FILE) start -f etc/demo-api.toml
+
+clean: ## Remove previous build
+	@rm -f dist/*
+
+push: # push git to multi repo
+	@git push -u gitee
+	@git push -u origin
+
+help: ## Display this help screen
+	@grep -h -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+```
+
+```sh
+$ make help
+dep                            Get the dependencies
+lint                           Lint Golang files
+vet                            Run go vet
+test                           Run unittests
+test-coverage                  Run tests with coverage
+build                          Build the binary file
+linux                          Build the binary file
+clean                          Remove previous build
+help                           Display this help screen
+```
+
+### 为程序注入版本信息
+
+为什么需要版本?
+
+```sh
+$ docker -v
+Docker version 20.10.7, build f0df350
+```
+
+常见的为程序添加配置的方案有2种:
++ 添加配置文件，打包到程序里
++ 通过宏, 编译时注入, 一般的编译型语言都支持
+
+
+这里采用第二种
+
+我们定义一个version包
+```go
+package version
+
+import (
+	"fmt"
+)
+
+const (
+	// ServiceName 服务名称
+	ServiceName = "demo"
+)
+
+var (
+	GIT_TAG    string
+	GIT_COMMIT string
+	GIT_BRANCH string
+	BUILD_TIME string
+	GO_VERSION string
+)
+
+// FullVersion show the version info
+func FullVersion() string {
+	version := fmt.Sprintf("Version   : %s\nBuild Time: %s\nGit Branch: %s\nGit Commit: %s\nGo Version: %s\n", GIT_TAG, BUILD_TIME, GIT_BRANCH, GIT_COMMIT, GO_VERSION)
+	return version
+}
+
+// Short 版本缩写
+func Short() string {
+	return fmt.Sprintf("%s[%s %s]", GIT_TAG, BUILD_TIME, GIT_COMMIT)
+}
+```
+
+然后我们给root command添加一个 -v 参数打印版本信息
+```go
+// RootCmd represents the base command when called without any subcommands
+var RootCmd = &cobra.Command{
+	Use:   "demo-api",
+	Short: "demo-api 管理系统",
+	Long:  `demo-api ...`,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		if vers {
+			fmt.Println(version.FullVersion())
+			return nil
+		}
+		return errors.New("no flags find")
+	},
+}
+```
+
+然后我们编译时通过参数注入, 注入语法如下
+```sh
+go build  -ldflags "-X <pkg.Var>='<Value>'" ...
+```
+
+```sh
+go build -o demo-api -ldflags "-X gitee.com/infraboard/go-course/day14/demo/api/version.GIT_TAG='v0.0.1'" main.go
+$ ./demo-api -v
+Version   : 'v0.0.1'
+Build Time: 
+Git Branch: 
+Git Commit: 
+Go Version: 
+```
+
 
 
 

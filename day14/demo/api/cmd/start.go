@@ -49,6 +49,7 @@ var serviceCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+
 		// 等待信号处理
 		go svr.waitSign(ch)
 		// 启动服务
