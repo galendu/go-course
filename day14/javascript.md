@@ -125,6 +125,18 @@ aCopy; // ['A', 'B', 'C', 'D', 'E', 'F', 'G']
 aCopy === arr; // false
 ```
 
+
+#### 元素Js数组与vue数组
+Vue 将被侦听的数组的变更方法进行了包裹，所以它们也将会触发视图更新。这些被包裹过的方法包括：
+
++ push()
++ pop()
++ shift()
++ unshift()
++ splice()
++ sort()
++ reverse()
+
 ### 对象
 
 JavaScript的对象是一种无序的集合数据类型，它由若干键值对组成
