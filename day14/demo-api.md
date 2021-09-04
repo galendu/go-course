@@ -471,14 +471,7 @@ public_ip    Btree
 
 最后resource表的创建SQL:
 ```sql
-SET NAMES utf8mb4;
-SET FOREIGN_KEY_CHECKS = 0;
-
--- ----------------------------
--- Table structure for resource
--- ----------------------------
-DROP TABLE IF EXISTS `resource`;
-CREATE TABLE `resource` (
+| resource | CREATE TABLE `resource` (
   `id` char(64) CHARACTER SET latin1 NOT NULL,
   `vendor` tinyint(1) NOT NULL,
   `region` varchar(64) CHARACTER SET latin1 NOT NULL,
@@ -497,26 +490,19 @@ CREATE TABLE `resource` (
   `public_ip` varchar(64) CHARACTER SET latin1 DEFAULT NULL,
   `private_ip` varchar(64) CHARACTER SET latin1 DEFAULT NULL,
   `pay_type` varchar(255) CHARACTER SET latin1 DEFAULT NULL,
+  `describe_hash` varchar(255) NOT NULL,
+  `resource_hash` varchar(255) NOT NULL,
   PRIMARY KEY (`id`),
-  KEY `instance_id` (`instance_id`) USING HASH,
   KEY `name` (`name`) USING BTREE,
   KEY `status` (`status`) USING HASH,
   KEY `private_ip` (`public_ip`) USING BTREE,
-  KEY `public_ip` (`public_ip`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-SET FOREIGN_KEY_CHECKS = 1;
+  KEY `public_ip` (`public_ip`) USING BTREE,
+  KEY `instance_id` (`instance_id`) USING HASH
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
 ```
 
 host表SQL如下:
 ```sql
-SET NAMES utf8mb4;
-SET FOREIGN_KEY_CHECKS = 0;
-
--- ----------------------------
--- Table structure for host
--- ----------------------------
-DROP TABLE IF EXISTS `host`;
 CREATE TABLE `host` (
   `resource_id` varchar(64) NOT NULL,
   `cpu` tinyint(4) NOT NULL,
@@ -533,8 +519,6 @@ CREATE TABLE `host` (
   `security_groups` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`resource_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-
-SET FOREIGN_KEY_CHECKS = 1;
 ```
 
 ### 实现存储和查询接口

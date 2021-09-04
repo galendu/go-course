@@ -10,10 +10,6 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-var (
-	db *sql.DB
-)
-
 func newConfig() *Config {
 	return &Config{
 		App:   newDefaultAPP(),
@@ -22,37 +18,31 @@ func newConfig() *Config {
 	}
 }
 
-// Config 应用配置
 type Config struct {
 	App   *app   `toml:"app"`
-	Log   *Log   `toml:"log"`
-	MySQL *MySQL `toml:"mysql"`
+	Log   *log   `toml:"log"`
+	MySQL *mySQL `toml:"mysql"`
 }
 
 type app struct {
-	Name      string `toml:"name" env:"APP_NAME"`
-	Host      string `toml:"host" env:"APP_HOST"`
-	Port      string `toml:"port" env:"APP_PORT"`
-	Key       string `toml:"key" env:"APP_KEY"`
-	EnableSSL bool   `toml:"enable_ssl" env:"APP_ENABLE_SSL"`
-	CertFile  string `toml:"cert_file" env:"APP_CERT_FILE"`
-	KeyFile   string `toml:"key_file" env:"APP_KEY_FILE"`
+	Name string `toml:"name" env:"APP_NAME"`
+	Host string `toml:"host" env:"APP_HOST"`
+	Port string `toml:"port" env:"APP_PORT"`
 }
 
 func (a *app) Addr() string {
-	return a.Host + ":" + a.Port
+	return fmt.Sprintf("%s:%s", a.Host, a.Port)
 }
+
 func newDefaultAPP() *app {
 	return &app{
 		Name: "demo",
 		Host: "127.0.0.1",
 		Port: "8050",
-		Key:  "default",
 	}
 }
 
-// Log todo
-type Log struct {
+type log struct {
 	Level   string    `toml:"level" env:"LOG_LEVEL"`
 	PathDir string    `toml:"path_dir" env:"LOG_PATH_DIR"`
 	Format  LogFormat `toml:"format" env:"LOG_FORMAT"`
@@ -60,17 +50,16 @@ type Log struct {
 }
 
 // newDefaultLog todo
-func newDefaultLog() *Log {
-	return &Log{
-		Level:   "debug",
-		PathDir: "logs",
-		Format:  "text",
-		To:      "stdout",
+func newDefaultLog() *log {
+	return &log{
+		Level:  "debug",
+		Format: "text",
+		To:     "stdout",
 	}
 }
 
 // MySQL todo
-type MySQL struct {
+type mySQL struct {
 	Host        string `toml:"host" env:"D_MYSQL_HOST"`
 	Port        string `toml:"port" env:"D_MYSQL_PORT"`
 	UserName    string `toml:"username" env:"D_MYSQL_USERNAME"`
@@ -80,24 +69,29 @@ type MySQL struct {
 	MaxIdleConn int    `toml:"max_idle_conn" env:"D_MYSQL_MAX_IDLE_CONN"`
 	MaxLifeTime int    `toml:"max_life_time" env:"D_MYSQL_MAX_LIFE_TIME"`
 	MaxIdleTime int    `toml:"max_idle_time" env:"D_MYSQL_MAX_idle_TIME"`
-	lock        sync.Mutex
+
+	lock sync.Mutex
 }
 
-// newDefaultMySQL todo
-func newDefaultMySQL() *MySQL {
-	return &MySQL{
-		Database:    "go_course",
-		Host:        "127.0.0.1",
-		Port:        "3306",
-		MaxOpenConn: 200,
-		MaxIdleConn: 50,
-		MaxLifeTime: 1800,
-		MaxIdleTime: 600,
+var (
+	db *sql.DB
+)
+
+func (m *mySQL) GetDB() (*sql.DB, error) {
+	// 加载全局数据量单例
+	m.lock.Lock()
+	defer m.lock.Unlock()
+	if db == nil {
+		conn, err := m.getDBConn()
+		if err != nil {
+			return nil, err
+		}
+		db = conn
 	}
+	return db, nil
 }
 
-// getDBConn use to get db connection pool
-func (m *MySQL) getDBConn() (*sql.DB, error) {
+func (m *mySQL) getDBConn() (*sql.DB, error) {
 	var err error
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&multiStatements=true", m.UserName, m.Password, m.Host, m.Port, m.Database)
 	db, err := sql.Open("mysql", dsn)
@@ -116,17 +110,15 @@ func (m *MySQL) getDBConn() (*sql.DB, error) {
 	return db, nil
 }
 
-// GetDB todo
-func (m *MySQL) GetDB() (*sql.DB, error) {
-	// 加载全局数据量单例
-	m.lock.Lock()
-	defer m.lock.Unlock()
-	if db == nil {
-		conn, err := m.getDBConn()
-		if err != nil {
-			return nil, err
-		}
-		db = conn
+// newDefaultMySQL todo
+func newDefaultMySQL() *mySQL {
+	return &mySQL{
+		Database:    "go_course",
+		Host:        "127.0.0.1",
+		Port:        "3306",
+		MaxOpenConn: 200,
+		MaxIdleConn: 50,
+		MaxLifeTime: 1800,
+		MaxIdleTime: 600,
 	}
-	return db, nil
 }

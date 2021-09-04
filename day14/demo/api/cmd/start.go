@@ -29,6 +29,7 @@ var serviceCmd = &cobra.Command{
 		if err := loadGlobalConfig(confType); err != nil {
 			return err
 		}
+
 		// 初始化全局日志配置
 		if err := loadGlobalLogger(); err != nil {
 			return err
@@ -144,6 +145,7 @@ func (s *service) waitSign(sign chan os.Signal) {
 	for sg := range sign {
 		switch v := sg.(type) {
 		default:
+			// 资源清理
 			s.log.Infof("receive signal '%v', start graceful shutdown", v.String())
 			if err := s.http.Stop(); err != nil {
 				s.log.Errorf("graceful shutdown err: %s, force exit", err)

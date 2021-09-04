@@ -8,6 +8,7 @@
 
 # Test binary, built with `go test -c`
 *.test
+node_modules
 
 secret.md
 
@@ -17,3 +18,4 @@ demo-api
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 *.o
+node_modules
