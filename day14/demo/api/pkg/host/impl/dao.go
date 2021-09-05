@@ -5,7 +5,6 @@ import (
 	"database/sql"
 
 	"gitee.com/infraboard/go-course/day14/demo/api/pkg/host"
-	"github.com/infraboard/mcube/exception"
 )
 
 func (s *service) save(ctx context.Context, h *host.Host) error {
@@ -13,6 +12,7 @@ func (s *service) save(ctx context.Context, h *host.Host) error {
 		stmt *sql.Stmt
 		err  error
 	)
+
 	// 开启一个事物
 	// 文档请参考: http://cngolib.com/database-sql.html#db-begintx
 	// 关于事物级别可以参考文章: https://zhuanlan.zhihu.com/p/117476959
@@ -39,17 +39,18 @@ func (s *service) save(ctx context.Context, h *host.Host) error {
 	}
 	defer stmt.Close()
 
+	// 生成描写信息的Hash
+	if err := h.GenHash(); err != nil {
+		return err
+	}
+
+	// vendor  h.Version.String()
 	_, err = stmt.Exec(
 		h.Id, h.Vendor, h.Region, h.Zone, h.CreateAt, h.ExpireAt, h.Category, h.Type, h.InstanceId,
 		h.Name, h.Description, h.Status, h.UpdateAt, h.SyncAt, h.SyncAccount, h.PublicIP,
 		h.PrivateIP, h.PayType, h.DescribeHash, h.ResourceHash,
 	)
 	if err != nil {
-		return err
-	}
-
-	// 生成描写信息的Hash
-	if err := h.GenHash(); err != nil {
 		return err
 	}
 
@@ -98,24 +99,24 @@ func (s *service) delete(ctx context.Context, req *host.DeleteHostRequest) error
 
 	stmt, err = tx.Prepare(deleteHostSQL)
 	if err != nil {
-		return exception.NewInternalServerError(err.Error())
+		return err
 	}
 	defer stmt.Close()
 
 	_, err = stmt.Exec(req.Id)
 	if err != nil {
-		return exception.NewInternalServerError(err.Error())
+		return err
 	}
 
 	stmt, err = s.db.Prepare(deleteResourceSQL)
 	if err != nil {
-		return exception.NewInternalServerError(err.Error())
+		return err
 	}
 	defer stmt.Close()
 
 	_, err = stmt.Exec(req.Id)
 	if err != nil {
-		return exception.NewInternalServerError(err.Error())
+		return err
 	}
 
 	return tx.Commit()

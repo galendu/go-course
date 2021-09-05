@@ -2,7 +2,6 @@ package host
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -22,32 +21,26 @@ type Service interface {
 	DeleteHost(context.Context, *DeleteHostRequest) (*Host, error)
 }
 
-const (
-	// DefaultPageSize 默认分页大小
-	DefaultPageSize = 20
-	// DefaultPageNumber 默认页号
-	DefaultPageNumber = 1
-)
-
 func NewQueryHostRequestFromHTTP(r *http.Request) *QueryHostRequest {
 	qs := r.URL.Query()
 
 	ps := qs.Get("page_size")
 	pn := qs.Get("page_number")
+	kw := qs.Get("keywords")
 
 	psUint64, _ := strconv.ParseUint(ps, 10, 64)
 	pnUint64, _ := strconv.ParseUint(pn, 10, 64)
 
 	if psUint64 == 0 {
-		psUint64 = DefaultPageSize
+		psUint64 = 20
 	}
 	if pnUint64 == 0 {
-		pnUint64 = DefaultPageNumber
+		pnUint64 = 1
 	}
 	return &QueryHostRequest{
 		PageSize:   psUint64,
 		PageNumber: pnUint64,
-		Keywords:   qs.Get("keywords"),
+		Keywords:   kw,
 	}
 }
 
@@ -57,16 +50,18 @@ type QueryHostRequest struct {
 	Keywords   string `json:"keywords"`
 }
 
-func (q *QueryHostRequest) OffSet() int64 {
-	return int64((q.PageNumber - 1) * q.PageSize)
+func (req *QueryHostRequest) OffSet() int64 {
+	return int64(req.PageSize) * int64(req.PageNumber-1)
 }
 
 func NewDescribeHostRequestWithID(id string) *DescribeHostRequest {
-	return &DescribeHostRequest{Id: id}
+	return &DescribeHostRequest{
+		Id: id,
+	}
 }
 
 type DescribeHostRequest struct {
-	Id string `json:"id"`
+	Id string `json:"id" validate:"required"`
 }
 
 func NewDeleteHostRequestWithID(id string) *DeleteHostRequest {
@@ -74,7 +69,7 @@ func NewDeleteHostRequestWithID(id string) *DeleteHostRequest {
 }
 
 type DeleteHostRequest struct {
-	Id string `json:"id"`
+	Id string `json:"id" validate:"required"`
 }
 
 type UpdateMode int
@@ -83,11 +78,6 @@ const (
 	PUT UpdateMode = iota
 	PATCH
 )
-
-type UpdateHostData struct {
-	*Resource
-	*Describe
-}
 
 func NewUpdateHostRequest(id string) *UpdateHostRequest {
 	return &UpdateHostRequest{
@@ -104,9 +94,10 @@ type UpdateHostRequest struct {
 }
 
 func (req *UpdateHostRequest) Validate() error {
-	if req.UpdateHostData == nil {
-		return fmt.Errorf("update data required")
-	}
-
 	return validate.Struct(req)
+}
+
+type UpdateHostData struct {
+	*Resource
+	*Describe
 }

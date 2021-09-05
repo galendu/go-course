@@ -23,7 +23,6 @@ func (h *handler) QueryHost(w http.ResponseWriter, r *http.Request, _ httprouter
 
 func (h *handler) CreateHost(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	ins := host.NewDefaultHost()
-
 	if err := request.GetDataFromRequest(r, ins); err != nil {
 		response.Failed(w, err)
 		return

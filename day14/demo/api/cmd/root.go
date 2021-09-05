@@ -6,8 +6,6 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-
-	"gitee.com/infraboard/go-course/day14/demo/api/version"
 )
 
 var (
@@ -25,10 +23,10 @@ var RootCmd = &cobra.Command{
 	Short: "demo-api 管理系统",
 	Long:  `demo-api ...`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if vers {
-			fmt.Println(version.FullVersion())
-			return nil
-		}
+		// if vers {
+		// 	fmt.Println(version.FullVersion())
+		// 	return nil
+		// }
 		return errors.New("no flags find")
 	},
 }

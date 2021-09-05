@@ -36,7 +36,7 @@ http://registry.npm.taobao.org/
 
 ```sh
 # 最新稳定版
-$ npm install vue
+$ npm install -g vue
 ```
 
 官方同时提供了1个cli工具, 用于快速初始化一个vue工程, 官方文档: [vue-cli](https://cli.vuejs.org/)

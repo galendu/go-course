@@ -1,6 +1,8 @@
 package http
 
 import (
+	"fmt"
+
 	"github.com/julienschmidt/httprouter"
 
 	"github.com/infraboard/mcube/logger"
@@ -21,6 +23,9 @@ type handler struct {
 
 func (h *handler) Config() error {
 	h.log = zap.L().Named("Host")
+	if pkg.Host == nil {
+		return fmt.Errorf("dependence service host not ready")
+	}
 	h.service = pkg.Host
 	return nil
 }

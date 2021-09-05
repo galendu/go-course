@@ -14,6 +14,7 @@ func C() *Config {
 	if global == nil {
 		panic("Load Config first")
 	}
+
 	return global
 }
 

@@ -3,10 +3,9 @@ package impl
 import (
 	"database/sql"
 
+	"gitee.com/infraboard/go-course/day14/demo/api/conf"
 	"github.com/infraboard/mcube/logger"
 	"github.com/infraboard/mcube/logger/zap"
-
-	"gitee.com/infraboard/go-course/day14/demo/api/conf"
 )
 
 var (
@@ -15,8 +14,8 @@ var (
 )
 
 type service struct {
-	db *sql.DB
-	l  logger.Logger
+	db  *sql.DB
+	log logger.Logger
 }
 
 func (s *service) Config() error {
@@ -24,7 +23,8 @@ func (s *service) Config() error {
 	if err != nil {
 		return err
 	}
-	s.l = zap.L().Named("Host")
+
+	s.log = zap.L().Named("Host")
 	s.db = db
 	return nil
 }

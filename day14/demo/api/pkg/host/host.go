@@ -15,20 +15,7 @@ const (
 	HuaWei
 )
 
-func NewHostSet() *HostSet {
-	return &HostSet{
-		Items: []*Host{},
-	}
-}
-
-type HostSet struct {
-	Items []*Host `json:"items"`
-	Total int     `json:"total"`
-}
-
-func (s *HostSet) Add(item *Host) {
-	s.Items = append(s.Items, item)
-}
+type Vendor int
 
 func NewDefaultHost() *Host {
 	return &Host{
@@ -42,6 +29,41 @@ type Host struct {
 	*Base
 	*Resource
 	*Describe
+}
+
+func (h *Host) Put(req *UpdateHostData) {
+	h.Resource = req.Resource
+	h.Describe = req.Describe
+	h.UpdateAt = ftime.Now().Timestamp() // time, 13 时间戳
+	h.GenHash()
+}
+
+func (h *Host) Patch(req *UpdateHostData) error {
+	err := ObjectPatch(h.Resource, req.Resource)
+	if err != nil {
+		return err
+	}
+
+	err = ObjectPatch(h.Describe, req.Describe)
+	if err != nil {
+		return err
+	}
+
+	h.UpdateAt = ftime.Now().Timestamp()
+	h.GenHash()
+	return nil
+}
+
+// patch JSON {a: 1, b： 2}， {b:20}  ===> {a:1, b:20}
+func ObjectPatch(old, new interface{}) error {
+	// {b: 20}
+	newByte, err := json.Marshal(new)
+	if err != nil {
+		return err
+	}
+	// {a:1, b:2}
+	// {a:1, b: 20}
+	return json.Unmarshal(newByte, old)
 }
 
 func (h *Host) GenHash() error {
@@ -63,39 +85,6 @@ func (h *Host) GenHash() error {
 	h.DescribeHash = fmt.Sprintf("%x", hash.Sum(nil))
 	return nil
 }
-
-func (h *Host) Put(req *UpdateHostData) {
-	h.Resource = req.Resource
-	h.Describe = req.Describe
-	h.UpdateAt = ftime.Now().Timestamp()
-	h.GenHash()
-}
-
-func (h *Host) Patch(req *UpdateHostData) error {
-	err := ObjectPatch(h.Resource, req.Resource)
-	if err != nil {
-		return err
-	}
-
-	err = ObjectPatch(h.Describe, req.Describe)
-	if err != nil {
-		return err
-	}
-
-	h.UpdateAt = ftime.Now().Timestamp()
-	h.GenHash()
-	return nil
-}
-
-func ObjectPatch(old, new interface{}) error {
-	newByte, err := json.Marshal(new)
-	if err != nil {
-		return err
-	}
-	return json.Unmarshal(newByte, old)
-}
-
-type Vendor int
 
 type Base struct {
 	Id           string `json:"id"`            // 全局唯一Id
@@ -138,4 +127,19 @@ type Describe struct {
 	InternetMaxBandwidthIn  int    `json:"internet_max_bandwidth_in"`  // 公网入带宽最大值，单位为 Mbps
 	KeyPairName             string `json:"key_pair_name"`              // 秘钥对名称
 	SecurityGroups          string `json:"security_groups"`            // 安全组  采用逗号分隔
+}
+
+func NewHostSet() *HostSet {
+	return &HostSet{
+		Items: []*Host{},
+	}
+}
+
+type HostSet struct {
+	Items []*Host `json:"items"`
+	Total int     `json:"total"`
+}
+
+func (s *HostSet) Add(item *Host) {
+	s.Items = append(s.Items, item)
 }
