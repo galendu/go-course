@@ -228,6 +228,49 @@ const c1 = 20
 c1 = 30 // Assignment to constant variable
 ```
 
+### 变量提升
+
+JavaScript的函数定义有个特点，它会先扫描整个函数体的语句，把所有申明的变量“提升”到函数顶部
+
+```js
+function foo() {
+    var x = 'Hello, ' + y;
+    console.log(x);
+    var y = 'Bob';
+}
+
+// JavaScript引擎看到的代码相当于
+function foo() {
+    var y; // 提升变量y的申明，此时y为undefined
+    var x = 'Hello, ' + y;
+    console.log(x);
+    y = 'Bob';
+}
+```
+
+所以js里面 变量都定义在顶部, 并且大量使用let来声明变量
+
+### 解构赋值
+
+js里面还有这种你看不懂的骚操作
+```js
+// 数组属性是index, 解开可以直接和变量对应
+let [x, [y, z]] = ['hello', ['JavaScript', 'ES6']];
+
+var person = {
+    name: '小明',
+    age: 20,
+    gender: 'male',
+    passport: 'G-12345678',
+    school: 'No.4 middle school'
+};
+
+// 对象解开后是属性, 可以直接导出你需要的属性, 用的地方很多
+var {name, age, passport} = person;
+```
+
+这就叫解构赋值
+
 
 ## 字符串
 
@@ -322,16 +365,6 @@ try {
 
 常见实用案例:  loading
 
-
-## 函数
-
-
-## 方法
-
-
-### 箭头函数(匿名函数)
-
-
 ### 错误类型
 
 javaScript有一个标准的Error对象表示错误
@@ -355,6 +388,211 @@ throw new Error('抛出异常')
 // VM3447:1 Uncaught Error: 抛出异常
 //     at <anonymous>:1:7
 // (anonymous) @ VM3447:1
+```
+
+## 函数
+
+```js
+function abs(x) {
+    if (x >= 0) {
+        return x;
+    } else {
+        return -x;
+    }
+}
+```
+
+上述abs()函数的定义如下：
+
++ function指出这是一个函数定义；
++ abs是函数的名称；
++ (x)括号内列出函数的参数，多个参数以,分隔；
++ { ... }之间的代码是函数体，可以包含若干语句，甚至可以没有任何语句。
+
+### 方法
+
+比如我们定义了一个对象
+```js
+var person = {name: '小明', age: 23}
+```
+
+那么我们如何给这个对象添加方法喃?
+```js
+var person = {name: '小明', age: 23}
+person.greet = function() {
+    console.log(`hello, my name is ${this.name}`)
+}
+
+person.greet()
+```
+
+绑定到对象上的函数称为方法，和普通函数也没啥区别，但是它在内部使用了一个this关键字
+
+在一个方法内部，this是一个特殊变量，它始终指向当前对象，也就是xiaoming这个变量
+
+#### this 是个坑
+
+注意这里的this, 如果你没有绑带在对象上, this 指的是 浏览器的window对象
+
+```js
+fn = function() {
+    console.log(this)
+}  
+fn()
+// <ref *1> Object [global] {
+//   global: [Circular *1],
+//   clearInterval: [Function: clearInterval],
+//   clearTimeout: [Function: clearTimeout],
+//   setInterval: [Function: setInterval],
+//   setTimeout: [Function: setTimeout] {
+//     [Symbol(nodejs.util.promisify.custom)]: [Getter]
+//   },
+//   queueMicrotask: [Function: queueMicrotask],
+//   clearImmediate: [Function: clearImmediate],
+//   setImmediate: [Function: setImmediate] {
+//     [Symbol(nodejs.util.promisify.custom)]: [Getter]
+//   },
+//   fn: [Function: fn]
+// }
+```
+
+```js
+var person = {name: '小明', age: 23}
+person.greetfn = function() {
+    return function() {
+        console.log(`hello, my name is ${this.name}`)
+    }
+}
+
+person.greetfn()() // hello, my name is undefined
+```
+
+
+此时我们可以通过一个变量+ 闭包, 把当前this传递过去, 确保this正常传递
+```js
+var person = {name: '小明', age: 23}
+person.greetfn = function() {
+    var that = this  // 这个很多，别看不懂
+    return function() {
+        console.log(`hello, my name is ${that.name}`)
+    }
+}
+
+person.greetfn()() // hello, my name is 小明
+```
+
+### 箭头函数(匿名函数)
+
+在js中你会看到很多这样的语法:
+```js
+fn = x => x * x
+console.log(fn(10)) 
+```
+
+这就是js特色的箭头函数
+```js
+x => x * x
+
+// 等价于下面这个函数
+function (x) {
+    return x * x;
+}
+```
+
+一个完整的箭头函数语法:
+```js
+(params ...) => { ... }
+```
+
+我们看看下面列子
+```js
+axios
+.get('http://localhost:8050/hosts', {params: this.query})
+.then(response => {
+    console.log(response)
+    this.tableData = response.data.data.items
+    this.total = response.data.data.total
+    console.log(this.tableData)
+})
+.catch(function (error) { // 请求失败处理
+    console.log(error);
+});
+```
+
+#### 请使用箭头函数
+
+箭头函数看上去是匿名函数的一种简写，但实际上，箭头函数和匿名函数有个明显的区别：箭头函数内部的this是词法作用域，由上下文确定
+
+```js
+var person = {name: '小明', age: 23}
+person.greetfn = function() {
+    return () => {
+        // this 继承自上层的this
+        console.log(`hello, my name is ${this.name}`)
+    }
+}
+
+person.greetfn()()
+```
+
+所有在js中 到处都是箭头函数
+
+
+## 名字空间
+
+不在任何函数内定义的变量就具有全局作用域。实际上，JavaScript默认有一个全局对象window，全局作用域的变量实际上被绑定到window的一个属性
+
+### 全局作用域与window
+
+```js
+alert("hello")
+// 等价于
+window.alert("hello")
+```
+
+由于函数定义有两种方式，以变量方式var foo = function () {}定义的函数实际上也是一个全局变量，因此，顶层函数的定义也被视为一个全局变量，并绑定到window对象
+
+```js
+var a = 10
+
+a // 10
+window.a // 10
+```
+
+甚至我们可以覆盖掉浏览器的内置方法:
+
+```js
+alert = () => {console.log("覆盖alert方法")}
+() => {console.log("覆盖alert方法")}
+alert() // 覆盖alert方法
+```
+
+是不是很骚, 这要是做大项目 就是在玩火, 那如果避免这种问题喃? 使用命名空间
+
+### 名字空间于Export
+
+我们可以将我们的所有方法绑定到一个变量上，然后暴露出去，避免全局变量的混乱， 许多著名的JavaScript库都是这么干的：jQuery，YUI，underscore等等
+
+```js
+// 唯一的全局变量MYAPP:
+var MYAPP = {};
+
+// 其他变量:
+MYAPP.name = 'myapp';
+MYAPP.version = 1.0;
+
+// 其他函数:
+MYAPP.foo = function () {
+    return 'foo';
+};
+
+
+export MYAPP
+```
+
+其他文件中
+```js
+import { MYAPP } from './export';
 ```
 
 ## 条件判断
@@ -510,6 +748,9 @@ arr.forEach((item) => {console.log(item)})
 
 
 
+## 总结
 
-
-
++ 推荐使用箭头函数
++ 判断使用 ===
++ 由于变量提升问题，尽量使用let声明变量，并且写在开头
++ for循环推荐forEach
