@@ -323,6 +323,15 @@ try {
 常见实用案例:  loading
 
 
+## 函数
+
+
+## 方法
+
+
+### 箭头函数(匿名函数)
+
+
 ### 错误类型
 
 javaScript有一个标准的Error对象表示错误
@@ -347,4 +356,160 @@ throw new Error('抛出异常')
 //     at <anonymous>:1:7
 // (anonymous) @ VM3447:1
 ```
+
+## 条件判断
+
+语法格式:
+```js
+if (condition) {
+    ...
+} else if (condition) {
+    ...
+} else {
+    ...
+}
+```
+
+注意条件需要加上括号, 其他和Go语言的if一样:
+
+```js
+var age = 20;
+if (age >= 6) {
+    console.log('teenager');
+} else if (age >= 18) {
+    console.log('adult');
+} else {
+    console.log('kid');
+}
+```
+
+## for 循环
+
+语法格式:
+
+```js
+for (初始条件; 判断条件; 修改变量) {
+    ...
+}
+```
+
+注意条件需要加上括号:
+
+```js
+var x = 0;
+var i;
+for (i=1; i<=10000; i++) {
+    x = x + i;
+}
+x; // 50005000
+```
+
+### for in (不推荐使用)
+
+for循环的一个变体是for ... in循环，它可以把一个对象的所有属性依次循环出来
+
+
+遍历对象: 遍历出来的属性是元素的key
+
+```js
+var o = {
+    name: 'Jack',
+    age: 20,
+    city: 'Beijing'
+};
+for (var key in o) {
+    console.log(key); // 'name', 'age', 'city'
+}
+```
+
+遍历数组: 一个Array数组实际上也是一个对象，它的每个元素的索引被视为一个属性
+
+```js
+var a = ['A', 'B', 'C'];
+for (var i in a) {
+    console.log(i); // '0', '1', '2'
+    console.log(a[i]); // 'A', 'B', 'C'
+}
+```
+
+for in 有啥问题? 为啥不推荐使用, 我们看下面一个例子
+
+当我们手动给Array对象添加了额外的属性后，for ... in循环将带来意想不到的意外效果
+```js
+var a = ['A', 'B', 'C'];
+a.name = 'Hello';
+for (var x in a) {
+    console.log(x); // '0', '1', '2', 'name'
+}
+```
+
+为什么? 这和for in的遍历机制相关: 遍历对象的属性名称
+
+那如何解决这个问题喃? 答案是 for of
+
+
+### for of
+
+for ... of循环则完全修复了这些问题，它只循环集合本身的元素
+
+```js
+var a = ['A', 'B', 'C'];
+a.name = 'Hello';
+for (var x of a) {
+    console.log(x); // 'A', 'B', 'C'
+}
+```
+
+
+但是我们用for of 能遍历对象吗?
+
+```js
+var o = {
+    name: 'Jack',
+    age: 20,
+    city: 'Beijing'
+};
+for (var key of o) {
+    console.log(key);
+}
+// VM2749:6 Uncaught TypeError: o is not iterable
+//     at <anonymous>:6:17
+```
+
+变通的方法是: 我们可以通过Object提供的方法获取key数组,然后遍历
+
+```js
+var o = {
+    name: 'Jack',
+    age: 20,
+    city: 'Beijing'
+};
+for (var key of Object.keys(o)) {
+    console.log(key); // 'name', 'age', 'city'
+}
+```
+
+
+### forEach方法
+
+forEach()方法是ES5.1标准引入的, 他也是遍历元素的一种常用手段, 也是能作用于可跌倒对象上, 和for of一样
+
+```js
+arr.forEach(function(item) {console.log(item )})
+```
+
+当然这还有一种简洁写法
+
+```js
+arr.forEach((item) => {console.log(item)})
+```
+
+### for循环应用
+
+如果后端返回的数据不满足我们展示的需求, 需要修改，比如vendor想要友好显示，我们可以直接修改数据
+
+
+
+
+
 
