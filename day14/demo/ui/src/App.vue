@@ -28,14 +28,66 @@
         :total="total">
       </el-pagination>
       
+      <h1>基础标签</h1>
       <h1>这是一个标题</h1>
       <h2>这是一个标题</h2>
       <h3>这是一个标题</h3>
       <h4>这是一个标题</h4>
-      
+
+      <p>这是一个段落</p>
+      <p>这是一个段落</p>
+
+      <hr>
+      <p>这是一个 <br />  段落</p>
+
+
+      <h1>文本标签</h1>
+        <!-- <del> 和 <ins> 一起使用，描述文档中的更新和修正。浏览器通常会在已删除文本上添加一条删除线，在新插入文本下添加一条下划线 -->
+      <p></p>
+      <del>test</del> <br>
+      <i>定义斜体文本。</i> <br>
+      <ins>定义被插入文本</ins> <br>
+      <strong>加粗文本</strong>
+
+      <p>这个文本包含 <sub>下标</sub>文本。</p>
+      <p>这个文本包含 <sup>上标</sup> 文本。</p>
+
+      <p>This is a <u>parragraph</u>.</p>
+
+      <h1>表单标签</h1>
+      <form action="demo_form.php">
+        <label for="male">Male</label>
+        <input type="radio" name="sex" id="male" value="male"><br>
+        <label for="female">Female</label>
+        <input type="radio" name="sex" id="female" value="female"><br><br>
+        <input type="submit" value="提交">
+      </form>
+
+      <h1>内联框架</h1>
       <iframe src="//www.runoob.com">
         <p>您的浏览器不支持  iframe 标签。</p>
       </iframe>
+
+      <h1>列表</h1>
+      <ul>
+          <li>Coffee</li>
+          <li>Tea</li>
+          <li>Milk</li>
+      </ul>
+
+      <h1>表格</h1>
+      <table border="1">
+      <tr>
+      <th>Month</th>
+      <th>Savings</th>
+      </tr>
+      <tr>
+      <td>January</td>
+      <td>$100</td>
+      </tr>
+      </table>
+
+
     </div>
   </template>
 

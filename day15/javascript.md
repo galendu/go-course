@@ -747,6 +747,119 @@ arr.forEach((item) => {console.log(item)})
 如果后端返回的数据不满足我们展示的需求, 需要修改，比如vendor想要友好显示，我们可以直接修改数据
 
 
+## Promise对象
+
+在JavaScript的世界中，所有代码都是单线程执行的。
+
+由于这个“缺陷”，导致JavaScript的所有网络操作，浏览器事件，都必须是异步执行。Javascript通过回调函数实现异步, js的一大特色
+
+### 单线程异步模型
+
+```js
+function callback() {
+    console.log('Done');
+}
+console.log('before setTimeout()');
+setTimeout(callback, 1000); // 1秒钟后调用callback函数
+console.log('after setTimeout()');
+// before setTimeout()
+// after setTimeout()
+// 等待一秒后
+// Done
+```
+
+由此可见并不会真正阻塞1秒, 而是在1秒后调用该函数, 这就是javascript的编程范式: 基于回调的异步
+
+### Promise与异步
+
+我们来看一个函数, resolve是成功后的回调函数, reject是失败后的回调函数
+```js
+function testResultCallbackFunc(resolve, reject) {
+    var timeOut = Math.random() * 2;
+    console.log('set timeout to: ' + timeOut + ' seconds.');
+    setTimeout(function () {
+        if (timeOut < 1) {
+            console.log('call resolve()...');
+            resolve('200 OK');
+        }
+        else {
+            console.log('call reject()...');
+            reject('timeout in ' + timeOut + ' seconds.');
+        }
+    }, timeOut * 1000);
+}
+```
+
+然后我们把处理成功和失败的函数 作为回调传递给该函数:
+```js
+function testResultCallback() {
+    success = (message) => {console.log(`success ${message}`)}
+    failed = (error) => {console.log(`failed ${error}`)}
+    testResultCallbackFunc(success, failed)
+}
+
+// set timeout to: 0.059809346310547795 seconds.
+// call resolve()...
+// success 200 OK
+```
+
+可以看出，testResultCallbackFunc()函数只关心自身的逻辑，并不关心具体的resolve和reject将如何处理结果
+
+Js把这种编程方式抽象成了一种对象: Promise
+
+```js
+interface PromiseConstructor {
+    /**
+     * Creates a new Promise.
+     * @param executor A callback used to initialize the promise. This callback is passed two arguments:
+     * a resolve callback used to resolve the promise with a value or the result of another promise,
+     * and a reject callback used to reject the promise with a provided reason or error.
+     */
+    new <T>(executor: (resolve: (value: T | PromiseLike<T>) => void, reject: (reason?: any) => void) => void): Promise<T>;
+```
+
+下面我们将回调改为Promise对象:
+```js
+var p1 = new Promise(testResultCallbackFunc)
+p1.then((resp) => {
+    console.log(resp)
+}).catch((err) => {
+    console.log(err)
+})
+// set timeout to: 0.628561731809246 seconds.
+// call resolve()...
+// 200 OK
+```
+
+可见Promise最大的好处是在异步执行的流程中，把执行代码和处理结果的代码清晰地分离了:
+
+![](./images/promise.png)
+
+
+### Async函数 + Promise组合
+
+从回调函数，到Promise对象，再到Generator函数(不讲, 这是协程方案的一种过度形态)，JavaScript异步编程解决方案历程可谓辛酸，终于到了Async/await。很多人认为它是异步操作的最终解决方案
+
+这些需要提到 async函数, async函数由内置执行器进行执行, 这和go func() 有异曲同工之妙
+
+那我们如果声明一个异步函数, 其实很简单 在你函数前面加上一个 async关键字就可以了
+
+```js
+async function testWithAsync() {
+    var p1 = new Promise(testResultCallbackFunc)
+
+    try {
+        var resp = await p1
+        console.log(resp)
+    } catch (err) {
+        console.log(err)
+    }
+}
+```
+
+这里testWithAsync就是一个异步函数, 他执行的时候 是交给js的携程执行器处理的, 而  await关键字 就是 告诉执行器 当p1执行完成后 主动通知我下(协程的一种实现), 其实就是一个 event pool模型(简称epool模型)
+
+我们修改下之前的demo, 使用async 来实现
 
 ## 总结
 
