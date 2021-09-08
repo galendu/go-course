@@ -429,7 +429,7 @@ if err != nil {
 ```go
 type service struct {
 	db *sql.DB
-	l  logger.Logger
+	log  logger.Logger
 }
 
 func (s *service) Config() error {
@@ -437,7 +437,7 @@ func (s *service) Config() error {
 	if err != nil {
 		return err
 	}
-	s.l = zap.L().Named("Host")
+	s.log = zap.L().Named("Host")
 	s.db = db
 	return nil
 }
@@ -471,7 +471,7 @@ public_ip    Btree
 
 最后resource表的创建SQL:
 ```sql
-| resource | CREATE TABLE `resource` (
+CREATE TABLE `resource` (
   `id` char(64) CHARACTER SET latin1 NOT NULL,
   `vendor` tinyint(1) NOT NULL,
   `region` varchar(64) CHARACTER SET latin1 NOT NULL,
@@ -680,17 +680,17 @@ type handler struct {
 然后我们实现HTTP协议处理逻辑，并暴露出去, 这里选用httprouter路由库, 标准库自带的默认路由是不支持路径匹配的[HTTP 协议](../day13/http.md)
 
 ```go
-func (h *handler) QueryUser(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	fmt.Fprint(w, "query user!\n")
+func (h *handler) QueryHost(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	fmt.Fprint(w, "query host!\n")
 }
 
-func (h *handler) CreateUser(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	fmt.Fprint(w, "create user!\n")
+func (h *handler) SaveHost(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	fmt.Fprint(w, "save host!\n")
 }
 
 func RegistAPI(r *httprouter.Router) {
-	r.GET("/hosts", api.QueryUser)
-	r.POST("/hosts", api.CreateUser)
+	r.GET("/hosts", api.QueryHost)
+	r.POST("/hosts", api.SaveHost)
 }
 ```
 
@@ -699,7 +699,7 @@ func RegistAPI(r *httprouter.Router) {
 我们请求和响应 使用JSON, 为了标准化接口数据结构, 封装了轻量级的request和response工具库
 
 ```go
-func (h *handler) QueryUser(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (h *handler) QueryHost(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	query := host.NewQueryHostRequest()
 	set, err := h.service.QueryHost(r.Context(), query)
 	if err != nil {
@@ -709,7 +709,7 @@ func (h *handler) QueryUser(w http.ResponseWriter, r *http.Request, _ httprouter
 	response.Success(w, set)
 }
 
-func (h *handler) CreateUser(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (h *handler) SaveHost(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	ins := host.NewDefaultHost()
 
 	if err := request.GetDataFromRequest(r, ins); err != nil {
