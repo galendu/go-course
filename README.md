@@ -85,6 +85,6 @@
 * Day15
   * [JavaScript基础](./day15/javascript.md)
   * [Web入门基础-HTLM](./day15/html.md)
-  * [Web入门基础-CSS](./day15/html.md)
-  * [Web入门基础-浏览器](./day15/html.md)
+  * [Web入门基础-CSS](./day15/css.md)
+  * [Web入门基础-浏览器](./day15/browser.md)
   * [实战: demo主机更新](./day15/devcloud.md)
