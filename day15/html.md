@@ -1,10 +1,8 @@
 # Web入门基础-HTLM
 
-
 ## HTML 网页结构
 
 ![](./images/html-struct.jpg)
-
 
 ## 标签与元素
 
@@ -84,13 +82,11 @@ li   定义一个列表项
 
 表格:
 ```
-<table> 标签定义 HTML 表格
-一个 HTML 表格包括 <table> 元素，一个或多个 <tr>、<th> 以及 <td> 元素。
-<tr> 元素定义表格行，
-<th> 元素定义表头，
-<td> 元素定义表格单元
+table  标签定义 HTML 表格, 一个 HTML 表格包括 <table> 元素，一个或多个 <tr>、<th> 以及 <td> 元素。
+tr     元素定义表格行，
+th     元素定义表头，
+td     元素定义表格单元
 ```
-
 
 容器元素
 ```
@@ -98,8 +94,86 @@ div    标签定义 HTML 文档中的一个分隔区块或者一个区域部分,
 span   用于对文档中的行内元素进行组合 标签提供了一种将文本的一部分或者文档的一部分独立出来的方式
 ```
 
+## 元素id
+标识该元素的唯一身份, 并且可以在其他地方引用
+
+比如，通过a标题跳转到指定的位置:
+```html
+<p>
+<a href="#C4">查看章节 4</a>
+</p>
+
+<h2>章节 1</h2>
+<p>这边显示该章节的内容……</p>
+
+<h2>章节 2</h2>
+<p>这边显示该章节的内容……</p>
+
+<h2>章节 3</h2>
+<p>这边显示该章节的内容……</p>
+
+<h2><a id="C4">章节 4</a></h2>
+<p>这边显示该章节的内容……</p>
+```
+
+id 也是js操作元素的重要依据之一:
+
+```js
+document.getElementById('C4')
+<a id=​"C4">​章节 4​</a>​
+```
+
 ## 元素的样式
 
+通过元素的style属性可以控制该元素的样式
+
+比如我们可以把p元素里面的这段话的字体加大, 演示改为红色
+```html
+<p style="color:red;font-size:20px;">这边显示该章节的内容……</p>
+```
+
+语法的格式:  key: value; 分号分开的就是一个样式条目, 我们可以为一个元素添加很多样式
+
+再比如控制元素的宽和高
+```html
+<iframe src="//www.runoob.com" sytle="height: 200px;width: 400px;">
+    <p>您的浏览器不支持  iframe 标签。</p>
+</iframe>
+```
+
+一个元素的样式属性是有很多的 我们到css时再讲解
 
 ## 脚本
+
+有了元素和样式，我们的页面还是一个静态页面, 比如页面加载完成后，我要动态修改里面的元素这么办?,  这就需要用到我们前面学的js脚本了
+
+```
+<script> 标签用于定义客户端脚本，比如 JavaScript
+<script> 元素既可包含脚本语句，也可通过 src 属性指向外部脚本文件
+```
+
+比如下面:
+```js
+// 通过src 网络引入
+<script src="https://cdn.jsdelivr.net/npm/vue@2.6.14"></script>
+
+// 通过本地文件引入
+<script>
+  import axios from 'axios';
+</script>
+```
+
+
+JavaScript 最常用于图片操作、表单验证以及内容动态更新
+
+```html
+<script>
+c4 = document.getElementById('C4')
+// <a id=​"C4">​章节 4​</a>​
+c4.innerText
+// '章节 4'
+c4.innerText = '章节 5'
+// '章节 5'
+</script>
+```
 
