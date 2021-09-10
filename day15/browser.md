@@ -210,6 +210,11 @@ Access-Control-Allow-Credentials: true
 Access-Control-Max-Age: 1728000
 ```
 
+#### axios
+
+很显然原生的client库，没那么好用, 于是诞生的axios
+
+
 ### 页面(DOM)
 
 浏览器当前加载的Page也是一个对象: window.document
@@ -231,11 +236,11 @@ document.title = '测试修改'
 
 #### DOM查询
 
-要查找DOM树的某个节点，需要从document对象开始查找。最常用的查找是根据ID和Tag Name
+要查找DOM树的某个节点，需要从document对象开始查找。最常用的查找是根据ID和Tag Name以及ClassName
 
 ```html
 <h1>列表</h1>
-<ul id="list_menu">
+<ul id="list_menu" class="ul_class">
     <li>Coffee</li>
     <li>Tea</li>
     <li>Milk</li>
@@ -248,6 +253,8 @@ document.getElementById('list_menu')
 
 document.getElementsByTagName('ul')
 // 这里返回所有的ul元素
+
+document.getElementsByClassName('ul_class')
 ```
 
 当然我们也可以组合使用
@@ -256,19 +263,96 @@ document.getElementById('list_menu').getElementsByTagName('li')
 
 // 上面也等价于
 document.getElementById('list_menu').children
+
+// firstElementChild
+document.getElementById('list_menu').firstElementChild
+
+// lastElementChild
+document.getElementById('list_menu').lastElementChild
+
+// parentElement 获取父元素
+document.getElementById('list_menu').parentElement
 ```
 
 #### 更新DOM
 
+获取的元素后, 我们可以通过元素的如下2个方法，修改元素:
++ innerHTML: 不但可以修改一个DOM节点的文本内容，还可以直接通过HTML片段修改DOM节点内部的子树
++ innerText: 只修改文本内容
 
+```js
+var le = document.getElementById('list_menu').lastElementChild
+le.innerText = '牛奶'
+// 我们发现页面的内容已经修改
+
+// html格式无法识别
+le.innerText = '<span style="color:red">牛奶</span>'
+// <span style="color:red">牛奶</span>
+
+// 使用innterHTML则可以
+le.innerHTML = '<span style="color:red">牛奶</span>'
+```
 
 #### 插入DOM
 
+很多响应式框架都会根据数据新增，动态创建一个DOM元素，并插入到指定位置,
+
+我们使用 createElement 来创建一个DOM元素, 比如创建一个a标签
+
+```js
+// 创建一个A标签
+var newlink = document.createElement('a')
+// <a></a>
+
+// 修改A标签属性
+newlink.href = "www.baiducom"
+newlink.innerText = '跳转到百度'
+
+// 追加到某个元素后面
+var lm = document.getElementById('list_menu')
+lm.appendChild(newlink)
+```
+
+如果我们想要控制元素插入的位置可以使用insertBefore
+
+insertBefore的语法如下:
+```js
+parentElement.insertBefore(newElement, referenceElement);
+```
+
+```js
+// 父元素
+var lm = document.getElementById('list_menu')
+
+// 子元素
+var cf = document.getElementById('coffee')
+
+// 需要插入的元素
+var newlink = document.createElement('a')
+newlink.href = "www.baiducom"
+newlink.innerText = '跳转到百度'
+
+// 插入到coffee之前
+lm.insertBefore(newlink, cf)
+```
+
+总结: 有2种方式可以插入一个DOM元素
++ appendChild: 把一个子节点添加到父节点的最后一个子节点
++ insertBefore: 插入到某个元素之前
 
 
 #### 删除DOM
 
+删除一个DOM节点就比插入要容易得多
 
+要删除一个节点，首先要获得该节点本身以及它的父节点，然后，调用父节点的removeChild把自己删掉
 
+removeChild的语法如下:
+```js
+parent.removeChild(childNode);
+```
 
-
+比如我们删除刚才添加的那个元素
+```js
+lm.removeChild(newlink)
+```

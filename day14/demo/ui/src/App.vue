@@ -69,8 +69,8 @@
       </iframe>
 
       <h1>列表</h1>
-      <ul id="list_menu">
-          <li>Coffee</li>
+      <ul id="list_menu" class="ul_class">
+          <li id="coffee">Coffee</li>
           <li>Tea</li>
           <li>Milk</li>
       </ul>
