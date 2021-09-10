@@ -368,10 +368,12 @@ ul>li:first-child {
 + max-width	设置元素的最大宽度。
 
 ```html
+<div style="height: 220px;width:440px">
+    <p>我们的内容</p>
+</div>
 ```
 
-
-### 盒子模型(Box Model)
+### 盒子模型
 
 ![](./images/box-model.png)
 
@@ -383,19 +385,94 @@ ul>li:first-child {
 ![](./images/margin-padding.png)
 
 ```html
+<div style="height: 220px;width:440px">
+    <p style="margin-top:22px;">我们的内容</p>
+</div>
 ```
 
 ### Display
 
++ inline: 现在在一行
++ block:  块元素是一个元素，占用了全部宽度，在前后都是换行符
++ flex: flex布局, 见后面参考
+
+```html
+<div>
+    <li style="display: inline;">Tea</li>
+    <li style="display: inline;">Milk</li>
+</div>
+
+<div>
+    <span style="display: block;">span1</span>
+    <span style="display: block;">span2</span>
+</div>
+```
 
 ### Overflow
 
+overflow 属性可以控制内容溢出元素框时在对应的元素区间内添加滚动条
+
++ visible	默认值。内容不会被修剪，会呈现在元素框之外。
++ hidden	内容会被修剪，并且其余内容是不可见的。
++ scroll	内容会被修剪，但是浏览器会显示滚动条以便查看其余的内容。
++ auto	如果内容被修剪，则浏览器会显示滚动条以便查看其余的内容。
++ inherit	规定应该从父元素继承 overflow 属性的值
+
+```html
+<div id="overflowTest">
+    <p>这里的文本内容是可以滚动的，滚动条方向是垂直方向。</p>
+    <p>这里的文本内容是可以滚动的，滚动条方向是垂直方向。</p>
+    <p>这里的文本内容是可以滚动的，滚动条方向是垂直方向。</p>
+    <p>这里的文本内容是可以滚动的，滚动条方向是垂直方向。</p>
+    <p>这里的文本内容是可以滚动的，滚动条方向是垂直方向。</p>
+    <p>这里的文本内容是可以滚动的，滚动条方向是垂直方向。</p>
+</div>
+
+<style scoped>
+#overflowTest {
+    background: #4CAF50;
+    color: white;
+    padding: 15px;
+    width: 80%;
+    height: 100px;
+    overflow: scroll;
+    border: 1px solid rgb(150, 18, 18);
+}
+</style>
+```
 
 ### 浮动
 
+控制元素左移还是右移
+
++ left
++ right
+
+元素浮动之后，周围的元素会重新排列，为了避免这种情况，使用 clear 属性
+
+```html
+<div>
+    <span style="display: block;">span1</span>
+    <span style="display: block;">span2</span>
+</div>
+
+<div id="overflowTest" style="clear:both">
+</div>
+```
 
 ### 对齐
 
+我们以常见的剧中为例:
+
+```html
+<div >
+    <p>我是垂直居中的。</p>
+</div>
+```
+
+如果仅仅是为了文本在元素内居中对齐，可以使用 text-align: center
+
+设置行高到div 就整体剧中了
 
 
 ## 常用网站

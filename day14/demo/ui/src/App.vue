@@ -106,6 +106,33 @@
 
       <h2><a>章节 4</a></h2>
       <p id="C4">这边显示该章节的内容……</p>
+
+      <div style="height: 220px;width:440px">
+          <p style="margin-top:22px;">我们的内容</p>
+      </div>
+
+      <div>
+          <li>Tea</li>
+          <li>Milk</li>
+      </div>
+
+      <div>
+          <span style="display: block;float:right;">span1</span>
+          <span style="display: block;float:right;">span2</span>
+      </div>
+
+      <div id="overflowTest" style="clear:both">
+        <p>这里的文本内容是可以滚动的，滚动条方向是垂直方向。</p>
+        <p>这里的文本内容是可以滚动的，滚动条方向是垂直方向。</p>
+        <p>这里的文本内容是可以滚动的，滚动条方向是垂直方向。</p>
+        <p>这里的文本内容是可以滚动的，滚动条方向是垂直方向。</p>
+        <p>这里的文本内容是可以滚动的，滚动条方向是垂直方向。</p>
+        <p>这里的文本内容是可以滚动的，滚动条方向是垂直方向。</p>
+      </div>
+
+      <div >
+        <p>我是垂直居中的。</p>
+      </div>
     </div>
   </template>
 
@@ -155,6 +182,16 @@
 
 ul>li:first-child {
   font-weight: 600;
+}
+
+#overflowTest {
+    background: #4CAF50;
+    color: white;
+    padding: 15px;
+    width: 80%;
+    height: 100px;
+    overflow: scroll;
+    border: 1px solid rgb(150, 18, 18);
 }
 
 </style>
