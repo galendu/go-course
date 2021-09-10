@@ -28,7 +28,7 @@
         :total="total">
       </el-pagination>
       
-      <h1>基础标签</h1>
+      <h1 class="f12">基础标签</h1>
       <h1>这是一个标题</h1>
       <h2>这是一个标题</h2>
       <h3>这是一个标题</h3>
@@ -73,6 +73,9 @@
           <li id="coffee">Coffee</li>
           <li>Tea</li>
           <li>Milk</li>
+          <div>
+            <li>In Div</li>
+          </div>
       </ul>
 
       <h1>表格</h1>
@@ -101,9 +104,8 @@
       <h2>章节 3</h2>
       <p>这边显示该章节的内容……</p>
 
-      <h2><a id="C4">章节 4</a></h2>
-      <p>这边显示该章节的内容……</p>
-
+      <h2><a>章节 4</a></h2>
+      <p id="C4">这边显示该章节的内容……</p>
     </div>
   </template>
 
@@ -151,6 +153,8 @@
 
 <style scoped>
 
-
+ul>li:first-child {
+  font-weight: 600;
+}
 
 </style>
