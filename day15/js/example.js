@@ -26,7 +26,7 @@ function testMethod1() {
 function testMethod2() {
     var person = {name: '小明', age: 23}
     person.greetfn = function() {
-        return function() {
+        return () =>{
             console.log(`hello, my name is ${this.name}`)
         }
     }
@@ -61,9 +61,9 @@ function callback() {
 }
 
 function testCallback() {
-    console.log('before setTimeout()');
-    setTimeout(callback, 1000); // 1秒钟后调用callback函数
-    console.log('after setTimeout()');
+    console.log('before setTimeout() callback');
+    setTimeout(callback, 1000); // 1秒钟后调用callback函数 
+    console.log('after setTimeout() callback');
 }
 
 function testResultCallbackFunc(resolve, reject) {
@@ -85,7 +85,7 @@ function testResultCallback() {
     success = (message) => {console.log(`success ${message}`)}
     failed = (error) => {console.log(`failed ${error}`)}
     testResultCallbackFunc(success, failed)
-    Promise()
+    Promise
 }
 
 function testWithPromise() {
@@ -97,6 +97,7 @@ function testWithPromise() {
     })
 }
 
+// async/await 
 async function testWithAsync() {
     var p1 = new Promise(testResultCallbackFunc)
 
@@ -108,9 +109,17 @@ async function testWithAsync() {
     }
 }
 
+function F() {
+   this.name = '小明'
+}
+
+function testNewObj() {
+    F()
+    console.log('xx ', this.name)
+}
+
 function main() {
-    console.log(abs(-10))
-    testWithAsync()
+    testNewObj()
 }
 
 main()

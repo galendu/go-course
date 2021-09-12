@@ -125,7 +125,7 @@ type Describe struct {
 	ImageID                 string `json:"image_id"`                   // 镜像ID
 	InternetMaxBandwidthOut int    `json:"internet_max_bandwidth_out"` // 公网出带宽最大值，单位为 Mbps
 	InternetMaxBandwidthIn  int    `json:"internet_max_bandwidth_in"`  // 公网入带宽最大值，单位为 Mbps
-	KeyPairName             string `json:"key_pair_name"`              // 秘钥对名称
+	KeyPairName             string `json:"key_pair_name,omitempty"`    // 秘钥对名称
 	SecurityGroups          string `json:"security_groups"`            // 安全组  采用逗号分隔
 }
 
