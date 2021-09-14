@@ -3,7 +3,7 @@ package sort_test
 import (
 	"testing"
 
-	"gitee.com/infraboard/go-course/day9/sort"
+	"gitee.com/infraboard/go-course/day09/sort"
 	"github.com/stretchr/testify/assert"
 )
 

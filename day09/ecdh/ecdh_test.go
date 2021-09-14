@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"testing"
 
-	"gitee.com/infraboard/go-course/day9/ecdh"
+	"gitee.com/infraboard/go-course/day09/ecdh"
 )
 
 func test(e ecdh.ECDH) {

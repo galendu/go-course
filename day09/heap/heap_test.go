@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"gitee.com/infraboard/go-course/day9/heap"
+	"gitee.com/infraboard/go-course/day09/heap"
 )
 
 func TestHeap(t *testing.T) {

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"gitee.com/infraboard/go-course/day9/stack"
+	"gitee.com/infraboard/go-course/day09/stack"
 	"github.com/stretchr/testify/assert"
 )
 

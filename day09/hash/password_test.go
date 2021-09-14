@@ -3,7 +3,7 @@ package hash_test
 import (
 	"testing"
 
-	"gitee.com/infraboard/go-course/day9/hash"
+	"gitee.com/infraboard/go-course/day09/hash"
 	"github.com/stretchr/testify/assert"
 )
 

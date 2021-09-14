@@ -4,8 +4,8 @@ import (
 	"math/rand"
 	"testing"
 
-	"gitee.com/infraboard/go-course/day9/sort"
-	"gitee.com/infraboard/go-course/day9/stack"
+	"gitee.com/infraboard/go-course/day09/sort"
+	"gitee.com/infraboard/go-course/day09/stack"
 )
 
 const (

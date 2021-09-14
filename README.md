@@ -93,12 +93,14 @@
 ## Day14
   * [Demo后端开发](./day14/demo-api.md)
   * [Demo前端开发](./day14/demo-ui.md)
+  * [作业](./day14/homework.md)
 
 ## Day15
   * [JavaScript基础](./day15/javascript.md)
   * [Web入门基础-HTLM](./day15/html.md)
   * [Web入门基础-CSS](./day15/css.md)
   * [Web入门基础-浏览器](./day15/browser.md)
+  * [作业](./day15/homework.md)
 
 ## Day16
   * [Vue入门基础](./day16/vue-base.md)

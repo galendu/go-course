@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"gitee.com/infraboard/go-course/day9/cbc"
+	"gitee.com/infraboard/go-course/day09/cbc"
 )
 
 // 79e04f5f8817c77123b4efb53beb83628294627e9a840dff5ce9985bd57267d333a0670d1e183737798ad18f9943c3b9

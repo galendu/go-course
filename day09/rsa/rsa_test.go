@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"gitee.com/infraboard/go-course/day9/rsa"
+	"gitee.com/infraboard/go-course/day09/rsa"
 )
 
 func TestRSA(t *testing.T) {
