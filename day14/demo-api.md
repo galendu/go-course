@@ -675,6 +675,15 @@ type handler struct {
 	service host.Service
 	log     logger.Logger
 }
+
+func (h *handler) Config() error {
+	h.log = zap.L().Named("Host")
+	if pkg.Host == nil {
+		return fmt.Errorf("dependence service host not ready")
+	}
+	h.service = pkg.Host
+	return nil
+}
 ```
 
 然后我们实现HTTP协议处理逻辑，并暴露出去, 这里选用httprouter路由库, 标准库自带的默认路由是不支持路径匹配的[HTTP 协议](../day13/http.md)
@@ -689,8 +698,15 @@ func (h *handler) SaveHost(w http.ResponseWriter, r *http.Request, _ httprouter.
 }
 
 func RegistAPI(r *httprouter.Router) {
+	// 通过全集变量配置http handler, 
+	// 主要是加载依赖的Host服务的具体实现: pkg.Host(全局服务容器层, 所有的服务实例都会注册到这个包里面)
+	api.Config()
 	r.GET("/hosts", api.QueryHost)
-	r.POST("/hosts", api.SaveHost)
+	r.POST("/hosts", api.CreateHost)
+	r.GET("/hosts/:id", api.DescribeHost)
+	r.DELETE("/hosts/:id", api.DeleteHost)
+	r.PUT("/hosts/:id", api.PutHost)
+	r.PATCH("/hosts/:id", api.PatchHost)
 }
 ```
 
