@@ -1,6 +1,7 @@
 package aes
 
 import (
+	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
 )
@@ -27,6 +28,7 @@ func Encrypt(plainText string, keyText string) (cipherByte []byte, err error) {
 
 	return
 }
+
 func Decrypt(cipherByte []byte, keyText string) (plainText string, err error) {
 	// 转换成字节数据, 方便加密
 	keyByte := []byte(keyText)
@@ -41,4 +43,29 @@ func Decrypt(cipherByte []byte, keyText string) (plainText string, err error) {
 	cfbdec.XORKeyStream(plainByte, cipherByte)
 	plainText = string(plainByte)
 	return
+}
+
+//加密
+func AESCtrEncrypt(plainText []byte, key string) ([]byte, error) {
+	//1. 创建cipher.Block接口
+	block, err := aes.NewCipher([]byte(key))
+	if err != nil {
+		return nil, err
+	}
+
+	//2. 计数器模式, 初始化接收器
+	// 具体过程参考: https://blog.csdn.net/weixin_42940826/article/details/83687007
+	iv := bytes.Repeat([]byte("1"), block.BlockSize())
+	stream := cipher.NewCTR(block, iv)
+
+	//3. 采用CTR进行异或运算, 明文 --异或--> 秘文 --异或--> 明文
+	dst := make([]byte, len(plainText))
+	stream.XORKeyStream(dst, plainText)
+
+	return dst, nil
+}
+
+//解密
+func AESCtrDecrypt(encryptData []byte, key string) ([]byte, error) {
+	return AESCtrEncrypt(encryptData, key)
 }
