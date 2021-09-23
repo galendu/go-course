@@ -1,7 +1,8 @@
 <template>
   <div id="app">
+    <span>父组件的msg: {{ msg1 }}</span>
     <img alt="Vue logo" src="./assets/logo.png">
-    <hello-world msg="Welcome to Your Vue.js App"/>
+    <hello-world v-model="msg1" />
   </div>
 </template>
 
@@ -10,6 +11,11 @@ import HelloWorld from './components/HelloWorld.vue'
 
 export default {
   name: 'App',
+  data() {
+    return {
+      msg1: 'Welcome to Your Vue.js App'
+    }
+  },
   components: {
     HelloWorld
   }

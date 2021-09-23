@@ -1164,8 +1164,232 @@ export default {
 
 到这里 应该知道为啥我们引入了element-ui后, el-table, 这些是啥了吧
 
+下面我们讲组件之间的通讯问题
+
+### 向子组件传递数据
+
+我们在组件里面定义的props, 到现在还没有用到
+```html
+<script>
+export default {
+  name: 'HelloWorld',
+  props: {
+    msg: String
+  }
+}
+</script>
+```
+
+这里props就是用于传递数据的变量, Prop 是你可以在组件上注册的一些自定义 attribute, 父组件通过绑定数据来传递消息给子组件
+
+```html
+<template>
+  <div id="app">
+    <img alt="Vue logo" src="./assets/logo.png">
+    <hello-world msg="Welcome to Your Vue.js App"/>
+  </div>
+</template>
+
+<script>
+import HelloWorld from './components/HelloWorld.vue'
+
+export default {
+  name: 'App',
+  components: {
+    HelloWorld
+  }
+}
+</script>
+```
+
+> 问题: 如果我想动态传递props怎么办?
+
+
+```html
+<template>
+  <div id="app">
+    <img alt="Vue logo" src="./assets/logo.png">
+    <hello-world :msg="msg1"/>
+  </div>
+</template>
+
+<script>
+import HelloWorld from './components/HelloWorld.vue'
+
+export default {
+  name: 'App',
+  data() {
+    return {
+      msg1: 'Welcome to Your Vue.js App'
+    }
+  },
+  components: {
+    HelloWorld
+  }
+}
+</script>
+```
+
+那如果我在子组件中修改了props的值，父组件会更新吗?
+
+我们在页面上添加显示父组件的msg
+```html
+<template>
+  <div id="app">
+    <span>父组件的msg: {{ msg1 }}</span>
+    <img alt="Vue logo" src="./assets/logo.png">
+    <hello-world :msg="msg1"/>
+  </div>
+</template>
+```
+
+接着我们在子组件中加入一个输入框修改msg属性
+```html
+<input v-model="msg" type="text" @keyup.enter="pressEnter(msg)">
+```
+
+不仅没生效，并且console还有个报错
+```js
+[Vue warn]: Avoid mutating a prop directly since the value will be overwritten whenever the parent component re-renders. Instead, use a data or computed property based on the prop's value. Prop being mutated: "msg"
+
+found in
+
+---> <HelloWorld>
+       <App> at src/App.vue
+         <Root>
+```
+
+意思就是不要直接修改子组件的props, 因为v-bind的原因, 父组件会有变覆盖当前值
+
+
+那我们可以通知父组建, 让父组建修改就可以了
+
+### 向父组件传递数据
+
+如何向父组件传递事件, 这里需要:
++ 子组件使用$emit发送事件, 事件名称: changeMsg
++ 父组件使用v-on 订阅子组件的事件
+
+首先修改子组建, 重新绑定一个属性: tmpMsg, 等点击回车时发生事件给父组件
+
+```html
+<input v-model="tmpMsg" type="text" @keyup.enter="changeProps(tmpMsg)">
+
+<script>
+export default {
+  name: 'HelloWorld',
+  data() {
+    return {
+      tmpMsg: '',
+    }
+  },
+  methods: {
+    changeProps(msg) {
+      this.$emit('changeMsg', msg)
+    }
+  },
+  props: {
+    msg: String
+  }
+}
+</script>
+```
+
+父组件修改
+```html
+<hello-world :msg="msg1" @changeMsg="msgChanged" />
+
+<script>
+import HelloWorld from './components/HelloWorld.vue'
+
+export default {
+  name: 'App',
+  methods: {
+    msgChanged(event) {
+      this.msg1 = event
+    }
+  }
+}
+</script>
+```
+
+### 使用 v-model
+
+如此费力的使用 v-bind 和 v-on 完成了数据的双向绑定, 你有啥感想?
+
+这不就是v-model吗?
+```
+v-model <==>  v-bind:value + v-on:input
+```
+
+将其 value attribute 绑定到一个名叫 value 的 prop 上
+在其 input 事件被触发时，将新的值通过自定义的 input 事件抛出
+
+因此我们修改我们属性, 让遵循v-model的绑定和订阅规范
+
+父组件使用 v-model进行值的双向传递:
+```html
+<hello-world v-model="msg1" />
+```
+
+子组件绑定value属性和抛出input事件
+```html
+<input :value="value" type="text" @input="$emit('input', $event.target.value)">
+<script>
+export default {
+  name: 'HelloWorld',
+  props: {
+    value: String,
+  }
+}
+</script>
+```
+
+这样就实现了数据的双向传递了， 是不是舒服了
+
 ## 插件
 
+插件通常用来为 Vue 添加全局功能。插件的功能范围没有严格的限制——一般有下面几种：
+
++ 添加全局方法或者 property。如：vue-custom-element
++ 添加全局资源：指令/过滤器/过渡等。如 vue-touch
++ 通过全局混入来添加一些组件选项。如 vue-router
++ 添加 Vue 实例方法，通过把它们添加到 Vue.prototype 上实现。
++ 一个库，提供自己的 API，同时提供上面提到的一个或多个功能。如 vue-router
+
+我们可以看看element-ui的插件:
+
+```js
+import ElementUI from "element-ui"
+import "element-ui/lib/theme-chalk/index.css"
+Vue.use(ElementUI)
+```
+
+可以看到有很多组件
+```js
+import Vue, { PluginObject } from 'vue'
+import { ElementUIComponent, ElementUIComponentSize, ElementUIHorizontalAlignment } from './component'
+
+import { ElAlert } from './alert'
+import { ElAside } from './aside'
+import { ElAutocomplete } from './autocomplete'
+import { ElBadge } from './badge'
+import { ElBreadcrumb } from './breadcrumb'
+import { ElBreadcrumbItem } from './breadcrumb-item'
+import { ElButton } from './button'
+```
+
+可以看到这些element的组件都被注册到vue里面去了
+```js
+import Vue from 'vue'
+
+/** ElementUI component common definition */
+export declare class ElementUIComponent extends Vue {
+  /** Install component into Vue */
+  static install (vue: typeof Vue): void
+}
+
+```
 
 ## 参考
 

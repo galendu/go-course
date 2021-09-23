@@ -1,8 +1,10 @@
 <template>
   <div class="hello">
-    <h1>{{ msg }}</h1>
+    <h1>{{ value }}</h1>
     <h2>{{ reverseName }}</h2>
    
+    <input :value="value" type="text" @input="$emit('input', $event.target.value)">
+    <br>
     <input v-focus v-model="name" type="text" @keyup.enter="pressEnter(name)">
     <ul>
       <li v-for="(item, index) in items" :key="item.message">
@@ -45,7 +47,6 @@
 </template>
 
 <script>
-
 export default {
   name: 'HelloWorld',
   data() {
@@ -57,7 +58,7 @@ export default {
         { message: 'Bar', level: 'error'}
       ],
       urlHash: '',
-      ts: Date.now()
+      ts: Date.now(),
     }
   },
   mounted() {
@@ -81,6 +82,10 @@ export default {
     },
     reverseData(data) {
       return data.split('').reverse().join('')
+    },
+    changeProps() {
+      console.log(this.value)
+      this.$emit('input', this.value)
     }
   },
   computed: {
@@ -94,7 +99,7 @@ export default {
     }
   },
   props: {
-    msg: String
+    value: String,
   }
 }
 </script>
