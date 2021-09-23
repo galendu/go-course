@@ -1,9 +1,18 @@
 <template>
   <div class="hello">
     <h1>{{ msg }}</h1>
-    <h2>{{ name.split('').reverse().join('') }}</h2>
+    <h2>{{ reverseName }}</h2>
    
-    <input v-model="name" type="text" @keyup.enter="pressEnter(name)">
+    <input v-focus v-model="name" type="text" @keyup.enter="pressEnter(name)">
+    <ul>
+      <li v-for="(item, index) in items" :key="item.message">
+        {{ item.message }} - {{ index}}
+        <br>
+        <span v-for="(value, key) in item" :key="key"> {{ value }} {{ key }} <br></span>
+      </li>
+    </ul>
+    <br>
+    {{ ts | parseTime }}
     <br>
     <button :disabled="isButtomDisabled" v-on:click="clickButtom" >Button</button>
     <p>
@@ -36,12 +45,31 @@
 </template>
 
 <script>
+
 export default {
   name: 'HelloWorld',
   data() {
     return {
       name: '老喻',
       isButtomDisabled: false,
+      items: [
+        { message: 'Foo', level: 'info' },
+        { message: 'Bar', level: 'error'}
+      ],
+      urlHash: '',
+      ts: Date.now()
+    }
+  },
+  mounted() {
+    let that = this
+    window.onhashchange = function () {
+      console.log('URL发生变化了', window.location.hash);
+      that.urlHash = window.location.hash
+    };
+  },
+  watch: {
+    urlHash: function(newURL, oldURL) {
+      console.log(newURL, oldURL)
     }
   },
   methods: {
@@ -50,6 +78,19 @@ export default {
     },
     pressEnter(name) {
       alert(`${name}点击了回车键`)
+    },
+    reverseData(data) {
+      return data.split('').reverse().join('')
+    }
+  },
+  computed: {
+    reverseName: {
+      get() {
+        return this.name.split('').reverse().join('')
+      },
+      set(value) {
+        this.name = value.split('').reverse().join('')
+      }
     }
   },
   props: {

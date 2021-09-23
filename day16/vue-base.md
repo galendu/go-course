@@ -711,20 +711,458 @@ export default {
 </script>
 ```
 
+### 条件渲染
+
+有2个指令用于在模版中控制条件渲染:
+
++ v-if: 控制元素是否创建, 创建开销较大
++ v-show: 控制元素是否显示, 对象无效销毁，开销较小
+
+v-if 完整语法:
+```html
+<t v-if="" /> 
+<t v-else-if="" /> 
+<t v-else="" /> 
+```
+
+v-show完整语法:
+```html
+<t v-show="" />
+```
+
+比如更加用户输入, 判断当前分数的等级
+
+```html
+<input v-model="name" type="text" @keyup.enter="pressEnter(name)">
+<div v-if="name >= 90">
+  A
+</div>
+<div v-else-if="name >= 80">
+  B
+</div>
+<div v-else-if="name >= 60">
+  C
+</div>
+<div v-else-if="name >= 0">
+  D
+</div>
+<div v-else>
+  请输入正确的分数
+</div>
+```
+
+这些HTML元素都需要动态创建,  我们换成v-show看看
+
+```html
+<input v-model="name" type="text" @keyup.enter="pressEnter(name)">
+<div v-show="name >= 90">
+  A
+</div>
+<div v-show="name >= 80 && name < 90">
+  B
+</div>
+<div v-show="name >= 60 && name < 80">
+  C
+</div>
+<div v-show="name >= 0 && name < 60">
+  D
+</div>
+```
+
+我们可以看到只是简单地基于 CSS 进行切换
+
+![](./images/v-show.png)
+
+一般来说，v-if 有更高的切换开销，而 v-show 有更高的初始渲染开销。因此，如果需要非常频繁地切换，则使用 v-show 较好；如果在运行时条件很少改变，则使用 v-if 较好
+
+
+### 列表渲染
+
+v-for元素的列表渲染, 语法如下:
+
+```html
+<t v-for="(item, index) in items" :key="item.message">
+  {{ item.message }}
+</t>
+
+<!-- items: [
+  { message: 'Foo' },
+  { message: 'Bar' }
+] -->
+```
+
+ 
+ 如果你不使用index, 也可以省略, 比如:
+
+```html
+<ul>
+  <li v-for="item in items" :key="item.message">
+    {{ item.message }}
+  </li>
+</ul>
+
+<script>
+export default {
+  name: 'HelloWorld',
+  data() {
+    return {
+      items: [
+        { message: 'Foo' },
+        { message: 'Bar' }
+      ]
+    }
+  },
+}
+</script>
+```
+
+v-for 除了可以遍历列表，可以遍历对象, 比如我们套2层循环, 先遍历列表，再遍历对象
+```html
+<ul>
+  <li v-for="(item, index) in items" :key="item.message">
+    {{ item.message }} - {{ index}}
+    <br>
+    <span v-for="(value, key) in item" :key="key"> {{ value }} {{ key }} <br></span>
+  </li>
+</ul>
+<script>
+export default {
+  name: 'HelloWorld',
+  data() {
+    return {
+      items: [
+        { message: 'Foo', level: 'info' },
+        { message: 'Bar', level: 'error'}
+      ]
+    }
+  }
+}
+</script>
+```
+
+我们也可以在console界面里进行数据修改测试
+```js
+$vm._data.items.push({message: "num4", level: "pannic"})
+$vm._data.items.pop()
+```
+
+注意事项:
++ 不推荐在同一元素上使用 v-if 和 v-for, 请另外单独再起一个元素进行条件判断
+
+比如
+```html
+<li v-for="todo in todos" v-if="!todo.isComplete">
+  {{ todo }}
+</li>
+
+请改写成下面方式:
+
+<ul v-if="todos.length">
+  <li v-for="todo in todos">
+    {{ todo }}
+  </li>
+</ul>
+<p v-else>No todos left!</p>
+```
+
 ## 计算属性
 
+如果model的数据并不是你要直接渲染的，需要处理再展示, 简单的方法是使用表达式，比如
+```html
+<h2>{{ name.split('').reverse().join('') }}</h2>
+```
+
+这种把数据处理逻辑嵌入的视图中，并不合适,  不易于维护, 我们可以把改成一个方法
+```html
+<h2>{{ reverseData(name) }}</h2>
+
+<script>
+  methods: {
+    reverseData(data) {
+      return data.split('').reverse().join('')
+    }
+  }
+</script>
+```
+
+除了函数, vue还是为我们提供了一个计算属性, 这样我们的视图可以看起来更干净, 计算属性的语法如下:
+
+```js
+computed: {
+  attrName: {
+    get() {
+      return value
+    },
+    set(value) {
+      // set value
+    }
+  }
+}
+```
+
+我们修改为计算属性:
+
+```html
+<h2>{{ reverseName }}</h2>
+<script>
+export default {
+  computed: {
+    reverseName: {
+      get() {
+        return this.name.split('').reverse().join('')
+      },
+      set(value) {
+        this.name = this.name = value.split('').reverse().join('')
+      }
+    }
+  },
+}
+</script>
+```
+
+我们可以看到reverseName这个属性已经存在再我们实例上了， 修改也能正常生效:
+
+![](./images/vue-comp.jpg)
 
 ## 侦听器
 
+一个简单的需求:
+我们一个页面有多个参数, 用户可能把url copy给别人, 我们需要不同的url看到页面内容不同, 不然用户每次到这个页面都是第一个页面
 
-## 自定义指令
+![](./images/tab-watch.jpg)
+
+这个就需要我们监听url参数的变化, 然后视图做调整, vue-router会有个全局属性: $route, 我们可以监听它的变化
+
+
+由于没引入vue-router,那我们如何监听URL的变化 window提供一个事件回调:
+```js
+window.onhashchange = function () {
+  console.log('URL发生变化了', window.location.hash);
+  this.urlHash = window.location.hash
+};
+```
+
+我们再也没挂在完成后, 把它记录成一个本地hash 来模拟这个过程, 这个有点多余，直接通过这个回调就可以完成页面变化处理, 这里是演示watch
+
+vue 提供的属性watch语法如下:
+```
+  watch: {
+    // 如果 `urlHash` 发生改变，这个函数就会运行
+    urlHash: function (newData, oldData) {
+      this.debouncedGetAnswer()
+    }
+  },
+```
+
+我们先监听变化， 挂载后修改vue对象, 然后watch做
+```html
+<script>
+export default {
+  name: 'HelloWorld',
+  data() {
+    return {
+      urlHash: '',
+    }
+  },
+  mounted() {
+    /* 来个骚操作 */
+    let that = this
+    window.onhashchange = function () {
+      that.urlHash = window.location.hash
+    };
+  },
+  watch: {
+    urlHash: function(newURL, oldURL) {
+      console.log(newURL, oldURL)
+    }
+  }
+}
+</script>
+```
+
+更多watch用于请参考: [Vue Watch API](https://cn.vuejs.org/v2/api/#vm-watch)
 
 
 ## 过滤器
 
+Vue.js 允许你自定义过滤器，可被用于一些常见的文本格式化, 最常见就是 时间的格式化
+
+过滤器语法:
+```js
+<!-- 在双花括号中 -->
+{{ message | capitalize }}
+```
+
+你可以把他等价于一个函数: capitalize(message)
+
+我们可以在当前组件的vue实例上定义一个过滤器:
+
+```js
+filters: {
+  capitalize: function (value) {
+    /*过滤逻辑*/
+  }
+}
+```
+
+我们先定义我们的parseTime过滤器:
+```js
+{{ ts | parseTime }}
+
+<script>
+export default {
+  name: 'HelloWorld',
+  data() {
+    return {
+      ts: Date.now()
+    }
+  },
+  filters: {
+    parseTime: function (value) {
+      let date = new Date(value)
+      return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}`
+    }
+  }
+}
+</script>
+```
+
+如果每个地方都要用这个过滤器, 我们中不至于每个组件里面抄一遍吧!
+
+vue提供全局过滤器, 再初始化vue实例的时候可以配置, 找到main.js添加
+
+```js
+// 添加全局过滤器
+Vue.filter('parseTime', function (value) {
+  let date = new Date(value)
+  return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}`
+})
+
+```
+
+这样我们就可以删除我们在局部里面定义的过滤器了
+
+## 自定义指令
+
+除了核心功能默认内置的指令 (v-model 和 v-show)，Vue 也允许注册自定义指令, 别问， 问就是你需要
+
+比如用户进入页面让输入框自动聚焦, 方便快速输入, 比如登陆页面, 快速聚焦到 username输入框
+
+如果是HTML元素聚焦, 我们找到元素, 调用focus就可以了, 如下:
+```js
+let inputE = document.getElementsByTagName('input')
+inputE[0].focus()
+```
+
+添加到mounted中进行测试:
+```js
+mounted() {
+  let inputE = document.getElementsByTagName('input')
+  inputE[0].focus()
+  }
+```
+
+如何将这个功能做成一个vue的指令喃? 比如 v-focus
+
+我们先注册一个局部指令, 在本组件中使用
+```js
+export default {
+  name: 'HelloWorld',
+  directives: {
+    focus: {
+      // 指令的定义
+      inserted: function (el) {
+        el.focus()
+      }
+    }
+  },
+}
+</script>
+```
+
+这里我们注册的指令名字叫focus, 所有的指令在模版要加一个v前缀, 因此我们的指令就是v-focus
+
+注释掉之前的测试代码, 然后使用我们注册的指令来实现:
+```html
+<input v-focus v-model="name" type="text" @keyup.enter="pressEnter(name)">
+```
+
+怎么好用的功能，怎么可能局部使用，当然要全局注册, 找到main.js 配置自定义指令
+
+```js
+// 注册一个全局自定义指令 `v-focus`
+Vue.directive('focus', {
+  // 当被绑定的元素插入到 DOM 中时……
+  inserted: function (el) {
+    // 聚焦元素
+    el.focus()
+  }
+})
+```
+
+删除局部指令测试
 
 ## 组件
 
+我们的demo 就是一个组件的例子, 终于开始到vue的核心了 组件
+
+如下是我们的App.vue, 这个Vue 根实例中引入了一个HelloWorld的组件:
+```html
+<template>
+  <div id="app">
+    <img alt="Vue logo" src="./assets/logo.png">
+    <HelloWorld msg="Welcome to Your Vue.js App"/>
+  </div>
+</template>
+
+<script>
+import HelloWorld from './components/HelloWorld.vue'
+
+export default {
+  name: 'App',
+  components: {
+    HelloWorld
+  }
+}
+</script>
+```
+
+组件是可复用的 Vue 实例，所以它们与 new Vue 接收相同的选项，例如 data、computed、watch、methods 以及生命周期钩子等,仅有的例外是像 el 这样根实例特有的选项
+
+注意这里的export default语法，这是ES6的模块语法, 请参考之前的js课程
+
+这里需要注意:
++ 每个vue组件, 只能有1个根元素, 所以你不能在模版里面写2个并排的div
++ 组件的命名风格是首字母大写, 导出名字最好和文件名称相同，方便阅读
++ 局部组件必须放到实例的components属性里面, 代表这个组件注册到了该实例,  只有注册后的组件才能使用
++ 组件的使用方式和HTML标签一样, 可以认为是自定义的HTML标签, 因此最好小写使用, 比如hello-world
+
+我们调整下demo的组件使用名字
+```html
+<template>
+  <div id="app">
+    <img alt="Vue logo" src="./assets/logo.png">
+    <hello-world msg="Welcome to Your Vue.js App"/>
+  </div>
+</template>
+```
+
+当然我们也可以再添加一个这样的组件
+```html
+<template>
+  <div id="app">
+    <img alt="Vue logo" src="./assets/logo.png">
+    <hello-world msg="Welcome to Your Vue.js App"/>
+    <hello-world msg="component2"/>
+  </div>
+</template>
+```
+
+是不是开始有味道了:
+
+![](./images/vue-components.png)
+
+到这里 应该知道为啥我们引入了element-ui后, el-table, 这些是啥了吧
 
 ## 插件
 
