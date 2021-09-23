@@ -1,7 +1,6 @@
 package aes
 
 import (
-	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
 )
@@ -55,7 +54,8 @@ func AESCtrEncrypt(plainText []byte, key string) ([]byte, error) {
 
 	//2. 计数器模式, 初始化接收器
 	// 具体过程参考: https://blog.csdn.net/weixin_42940826/article/details/83687007
-	iv := bytes.Repeat([]byte("1"), block.BlockSize())
+	// iv := bytes.Repeat([]byte("1"), block.BlockSize())
+	iv := []byte("abcd123123123122")
 	stream := cipher.NewCTR(block, iv)
 
 	//3. 采用CTR进行异或运算, 明文 --异或--> 秘文 --异或--> 明文

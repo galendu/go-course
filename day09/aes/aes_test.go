@@ -30,9 +30,9 @@ func TestAES(t *testing.T) {
 }
 
 func TestAESWithCTR(t *testing.T) {
-	plain := "The text need to be encrypt."
+	plain := "这是我的加密数据！"
 	// AES 规定有3种长度的key: 16, 24, 32分别对应AES-128, AES-192, or AES-256
-	key := "abcdefgehjhijkmlkjjwwoew"
+	key := "abcd123123123123"
 
 	// 加密
 	cipherByte, err := aes.AESCtrEncrypt([]byte(plain), key)
