@@ -569,9 +569,47 @@ alert() // 覆盖alert方法
 
 是不是很骚, 这要是做大项目 就是在玩火, 那如果避免这种问题喃? 使用命名空间
 
-### 名字空间于Export
+所以我们需要将功能分开, 做成一个一个的模块, 就和Go的pkg一样, 避免一个模块写大后，出现相互覆盖
 
-我们可以将我们的所有方法绑定到一个变量上，然后暴露出去，避免全局变量的混乱， 许多著名的JavaScript库都是这么干的：jQuery，YUI，underscore等等
+### export
+
+在js中, 一个模块就是一个独立的文件。该文件内部的所有变量，外部无法获取。如果你希望外部能够读取模块内部的某个变量，就必须使用export关键字输出该变
+
+下面是一个 JS 文件，里面使用export命令输出变量
+
+```js
+// profile.js
+export var firstName = 'Michael';
+export var lastName = 'Jackson';
+export var year = 1958;
+```
+
+为了方便我们也可以写到一行
+
+```js
+// profile.js
+export {firstName, lastName, year};
+```
+
+### import
+
+我们通过import来导入其他模块中定义的变量, 比如
+
+```js
+import { firstName, lastName, year } from './profile.js';
+```
+
+如何导入的变量和本命令空间有冲突, 我们可以使用 import as语法来为变量 进行重命名
+
+```js
+import { lastName as surname } from './profile.js';
+```
+
+如果你一不小心 忘记了as, 可能会导致变量覆盖, 这由回到了全局变量的问题, 所以模块导出的时候最好设置模块命名空间
+
+### 命名空间于Export
+
+我们可以将我们的所有方法绑定到一个变量上，然后暴露出去，避免导入时覆盖问题， 许多著名的JavaScript库都是这么干的：jQuery，YUI，underscore等等
 
 ```js
 // 唯一的全局变量MYAPP:
@@ -590,10 +628,56 @@ MYAPP.foo = function () {
 export MYAPP
 ```
 
+
 其他文件中
 ```js
 import { MYAPP } from './export';
 ```
+
+### 默认导出
+
+使用import命令的时候，用户需要知道所要加载的变量名或函数名，否则无法加载, 比如
+```js
+// 我们必须知道export文件里面 使用export导出了哪些变量, 才知道import时 需要导入哪些
+import { MYAPP } from './export';
+```
+
+如果我们想要直接导入模块，再看该模块下有哪些变量可用，就像golang的pkg一样，我们该怎么做, 这个时候就要使用到export default了
+
+export default命令，为模块指定默认输出
+
+```js
+export default MYAPP
+```
+
+与export命令的区别：其他模块加载该模块时，import命令可以为该匿名函数指定任意名字, 
+```js
+import myPkg from './export';
+myPkg.foo(); // 'foo'
+```
+
+export default命令用于指定模块的默认输出。显然，一个模块只能有一个默认输出，因此export default命令只能使用一次。所以，import命令后面才不用加大括号，因为只可能唯一对应export default命令
+
+### 注意版本
+
+ES版本不同，有2种导入语法:
++ require/exports: 是 CommonJS/AMD 中为了解决模块化语法而引入的, ES5语法, 注意NodeJs使用的该规范
++ import/export:  是ES6引入的新规范，因为浏览器引擎兼容问题，需要在node中用babel将ES6语法编译成ES5语法
+
+
+import/export的语法我们讲解了，至于CommonJs的语法这里简单说下:
+
+一个模块想要对外暴露变量（函数也是变量），可以用module.exports = variable;，一个模块要引用其他模块暴露的变量，用var ref = require('module_name');就拿到了引用模块的变量
+
+这里的机制其实就是为每个文件准备一个module对象, 把它装进去
+
+```js
+var module = {
+    id: 'hello',
+    exports: {}
+};
+```
+
 
 ## 条件判断
 
@@ -867,3 +951,8 @@ async function testWithAsync() {
 + 判断使用 ===
 + 由于变量提升问题，尽量使用let声明变量，并且写在开头
 + for循环推荐forEach
+
+
+## 参考
+
++ [export 和 export default 的区别](https://www.cnblogs.com/fanyanzhao/p/10298543.html)

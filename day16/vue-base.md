@@ -294,6 +294,11 @@ export default {
 ```
 
 然后在模版中添加个输入框来修改他, 给他h2展示name属性
+
+默认情况下vue是单向绑定: 数据 --> 视图
+
+如果要双向绑定, 需要使用v-model: 视图 --> 数据
+
 ```html
 <h2>{{ name }}</h2>
 <input v-model="name" type="text">
@@ -308,7 +313,420 @@ export default {
 
 ## Vue实例
 
+```ts
+export interface Vue {
+  // 生产的HTML元素
+  readonly $el: Element; 
+  // 实例的一些配置, 比如components, directives, filters ...
+  readonly $options: ComponentOptions<Vue>;
+  // 父Vue实例 
+  readonly $parent: Vue;
+  // Root Vue实例
+  readonly $root: Vue;
+  // 该vue实例的子vue实例，一般为 子组建
+  readonly $children: Vue[];
+  // 元素refs, 当元素有refs属性时才能获取
+  readonly $refs: { [key: string]: Vue | Element | (Vue | Element)[] | undefined };
+  // 插槽, 模版插槽
+  readonly $slots: { [key: string]: VNode[] | undefined };
+  readonly $scopedSlots: { [key: string]: NormalizedScopedSlot | undefined };
+  readonly $isServer: boolean;
+  // Model对应的数据
+  readonly $data: Record<string, any>;
+  // 实例props, 用于组件见消息传递
+  readonly $props: Record<string, any>;
+  readonly $ssrContext: any;
+  // 虚拟node
+  readonly $vnode: VNode;
+  readonly $attrs: Record<string, string>;
+  readonly $listeners: Record<string, Function | Function[]>;
 
+  // 实例挂在到具体的HTML上
+  $mount(elementOrSelector?: Element | string, hydrating?: boolean): this;
+  // 强制刷新渲染, 收到刷新界面, 当有些情况下 界面没响应时
+  $forceUpdate(): void;
+  // 销毁实例
+  $destroy(): void;
+  $set: typeof Vue.set;
+  $delete: typeof Vue.delete;
+  // watch对象变化
+  $watch(
+    expOrFn: string,
+    callback: (this: this, n: any, o: any) => void,
+    options?: WatchOptions
+  ): (() => void);
+  $watch<T>(
+    expOrFn: (this: this) => T,
+    callback: (this: this, n: T, o: T) => void,
+    options?: WatchOptions
+  ): (() => void);
+  $on(event: string | string[], callback: Function): this;
+  $once(event: string | string[], callback: Function): this;
+  $off(event?: string | string[], callback?: Function): this;
+  // 触发事件
+  $emit(event: string, ...args: any[]): this;
+  // Dom更新完成后调用
+  $nextTick(callback: (this: this) => void): void;
+  $nextTick(): Promise<void>;
+  $createElement: CreateElement;
+}
+```
+
+那我们如何实例化一个vue实例, 下面是 Vue实例的构造函数
++ Data: Model
++ Methods: 方法
++ Computed: 计算属性
++ Props: 类似于一个自定义 attribute
+
+```js
+new <Data = object, Methods = object, Computed = object, Props = object>(options?: ThisTypedComponentOptionsWithRecordProps<V, Data, Methods, Computed, Props>): CombinedVueInstance<V, Data, Methods, Computed, Record<keyof Props, any>>;
+
+```
+
+我们看看我们main.js
+
+```js
+import Vue from 'vue'
+import App from './App.vue'
+
+// vue实例的配置
+Vue.config.productionTip = false
+
+
+// Root Vue实例, 挂载到id是app的元素上
+new Vue({
+  render: h => h(App),
+}).$mount('#app')
+```
+
+```html
+<template>
+  <div id="app">
+    <img alt="Vue logo" src="./assets/logo.png">
+    <HelloWorld msg="Welcome to Your Vue.js App"/>
+  </div>
+</template>
+```
+
+还有我们的Helloworld组件
+
+```html
+<template>
+  ...
+</template>
+<script>
+export default {
+  name: 'HelloWorld',
+  data() {
+    return {
+      name: '老喻'
+    }
+  },
+  props: {
+    msg: String
+  }
+}
+</script>
+```
+
+这里可以通过devTools查看到vm上的关系
+
+![](./images/vm-comsole.jpg)
+
+
+## Vue实例生命周期
+
+![](./images/lifecycle.png)
+
+然后我们扩展我们的demo为我们的vue实力添加上这些钩子
+
+```js
+<script>
+export default {
+  name: 'HelloWorld',
+  data() {
+    return {
+      name: '老喻'
+    }
+  },
+  beforeCreate() {
+    console.log('beforeCreate')
+  },
+  created() {
+    console.log('created')
+  },
+  beforeMount() {
+    console.log('beforeMount')
+  },
+  mounted() {
+    console.log('mounted')
+  },
+  beforeUpdate() {
+    console.log('beforeUpdate')
+  },
+  updated() {
+    console.log('updated')
+  },
+  beforeDestroy() {
+    console.log('beforeDestroy')
+  },
+  destroyed() {
+    console.log('destroyed')
+  },
+  props: {
+    msg: String
+  }
+}
+</script>
+```
+
+测试加载和修改数据
+
+## 模板语法
+
+通过template标签定义的部分都是vue的模版, 模版会被vue-template-compiler编译后渲染
+```html
+<template>
+  ...
+</template>
+```
+
+### 文本值
+
+当我们需要访问我们的Model时，就是data 这个Object时, 我们直接使用 {{ attr }} 就可以访问, vue会根据属性是否变化, 而动态渲染模版
+
+比如 data中的 name属性
+```html
+<template>
+  <div>{{ name }}</div>
+</template>
+<script>
+export default {
+  name: 'HelloWorld',
+  data() {
+    return {
+      name: '老喻'
+    }
+  }
+}
+</script>
+```
+
+### 元素属性
+
+变量不能作用在 HTML attribute 上, 比如下面的语法就是错误的
+```html
+<template>
+  <div id={{ name }}>{{ name }}</div>
+</template>
+```
+
+比如buttom有个disabled属性, 用于控制当前按钮是否可以点击
+```html
+<template>
+<button disabled="true">Button</button>
+</template>
+```
+
+针对HTML元素的属性 vue专门提供一个 v-bind指令, 这个指令就是模版引擎里面的一个函数, 他专门帮你完成HTML属性变量替换, 语法如下:
+```
+v-bind:disabled="attr"   ==>  disabled="data.attr"
+```
+
+那我们修改下
+```html
+<template>
+<button v-bind:disabled="isButtomDisabled">Button</button>
+</template>
+<script>
+export default {
+  name: 'HelloWorld',
+  data() {
+    return {
+      name: '老喻',
+      isButtomDisabled: false,
+    }
+  }
+}
+</script>
+```
+
+v-binding 有个缩写:  `:`
+
+```html
+<template>
+<button :disabled="isButtomDisabled">Button</button>
+</template>
+```
+
+### 元素事件
+
+如果我要要给buttom这个元素绑定一个事件应该如何写
+
+参考: [HTML 事件属性](https://www.runoob.com/tags/ref-eventattributes.html)
+
+原生的写法:
+```html
+<button onclick="copyText()">复制文本</button>
+```
+
+对于vue的模版系统来说, copyText这个函数如何渲染, 他不是一个文本，而是一个函数
+
+vue针对事件专门定义了一个指令: v-on, 语法如下:
+```
+v-on:eventName="eventHandler"
+
+eventName: 事件的名称
+eventHandler: 处理这个事件的函数
+```
+
+data是我们定义Model的地方, vue专门给一个属性用于定义方法: methods
+
+
+```html
+<template>
+    <button :disabled="isButtomDisabled" v-on:click="clickButtom" >Button</button>
+</template>
+<script>
+export default {
+  name: 'HelloWorld',
+  data() {
+    return {
+      name: '老喻',
+      isButtomDisabled: false,
+    }
+  },
+  methods: {
+    clickButtom() {
+      alert("别点我")  
+    }
+  }
+}
+</script>
+```
+
+当然v-on这个指令也可以缩写成 `@`
+```html
+<template>
+    <button :disabled="isButtomDisabled" @click="clickButtom" >Button</button>
+</template>
+```
+
+### 骚包的指令
+
+vue遇到不好解决的问题，就定义一个指令, 官方内置了一些指令:
+
++ v-model: 双向绑定的数据
++ v-bind: html元素属性绑定
++ v-on: html元素事件绑定
++ v-if: if 渲染
++ v-show: 控制是否显示
++ v-for: for 循环
+
+上面的例子 只是指令的简单用法, 指令的完整语法如下:
+```
+v-directive:argument.modifier.modifier...
+
+v-directive: 表示指令名称, 如v-on
+argument： 表示指令的参数, 比如click
+modifier:  修饰符,用于指出一个指令应该以特殊方式绑定
+```
+
+比如当用户按下回车时, 表示用户输入完成, 触发搜索
+
+```
+v-directive: 需要使用绑定事件的指令: v-on
+argument:    监听键盘事件: keyup, 按键弹起时
+modifier:    监听Enter建弹起时
+
+因此完整写发:  v-on:keyup.enter
+```
+
+```html
+<template>
+    <input v-model="name" type="text" @keyup.enter="pressEnter">
+</template>
+<script>
+export default {
+  name: 'HelloWorld',
+  data() {
+    return {
+      name: '老喻',
+      isButtomDisabled: false,
+    }
+  },
+  methods: {
+    clickButtom() {
+      alert("别点我")  
+    },
+    pressEnter() {
+      alert("点击了回车键")
+    }
+  },
+}
+</script>
+```
+
+最后需要注意事件的指令的函数是可以接受参数的
+
+```html
+<template>
+    <input v-model="name" type="text" @keyup.enter="pressEnter(name)">
+    <button v-on:click="say('hi')">Say hi</button>
+</template>
+```
+
+函数是直接读到model数据的, 因此别用{{ }}， 如果要传字符串 使用''
+
+
+修饰符可以玩出花, 具体的请看官方文档
+```html
+<!-- 即使 Alt 或 Shift 被一同按下时也会触发 -->
+<button v-on:click.ctrl="onClick">A</button>
+
+<!-- 有且只有 Ctrl 被按下的时候才触发 -->
+<button v-on:click.ctrl.exact="onCtrlClick">A</button>
+
+<!-- 没有任何系统修饰符被按下的时候才触发 -->
+<button v-on:click.exact="onClick">A</button>
+```
+
+### JavaScript 表达式
+
+模版支持JavaScript的表达式, 可以在显示的动态的做一些处理
+
+```html
+<template>
+  <div>{{ name.split('').reverse().join('') }}</div>
+</template>
+<script>
+export default {
+  name: 'HelloWorld',
+  data() {
+    return {
+      name: '老喻'
+    }
+  }
+}
+</script>
+```
+
+## 计算属性
+
+
+## 侦听器
+
+
+## 自定义指令
+
+
+## 过滤器
+
+
+## 组件
+
+
+## 插件
 
 
 ## 参考

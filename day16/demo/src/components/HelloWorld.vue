@@ -1,8 +1,11 @@
 <template>
   <div class="hello">
     <h1>{{ msg }}</h1>
-    <h2>{{ name }}</h2>
-    <input v-model="name" type="text">
+    <h2>{{ name.split('').reverse().join('') }}</h2>
+   
+    <input v-model="name" type="text" @keyup.enter="pressEnter(name)">
+    <br>
+    <button :disabled="isButtomDisabled" v-on:click="clickButtom" >Button</button>
     <p>
       For a guide and recipes on how to configure / customize this project,<br>
       check out the
@@ -37,7 +40,16 @@ export default {
   name: 'HelloWorld',
   data() {
     return {
-      name: '老喻'
+      name: '老喻',
+      isButtomDisabled: false,
+    }
+  },
+  methods: {
+    clickButtom() {
+      alert("别点我")  
+    },
+    pressEnter(name) {
+      alert(`${name}点击了回车键`)
     }
   },
   props: {

@@ -118,8 +118,15 @@ function testNewObj() {
     console.log('xx ', this.name)
 }
 
+
+function testExport() {
+    import customName from './export'
+    console.log(customName())
+}
+
 function main() {
-    testNewObj()
+    testExport()
 }
 
 main()
+
