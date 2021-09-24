@@ -1,29 +1,35 @@
 <template>
   <div id="app">
-    <span>父组件的msg: {{ msg1 }}</span>
-    <img alt="Vue logo" src="./assets/logo.png">
-    <hello-world v-model="msg1" />
+    <div id="nav">
+      <a @click="jumpToHome">Home</a> |
+      <a @click="jumpToAbout">About</a> |
+      <a @click="jumpToTest">Test</a>
+    </div>
+    <router-view/>
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
-
 export default {
   name: 'App',
   data() {
     return {
-      msg1: 'Welcome to Your Vue.js App'
     }
   },
-  created() {
-    this.$root.$data.b = 2
+  methods: {
+    jumpToHome() {
+      this.$router.push('/')
+    },
+    jumpToAbout() {
+      this.$router.push('/about')
+    },
+    jumpToTest() {
+      this.$router.push('/test')
+    }
   },
-  components: {
-    HelloWorld
-  }
 }
 </script>
+
 
 <style>
 #app {
@@ -32,6 +38,18 @@ export default {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  margin-top: 60px;
+}
+
+#nav {
+  padding: 30px;
+}
+
+#nav a {
+  font-weight: bold;
+  color: #2c3e50;
+}
+
+#nav a.router-link-exact-active {
+  color: #42b983;
 }
 </style>

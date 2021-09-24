@@ -1,6 +1,5 @@
 # Vue路由与状态管理
 
-
 ## 页面路由
 
 我们看看当前的vue配置
@@ -15,11 +14,228 @@ new Vue({
 
 ### 简单路由
 
+我们可以通过window.location.pathname 获取到当前浏览器的URL path
+```js
+location.pathname
+'/mypath'
+```
 
-[自己处理路由](https://cn.vuejs.org/v2/guide/routing.html)
+我们为每个path, 定义一个组件 就实现了一个简单的路由, 那我们重新定义渲染的逻辑
+```js
+// Root Vue实例
+// 添加currentRoute数据 和 浏览器的path绑定
+// 根据path 返回对应组件
+new Vue({
+  data: {
+    currentRoute: window.location.pathname
+  },
+  render(h) {
+    if (this.currentRoute === '/index') {
+      return h(App2)
+    }
+    return h(App)
+  },
+}).$mount('#app')
+```
+
+> 验证我们的路由是否生效了
+
+这个路由太过简单, 我们连一个菜单页都没有,直接硬跳, 如果想看稍我复杂点的可以看看官方的例子[自己处理路由](https://cn.vuejs.org/v2/guide/routing.html)
 
 ### vue-router
 
+当我们还在手动鲁路由的时候，别人页面都出几个了，这就是vue-router的威力, 相比我们自己的工具，他更能发挥规模化的力量。
+
+Vue Router 是 Vue.js (opens new window)官方的路由管理器。它和 Vue.js 的核心深度集成，让构建单页面应用变得易如反掌。包含的功能有：
+
++ 嵌套的路由/视图表
++ 模块化的、基于组件的路由配置
++ 路由参数、查询、通配符
++ 基于 Vue.js 过渡系统的视图过渡效果
++ 细粒度的导航控制
++ 带有自动激活的 CSS class 的链接
++ HTML5 历史模式或 hash 模式，在 IE9 中自动降级
++ 自定义的滚动条行为
+
+#### 安装
+
+第一个我们需要安装依赖, 当前项目下
+```js
+npm install vue-router
+// vue-router@3.5.2
+```
+
+vue-router是vue的插件, 我们按照插件的方式引入到vue中
+```js
+import Vue from 'vue'
+import VueRouter from 'vue-router'
+
+Vue.use(VueRouter)
+```
+
+我们也可以使用cli一步到位, 案例一起提供
+
+```js
+vue add router
+```
+
+这样我们就可以在实例中使用vue-router插件提供的各种功能了
+
+#### 起步
+
+我们看看vue add router为我们生成的代码
+```js
+...
+import router from './router'
+...
+// Root Vue实例
+new Vue({
+  el:'#app',
+  router,
+  render: h => h(App)
+})
+```
+
+可以看到router的定义都在一个模块里面
+```js
+import Vue from 'vue'
+import VueRouter from 'vue-router'
+import Home from '../views/Home.vue'
+
+Vue.use(VueRouter)
+
+const routes = [
+  {
+    path: '/',
+    name: 'Home',
+    component: Home
+  },
+  {
+    path: '/about',
+    name: 'About',
+    // route level code-splitting
+    // this generates a separate chunk (about.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+    component: () => import(/* webpackChunkName: "about" */ '../views/About.vue')
+  }
+]
+
+const router = new VueRouter({
+  mode: 'history',
+  base: process.env.BASE_URL,
+  routes
+})
+
+export default router
+```
+
+比如我们在添加一个页面: Test.vue
+```html
+<template>
+  <div class="about">
+    <h1>This is an test page</h1>
+  </div>
+</template>
+```
+
+然后我们补充到路由里面
+```js
+const routes = [
+  {
+    path: '/',
+    name: 'Home',
+    component: Home
+  },
+  {
+    path: '/about',
+    name: 'About',
+    // route level code-splitting
+    // this generates a separate chunk (about.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+    component: () => import(/* webpackChunkName: "about" */ '../views/About.vue')
+  },
+  {
+    path: '/test',
+    name: 'Test',
+    // route level code-splitting
+    // this generates a separate chunk (about.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+    component: () => import(/* webpackChunkName: "about" */ '../views/Test.vue')
+  }
+]
+```
+
+然后我们在界面上添加一个跳转
+```html
+<div id="nav">
+  <router-link to="/">Home</router-link> |
+  <router-link to="/about">About</router-link> |
+  <router-link to="/test">Test</router-link>
+</div>
+```
+
+> 测试下, 是不是很舒爽了
+
+
+#### 编程式的导航
+
+router-link这种组件是需要用户点击才能生效的, 如果 需要动态加载，或者跳转前检查用户的权限，这个时候再使用router-link就不合适了
+
+在之前的学习中，我们知道 window.history 和 location 可以模拟我们操作浏览器
++ location.assign('/')
++ location.reload()
++ history.back()
++ history.forward()
+
+vue-router为我们提供了一个函数用于js来控制路由那就是 push 功能和location.assign类似
+```js
+router.push(location, onComplete?, onAbort?)
+// location    location参数 等价于 <router-link :to="...">, 比如<router-link :to="/home">  等价于 router.push('/home')
+// onComplete  完成后的回调
+// onAbort     取消后的回调
+```
+
+> console中 尝试下吧? 注意 console router在vm的实例上面哦: $vm.$router
+
+
+我们调整下我们App.vue, 使用a标签
+```html
+<div id="nav">
+  <a @click="jumpToHome">Home</a> |
+  <a @click="jumpToAbout">About</a> |
+  <a @click="jumpToTest">Test</a>
+</div>
+<script>
+export default {
+  name: 'App',
+  data() {
+    return {
+    }
+  },
+  methods: {
+    jumpToHome() {
+      this.$router.push('/')
+    },
+    jumpToAbout() {
+      this.$router.push('/about')
+    },
+    jumpToTest() {
+      this.$router.push('/test')
+    }
+  },
+}
+</script>
+```
+
+
+#### 动态路由匹配
+
+
+
+#### Router对象
+
+
+#### Router钩子
 
 
 
@@ -33,7 +249,7 @@ new Vue({
 
 ### 共享内存
 
-第一种方式最直接: 共享内存, 直接开辟一个变量，全局都能访问到就可以了, 你和定义一个全局map一样
+第一种方式最直接: 共享内存, 直接开辟一个变量，全局都能访问到就可以了, 你和定义一个全局map一样简单
 
 比如我在root 实例上 添加一个data, 其他子实例 通过$root.$data来访问数据
 
@@ -197,7 +413,6 @@ localStorage.clear()
 ```
 
 ### vuex
-
 
 
 

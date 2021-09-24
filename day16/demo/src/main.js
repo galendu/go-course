@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import App from './App.vue'
+import router from './router'
 
 // vue实例的配置
 Vue.config.productionTip = false
@@ -22,6 +23,7 @@ Vue.directive('focus', {
 
 // Root Vue实例
 new Vue({
-  render: h => h(App),
-  data: {a: 1},
-}).$mount('#app')
+  el:'#app',
+  router,
+  render: h => h(App)
+})
