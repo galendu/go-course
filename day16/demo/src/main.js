@@ -2,6 +2,12 @@ import Vue from 'vue'
 import App from './App.vue'
 import router from './router'
 
+
+// 加载全局样式
+import './styles/index.css'
+
+
+
 // vue实例的配置
 Vue.config.productionTip = false
 

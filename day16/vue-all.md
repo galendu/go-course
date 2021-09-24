@@ -227,17 +227,242 @@ export default {
 </script>
 ```
 
-
 #### 动态路由匹配
 
+现在我们的遇到的路由都是静态的, 我们看看前后端路由的区别
 
+```
+后端:  path --->   handler
+前端:  path --->   view
+```
+
+我们看看之前demo里面的http router路由
+```go
+r.GET("/hosts", api.QueryHost)
+r.POST("/hosts", api.CreateHost)
+r.GET("/hosts/:id", api.DescribeHost)
+r.DELETE("/hosts/:id", api.DeleteHost)
+r.PUT("/hosts/:id", api.PutHost)
+r.PATCH("/hosts/:id", api.PatchHost)
+```
+
+vue-router的路由也支持像上面httprouter那样的路由匹配
+
+![](./images/vue-router.jpg)
+
+我们修改测试页面, 改为动态匹配
+
+```js
+{
+  path: '/test/:id',
+  name: 'Test',
+  // route level code-splitting
+  // this generates a separate chunk (about.[hash].js) for this route
+  // which is lazy-loaded when the route is visited.
+  component: () => import(/* webpackChunkName: "about" */ '../views/Test.vue')
+}
+```
+
+然后修改我们的视图, 显示这个id
+```html
+<template>
+  <div class="about">
+    <h1>This is an test page</h1>   
+    <span>{{ $route.params }}</span>
+  </div>
+</template>
+```
+
+你也许会问: 者有什么卵用? 就为了打印下id吗?
+
+我们可以使用这个来做详情页面, 根据不同的id 完后端获取不同的对象, 用于显示
+
+
+我们还漏了一个404的处理, 如果我们找不页面, 也需要返回一个视图, 告诉用户也没不存在
+
+vue-router在处理404的方式和后端不同, 路由依次匹配, 如果都匹配不上 写一个特殊的*路由作为 404路由
+```
+... 业务路由
+{
+  // 会匹配所有路径
+  path: '*'
+}
+```
+
+那我们补充一个404路由
+```js
+const routes = [
+  {
+    path: '/',
+    name: 'Home',
+    component: Home
+  },
+  {
+    path: '/about',
+    name: 'About',
+    // route level code-splitting
+    // this generates a separate chunk (about.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+    component: () => import(/* webpackChunkName: "about" */ '../views/About.vue')
+  },
+  {
+    path: '/test/:id',
+    name: 'Test',
+    // route level code-splitting
+    // this generates a separate chunk (about.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+    component: () => import(/* webpackChunkName: "about" */ '../views/Test.vue')
+  },
+  {
+    path: '*',
+    name: '404',
+    // route level code-splitting
+    // this generates a separate chunk (about.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+    component: () => import(/* webpackChunkName: "about" */ '../views/404.vue')
+  }
+]
+```
 
 #### Router对象
+
+讲了那么就的router, router到底有写啥，我们可以看看Router的定义:
+
+```ts
+export declare class VueRouter {
+  constructor(options?: RouterOptions)
+
+  app: Vue
+  options: RouterOptions
+  mode: RouterMode
+  currentRoute: Route
+
+  beforeEach(guard: NavigationGuard): Function
+  beforeResolve(guard: NavigationGuard): Function
+  afterEach(hook: (to: Route, from: Route) => any): Function
+  push(location: RawLocation): Promise<Route>
+  replace(location: RawLocation): Promise<Route>
+  push(
+    location: RawLocation,
+    onComplete?: Function,
+    onAbort?: ErrorHandler
+  ): void
+  replace(
+    location: RawLocation,
+    onComplete?: Function,
+    onAbort?: ErrorHandler
+  ): void
+  go(n: number): void
+  back(): void
+  forward(): void
+  match (raw: RawLocation, current?: Route, redirectedFrom?: Location): Route
+  getMatchedComponents(to?: RawLocation | Route): Component[]
+  onReady(cb: Function, errorCb?: ErrorHandler): void
+  onError(cb: ErrorHandler): void
+  addRoutes(routes: RouteConfig[]): void
+
+  addRoute(parent: string, route: RouteConfig): void
+  addRoute(route: RouteConfig): void
+  getRoutes(): RouteRecordPublic[]
+
+  resolve(
+    to: RawLocation,
+    current?: Route,
+    append?: boolean
+  ): {
+    location: Location
+    route: Route
+    href: string
+    // backwards compat
+    normalizedTo: Location
+    resolved: Route
+  }
+```
 
 
 #### Router钩子
 
+如果需要在路由前后做一些额外的处理, 这就需要路由为我们留钩子, 最常见的使用钩子的地方是认证, 在访问页面的时候, 判断用户是否有权限访问
 
+router为我们提供了如下钩子
++ beforeEach: 路由前处理
++ beforeEnter
++ beforeRouteEnter
++ beforeRouteUpdate
++ beforeRouteLeave
++ afterEach: 路由后出来
+
+我们为router设置钩子函数验证下:
+```js
+router.beforeEach((to, from, next) => {
+  console.log(to, from, next)
+  next()
+})
+
+router.afterEach((to, from) => {
+  console.log(to, from)
+})
+
+```
+
+广泛使用的就beforeEach和afterEach, 我们以此为例, 做一个简单的页面加载progress bar
+
+这里我们选用nprogress这个库来实现: [NPM NProgress](https://www.npmjs.com/package/nprogress)
+
+```js
+// nprogress@0.2.0
+npm install --save nprogress
+```
+
+这玩意使用也简单
+```js
+NProgress.start();
+NProgress.done();
+
+NProgress.set(0.0);     // Sorta same as .start()
+NProgress.set(0.4);
+NProgress.set(1.0);     // Sorta same as .done()
+```
+
+我们先引入库和样式
+```js
+import NProgress from 'nprogress' // progress bar
+import 'nprogress/nprogress.css' // progress bar style
+
+// 路由开始时: NProgress.start();
+// 路由结束时: NProgress.done();
+```
+
+按照这个逻辑修改我们的router
+```js
+router.beforeEach((to, from, next) => {
+  // start progress bar
+  NProgress.start()
+  
+  console.log(to, from, next)
+  next()
+})
+
+router.afterEach(() => {
+  // finish progress bar
+  NProgress.done()
+})
+```
+
+这个颜色好像不行? 我们怎么调整下喃?
+
+找到样式，调整好 写入一个文件中: styles/index.css, 等下全局加载
+```css
+#nprogress .bar {
+    background:#13C2C2;
+  }
+```
+
+在main.js加载全局样式
+```js
+// 加载全局样式
+import './styles/index.css'
+```
 
 ## 页面状态
 
