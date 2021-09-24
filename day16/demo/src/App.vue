@@ -16,6 +16,9 @@ export default {
       msg1: 'Welcome to Your Vue.js App'
     }
   },
+  created() {
+    this.$root.$data.b = 2
+  },
   components: {
     HelloWorld
   }

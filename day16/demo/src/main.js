@@ -23,4 +23,5 @@ Vue.directive('focus', {
 // Root Vue实例
 new Vue({
   render: h => h(App),
+  data: {a: 1},
 }).$mount('#app')

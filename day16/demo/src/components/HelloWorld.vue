@@ -67,6 +67,8 @@ export default {
       console.log('URL发生变化了', window.location.hash);
       that.urlHash = window.location.hash
     };
+
+    console.log(this.$root.$data.b)
   },
   watch: {
     urlHash: function(newURL, oldURL) {
