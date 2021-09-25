@@ -1,6 +1,6 @@
 # 课程
 
-## Day1
+## Day01
   * [初识Go语言](./zh-cn/base/hello_go.md)
   * [开发环境搭建](./zh-cn/base/install.md)
   * [第一个程序](./zh-cn/base/hello_world.md)
@@ -11,7 +11,7 @@
   * [运算符](./zh-cn/base/operate.md)
   * [作业](./day01/README.md)
 
-## Day2
+## Day02
   * [MODULES工程](./zh-cn/base/modules.md)
   * [格式化输出](./zh-cn/base/fmt_out.md)
   * [条件语句](./zh-cn/base/if.md)
@@ -21,7 +21,7 @@
   * [Go语言指针](./zh-cn/base/pointer.md)
   * [作业](./day02/README.md)
 
-## Day3
+## Day03
   * [Go语言函数](./zh-cn/base/func.md)
   * [defer与异常](./zh-cn/base/error.md)
   * [Go语言数组](./zh-cn/base/array.md)
@@ -31,10 +31,10 @@
   * [Go语言切片](./zh-cn/base/slice.md)
   * [作业](./day03/README.md)
 
-## Day4
+## Day04
   * [重点知识回顾与答疑](./day4/README.md)
 
-## Day5
+## Day05
   * [字符串](./zh-cn/base/string.md)
   * [Go语言Map](./zh-cn/base/map.md)
   * [Go语言接口](./zh-cn/base/interface.md)
@@ -45,21 +45,21 @@
   * [面向接口](./zh-cn/base/oop.md)
   * [作业](./day04/README.md)
 
-## Day6
+## Day06
   * [IO操作](./zh-cn/base/oop.md)
   * [反射与AST](./zh-cn/base/oop.md)
   * [文件读写](./zh-cn/base/string.md)
   * [包与工程](./zh-cn/base/pkg.md)
   * [单元测试和基准测试](./zh-cn/base/func.md)
 
-## Day8
+## Day08
   * [反馈问题解答](./day08/question.md)
   * [重点知识回顾](./zh-cn/base/oop.md)
   * [实战: 文件中转站]
     * [简易版工具开发](./day08/simple_tool.md)
     * [以系统方式开发](./day08/design.md)
 
-## Day9
+## Day09
   * [密码学简介](./day09/summary.md)
   * [散列算法](./day09/go-hash.md)
   * [对称加密算法](./day09/go-cipher.md)
