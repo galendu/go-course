@@ -1,22 +1,8 @@
 <template>
   <div class="hello">
-    <h1>{{ value }}</h1>
-    <h2>{{ reverseName }}</h2>
-   
-    <input :value="value" type="text" @input="$emit('input', $event.target.value)">
-    <br>
-    <input v-focus v-model="name" type="text" @keyup.enter="pressEnter(name)">
-    <ul>
-      <li v-for="(item, index) in items" :key="item.message">
-        {{ item.message }} - {{ index}}
-        <br>
-        <span v-for="(value, key) in item" :key="key"> {{ value }} {{ key }} <br></span>
-      </li>
-    </ul>
-    <br>
-    {{ ts | parseTime }}
-    <br>
-    <button :disabled="isButtomDisabled" v-on:click="clickButtom" >Button</button>
+    <h1>{{ msg }}</h1>
+    <h2>{{ name }}</h2>
+    <input v-model="name" type="text">
     <p>
       For a guide and recipes on how to configure / customize this project,<br>
       check out the
@@ -51,48 +37,35 @@ export default {
   name: 'HelloWorld',
   data() {
     return {
-      name: '老喻',
-      isButtomDisabled: false,
-      items: [
-        { message: 'Foo', level: 'info' },
-        { message: 'Bar', level: 'error'}
-      ],
-      urlHash: '',
-      ts: Date.now(),
+      name: "老喻",
     }
   },
-  watch: {
-    urlHash: function(newURL, oldURL) {
-      console.log(newURL, oldURL)
-    }
+  beforeCreate() {
+    console.log('beforeCreate')
   },
-  methods: {
-    clickButtom() {
-      alert("别点我")  
-    },
-    pressEnter(name) {
-      alert(`${name}点击了回车键`)
-    },
-    reverseData(data) {
-      return data.split('').reverse().join('')
-    },
-    changeProps() {
-      console.log(this.value)
-      this.$emit('input', this.value)
-    }
+  created() {
+    console.log('created')
   },
-  computed: {
-    reverseName: {
-      get() {
-        return this.name.split('').reverse().join('')
-      },
-      set(value) {
-        this.name = value.split('').reverse().join('')
-      }
-    }
+  beforeMount() {
+    console.log('beforeMount')
+  },
+  mounted() {
+    console.log('mounted')
+  },
+  beforeUpdate() {
+    console.log('beforeUpdate')
+  },
+  updated() {
+    console.log('updated')
+  },
+  beforeDestroy() {
+    console.log('beforeDestroy')
+  },
+  destroyed() {
+    console.log('destroyed')
   },
   props: {
-    value: String,
+    msg: String
   }
 }
 </script>

@@ -1,35 +1,20 @@
 <template>
   <div id="app">
-    <div id="nav">
-      <a @click="jumpToHome">Home</a> |
-      <a @click="jumpToAbout">About</a> |
-      <a @click="jumpToTest">Test</a>
-    </div>
-    <router-view/>
+    <img alt="Vue logo" src="./assets/logo.png">
+    <HelloWorld msg="Welcome to Your Vue.js App"/>
   </div>
 </template>
 
 <script>
+import HelloWorld from './components/HelloWorld.vue'
+
 export default {
   name: 'App',
-  data() {
-    return {
-    }
-  },
-  methods: {
-    jumpToHome() {
-      this.$router.push('/')
-    },
-    jumpToAbout() {
-      this.$router.push('/about')
-    },
-    jumpToTest() {
-      this.$router.push('/test')
-    }
-  },
+  components: {
+    HelloWorld
+  }
 }
 </script>
-
 
 <style>
 #app {
@@ -38,18 +23,6 @@ export default {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-}
-
-#nav {
-  padding: 30px;
-}
-
-#nav a {
-  font-weight: bold;
-  color: #2c3e50;
-}
-
-#nav a.router-link-exact-active {
-  color: #42b983;
+  margin-top: 60px;
 }
 </style>
