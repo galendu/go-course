@@ -795,6 +795,18 @@ localStorage.clear()
 
 ### vuex
 
+vuex是一种更高级的抽象, 所以使用上需要先理解他的理念，不像我们直接使用store那么简单
+
++ state，驱动应用的数据源；
++ view，以声明方式将 state 映射到视图；
++ actions，响应在 view 上的用户输入导致的状态变化
+
+![](./images/vuex.png)
+
+#### 安装
+
+
+### 
 
 
 ### vuex-persist
