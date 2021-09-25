@@ -20,7 +20,7 @@ vue借鉴了很有框架优秀的部分进行了整合:
 + vue
 + vue/cli
 + Vue Devtools, 
-+ Vuter
++ Vetur
 
 ### 安装node
 
