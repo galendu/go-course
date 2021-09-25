@@ -3,6 +3,7 @@
     <h1>{{ msg }}</h1>
     <h2>{{ name }}</h2>
     <input v-model="name" type="text">
+    <input v-model="pageSize" type="text">
     <p>
       For a guide and recipes on how to configure / customize this project,<br>
       check out the
@@ -38,6 +39,16 @@ export default {
   data() {
     return {
       name: "老喻",
+    }
+  },
+  computed: {
+    pageSize: {
+      get() {
+        return this.$store.getters.pageSize
+      },
+      set(value) {
+        this.$store.dispatch('setPageSize', value)
+      }
     }
   },
   beforeCreate() {

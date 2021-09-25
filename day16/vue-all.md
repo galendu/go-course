@@ -798,16 +798,119 @@ localStorage.clear()
 vuex是一种更高级的抽象, 所以使用上需要先理解他的理念，不像我们直接使用store那么简单
 
 + state，驱动应用的数据源；
-+ view，以声明方式将 state 映射到视图；
 + actions，响应在 view 上的用户输入导致的状态变化
++ mutation, 用于直接修改数据的方法
+
+读取数据: 组件通过store的getter方法 从中取数据
+修改数据: 组件通过store提供的dispatch方法触发一个action, 有action提交mutation来修改数据
 
 ![](./images/vuex.png)
 
 #### 安装
 
+当然你也可以选择手动安装:
+```sh
+npm install vuex --save
+```
 
-### 
+然后在项目中引入
+```js
+import Vue from 'vue'
+import Vuex from 'vuex'
 
+Vue.use(Vuex)
+```
+
+当然更加简单的方法是 使用 cli安装, 还能给我们生成实例
+```sh
+vue add vuex
+```
+
+### 起步
+
+我们看看cli生成的样例, 是入口main.js
+```js
+import Vue from 'vue'
+import App from './App.vue'
+import store from './store'
+
+Vue.config.productionTip = false
+
+new Vue({
+  store,
+  render: h => h(App)
+}).$mount('#app')
+```
+
+看到store模块提供了store实例, 直接看store如何实例化的: store/index.js
+```js
+import Vue from 'vue'
+import Vuex from 'vuex'
+
+Vue.use(Vuex)
+
+export default new Vuex.Store({
+  state: {
+  },
+  mutations: {
+  },
+  actions: {
+  },
+  modules: {
+  }
+})
+```
+
+我们举个简单的例子: 用户设置了分页大小, 我希望每个页面都能生效, 我们定义一个状态: pageSize
+```js
+export default new Vuex.Store({
+  state: {
+    /* 添加pageSize状态变量 */
+    pageSize: 20
+  },
+  getters: {
+    /* 设置获取方法 */
+    pageSize: state => {
+      return state.pageSize
+    } 
+  },
+  mutations: {
+    /* 定义修改pageSize的函数 */
+    setPageSize(state, ps) {
+      state.pageSize = ps
+    }
+  },
+  actions: {
+    /* 一个动作可以由可以提交多个mutation */
+    /* { commit, state } 这个是一个解构赋值, 正在的参数是context, 我们从中解出我们需要的变量*/
+    setPageSize({ commit }, ps) {
+      /* 使用commit 提交修改操作 */
+      commit('setPageSize', ps)
+    }
+  },
+  modules: {
+  }
+})
+
+```
+
+现在我们的store定义完成了, 在一个足迹中使用, 然后尝试在另一个组件中读取
+
+子组建中修改状态, 我们采用store提供的dispatch方法来进行修改
+```js
+<input v-model="pageSize" type="text">
+
+computed: {
+  pageSize: {
+    get() {
+      return this.$store.getters.pageSize
+    },
+    set(value) {
+      this.$store.dispatch('setPageSize', value)
+    }
+  }
+},
+```
 
 ### vuex-persist
 
