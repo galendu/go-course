@@ -1,9 +1,15 @@
 <template>
   <div class="hello">
-    <h1>{{ msg }}</h1>
-    <h2>{{ name }}</h2>
+    <h1>{{ value }}</h1>
+    <h2>{{ reverseName }}</h2>
+    {{ urlHash }}
     <input v-model="name" type="text">
-    <input v-model="pageSize" type="text">
+    <br>
+    <button @click="clickHanlder" style="margin-top:12px;">点击我</button>
+    <br>
+    {{ ts | parseTime }}
+    <br>
+    <input v-model="tmpMsg" type="text" @input="$emit('input', $event.target.value)">
     <p>
       For a guide and recipes on how to configure / customize this project,<br>
       check out the
@@ -38,45 +44,41 @@ export default {
   name: 'HelloWorld',
   data() {
     return {
+      tmpMsg: '',
+      inputData: '',
       name: "老喻",
+      isButtomDisabled: false,
+      hosts: [{ip: '127.0.0.1', os: 'linux'}, {ip: '10.10.10.1', os: 'windows'}],
+      urlHash: '',
+      ts: Date.now()
+    }
+  },
+  watch: {
+    urlHash: function(newData, oldData) {
+      console.log(newData, oldData)
+    }
+  },
+  // 定义一个属性: {funame:}
+  methods: {
+    clickHanlder() {
+      alert("别点我")
+    },
+    inputDownHandler() {
+      alert(`你输入了${this.inputData}`)
     }
   },
   computed: {
-    pageSize: {
+    reverseName: {
       get() {
-        return this.$store.getters.pageSize
+        return this.name.split('').reverse().join('')
       },
-      set(value) {
-        this.$store.dispatch('setPageSize', value)
+      set(data) {
+        this.name = data.split('').reverse().join('')
       }
     }
   },
-  beforeCreate() {
-    console.log('beforeCreate')
-  },
-  created() {
-    console.log('created')
-  },
-  beforeMount() {
-    console.log('beforeMount')
-  },
-  mounted() {
-    console.log('mounted')
-  },
-  beforeUpdate() {
-    console.log('beforeUpdate')
-  },
-  updated() {
-    console.log('updated')
-  },
-  beforeDestroy() {
-    console.log('beforeDestroy')
-  },
-  destroyed() {
-    console.log('destroyed')
-  },
   props: {
-    msg: String
+    value: String
   }
 }
 </script>
