@@ -273,11 +273,6 @@ vue-router的路由也支持像上面httprouter那样的路由匹配
 </template>
 ```
 
-你也许会问: 者有什么卵用? 就为了打印下id吗?
-
-我们可以使用这个来做详情页面, 根据不同的id 完后端获取不同的对象, 用于显示
-
-
 我们还漏了一个404的处理, 如果我们找不页面, 也需要返回一个视图, 告诉用户也没不存在
 
 vue-router在处理404的方式和后端不同, 路由依次匹配, 如果都匹配不上 写一个特殊的*路由作为 404路由
@@ -323,6 +318,167 @@ const routes = [
   }
 ]
 ```
+
+#### 加载数据
+
+你也许会问: 这有什么卵用? 就为了打印下id吗? 那我们做一个完整详情页面
+
+我们可以使用这个来做详情页面, 根据不同的id 完后端获取不同的对象, 用于显示
+
+如何请求id对应的后端数据, 通过axios, 因此提前按照下他
+```js
+// axios@0.21.4
+npm install --save axios
+```
+
+我们之前是这样使用axios的:
+
+```js
+getHosts() {
+  // loading
+    axios
+      .get('http://localhost:8050/hosts', {params: this.query})
+      .then(response => {
+        console.log(response)
+        this.tableData = response.data.data.items
+        this.total = response.data.data.total
+        console.log(this.tableData)
+      })
+      .catch(function (error) { // 请求失败处理
+        console.log(error);
+      });
+  },
+```
+
+这种方式短平快, 但是上了规模后就会有问题:
++ 后期接口有变更怎么办? 一个一个找来更新吗?
++ 我有一些通用的中间件需要加载, 每次请求时，添加token头
+
+首先我们需要将ajax封装下, 因为需要添加一些通用逻辑, 模块位于 utils/request.js
+```js
+import axios from 'axios'
+
+// create an axios instance
+const service = axios.create({
+    baseURL: 'http://localhost:8050', // url = base url + request url
+    // withCredentials: true, // send cookies when cross-domain requests
+    timeout: 5000 // request timeout
+  })
+
+
+// request interceptor
+service.interceptors.request.use(
+    config => {
+      return config
+    },
+    error => {
+      // do something with request error
+      console.log(error) // for debug
+      return Promise.reject(error)
+    }
+)
+
+
+// response interceptor
+service.interceptors.response.use(
+    /**
+     * If you want to get http information such as headers or status
+     * Please return  response => response
+    */
+  
+    /**
+     * Determine the request status by custom code
+     * Here is just an example
+     * You can also judge the status by HTTP Status Code
+     */
+    response => {
+      const res = response.data
+      // if the custom code is not 20000, it is judged as an error.
+      if (res.code !== 0) {
+        // 比如 token过期
+      } else {
+        // 正常
+        return res
+      }
+    },
+    error => {
+      console.log('err' + error) // for debug
+      // 传递出去
+      return Promise.reject(error)
+    }
+)
+  
+export default service
+```
+
+紧接着我们新增一个api目录用于存放我们所有的API请求, 在里面新建一个模块: test.js
+```js
+import request from '../utils/request'
+
+export function GET_TEST_DATA(id, query) {
+  return request({
+    url: `/hosts/${id}`,
+    method: 'get',
+    params: query
+  })
+}
+```
+
+最后在我们的视图中使用: Test.vue
+
+选择在什么时候加载数据是个问题，通常有2种方案:
++ 导航完成之后获取：先完成导航，然后在接下来的组件生命周期钩子中获取数据。在数据获取期间显示“加载中”之类的指示。
++ 导航完成之前获取：导航完成前，在路由进入的守卫中获取数据，在数据获取成功后执行导航。
+
+下面选择第一种, 因为通常详情页面 都是先跳转过去, 显示加载中:
+```js
+<script>
+import { GET_TEST_DATA } from '../api/test'
+
+export default {
+  name: 'Test',
+  data () {
+    return {
+      loading: false,
+      post: null,
+      error: null
+    }
+  },
+  created () {
+    // 组件创建完后获取数据，
+    // 此时 data 已经被 observed 了
+    this.fetchData()
+  },
+  watch: {
+    // 如果路由有变化，会再次执行该方法
+    '$route': 'fetchData'
+  },
+  methods: {
+      async fetchData () {
+        this.error = this.post = null
+        this.loading = true
+        // replace GET_TEST_DATA with your data fetching util / API wrapper
+        try {
+          this.loading = true
+          let resp = await GET_TEST_DATA(this.$route.params.id)
+          this.post = resp.data
+        } catch (err) {
+          this.error = err.toString()
+        } finally {
+          this.loading = false
+        }
+      }
+    }
+}
+</script>
+```
+
+第二种方式 主要是在router的钩子中获取数据:
++ beforeRouteEnter: 进入路由前
++ beforeRouteUpdate: 路由update前
+
+具体请参考: [在导航完成前获取数据](https://router.vuejs.org/zh/guide/advanced/data-fetching.html#%E5%9C%A8%E5%AF%BC%E8%88%AA%E5%AE%8C%E6%88%90%E5%89%8D%E8%8E%B7%E5%8F%96%E6%95%B0%E6%8D%AE)
+
 
 #### Router对象
 
