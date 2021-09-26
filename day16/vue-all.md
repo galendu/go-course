@@ -806,6 +806,7 @@ vuex是一种更高级的抽象, 所以使用上需要先理解他的理念，�
 
 ![](./images/vuex.png)
 
+
 #### 安装
 
 当然你也可以选择手动安装:
@@ -896,7 +897,7 @@ export default new Vuex.Store({
 
 现在我们的store定义完成了, 在一个足迹中使用, 然后尝试在另一个组件中读取
 
-子组建中修改状态, 我们采用store提供的dispatch方法来进行修改
+子组建中修改状态, 我们采用store提供的dispatch方法来进行修改: Test.vue
 ```js
 <input v-model="pageSize" type="text">
 
@@ -912,12 +913,41 @@ computed: {
 },
 ```
 
+> 测试下 看看devtools中 vuex是否正常, 看看刷新后如何
+
 ### vuex-persist
 
-Vuex的状态存储并不能持久化，存储在 Vuex 中的 store 里的数据，只要一刷新页面，数据就丢失了
+上面的测试应该已经知道 vuex的状态存储并不能持久化，存储在 Vuex 中的 store 里的数据，只要一刷新页面，数据就丢失了
 
-具体使用说明请参考[vuex-persist Github](https://github.com/championswimmer/vuex-persist)
+那我们能不能叫vuex的存储修改为localstorage喃? 答案是可以的, 有个插件就完成了这个事儿: vuex-persist,具体使用说明请参考: [vuex-persist Github](https://github.com/championswimmer/vuex-persist)
 
+```js
+// vuex-persist@3.1.3
+npm install --save vuex-persist
+```
+
+安装好了后我们配置vuex使用该插件： store/index.js
+```js
+// 1. 引入依赖
+import VuexPersistence from 'vuex-persist'
+
+// 2. 实例化一个插件对象, 我们使用localStorage作为存储
+const vuexLocal = new VuexPersistence({
+  storage: window.localStorage
+})
+
+// 3.配置store实例使用localStorage插件
+export default new Vuex.Store({
+  // ...
+  plugins: [vuexLocal.plugin],
+})
+```
+
+我们通过console确认下是否已经存入localstorage:
+
+![](./images/vuex-local.jpg)
+
+可以发现vuex-persist, 使用vuex做一个key, 把所有数据都存储在这个字段里面, 所有还是不要使用vuex存储太多数据，不然有性能问题
 
 ## 参考
 

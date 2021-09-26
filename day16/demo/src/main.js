@@ -7,6 +7,8 @@ Vue.config.productionTip = false
 // 加载全局样式
 import './styles/index.css'
 
+import store from './store'
+
 
 Vue.filter('parseTime', function (value) {
   let date = new Date(value)
@@ -23,5 +25,6 @@ Vue.directive('focus', {
 
 new Vue({
   router,
+  store,
   render: h => h(App)
 }).$mount('#app')
