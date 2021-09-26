@@ -827,7 +827,7 @@ Vue.use(Vuex)
 vue add vuex
 ```
 
-### 起步
+#### 起步
 
 我们看看cli生成的样例, 是入口main.js
 ```js
@@ -915,7 +915,7 @@ computed: {
 
 > 测试下 看看devtools中 vuex是否正常, 看看刷新后如何
 
-### vuex-persist
+#### vuex-persist
 
 上面的测试应该已经知道 vuex的状态存储并不能持久化，存储在 Vuex 中的 store 里的数据，只要一刷新页面，数据就丢失了
 
