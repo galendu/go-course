@@ -108,7 +108,7 @@ vue-devtools可以从chrome商店直接下载安装，非常简单， 具体请�
 + Beautify: js, css, html 语法高亮差距
 + ESLint: js eslint语法风格检查
 + Auto Rename Tag: tag rename
-+ Veter: vue语法高亮插架
++ Vetur: vue语法高亮插架
 
 
 ## Hello World
