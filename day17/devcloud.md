@@ -301,10 +301,6 @@ config.module
     symbolId: 'icon-[name]'
 })
 .end()
-.before('svg-sprite-loader')
-.use('svgo-loader')
-.loader('svgo-loader')
-.end();
 ```
 
 3. 引入svg图片
@@ -430,6 +426,18 @@ requireAll(req)
 <svg-icon icon-class="feishu" />
 ```
 
+7. 添加svgo优化命令
+
+在package.json中添加svgo指令, 用于优化我们的svg icon
+```js
+"svgo": "svgo -f src/icons/svg --config=src/icons/svgo.yml"
+```
+
+最后我们执行
+```js
+npm run svgo
+```
+
 #### 打包优化 
 
 在进行webpack打包的时候, 为了避免某个js库文件太大, 打包成单个文件加载过慢的问题, 需要对大文件进行切割, 让浏览器可以并行加载，提高页面加载速度
@@ -475,7 +483,6 @@ config
     }
     )
 ```
-
 
 ## 参考 
 
