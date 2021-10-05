@@ -214,9 +214,9 @@ Vue Loader 是一个 webpack 的 loader，它允许你以一种名为单文件�
 作用: 解析和转换 .vue 文件，提取出其中的逻辑代码 script、样式代码 style、以及 HTML 模版 template，再分别把它们交给对应的 Loader 去处理
 
 Vue Loader 还提供了很多酷炫的特性：
-+ 允许为 Vue 组件的每个部分使用其它的 webpack loader，例如在 <style> 的部分使用 Sass 和在 <template> 的部分使用 Pug；
++ 允许为 Vue 组件的每个部分使用其它的 webpack loader
 + 允许在一个 .vue 文件中使用自定义块，并对其运用自定义的 loader 链；
-+ 使用 webpack loader 将 <style> 和 <template> 中引用的资源当作模块依赖来处理；
++ 使用 webpack loader 将 style 和 template 中引用的资源当作模块依赖来处理；
 + 为每个组件模拟出 scoped CSS；
 + 在开发过程中使用热重载来保持状态。
 
@@ -259,15 +259,37 @@ config.module
 无论我们使用那个UI组件, 总会遇到icon不够用的时候, 这时候为了保证icon放大不失真，我们需要使用svg icon, 最常用的svg icon库就是:
 [阿里巴巴矢量图标库](https://www.iconfont.cn/search/index?searchType=icon&q=gitee&page=1&fromCollection=-1&fills=&tag=)
 
-svg-sprite-loader
+最简单的使用svg icon的方法是 直接使用img标签, 因此我们把资源放到我们的静态文件的目录下: assets/feishu.svg
 
+然后在我们的App.vue中通过相对路径使用:
+```html
+<img alt="Feishu logo" src="./assets/feishu.svg" />
+```
+
+这看起来并没有什么不妥, 但是当我们icon很多的时候, 由于我们使用的img标签，所以每次都需要从服务端拉去, 有没有其他优化办法喃?
+
+这里有2个库可以用来优化我们的导入
++ svg-sprite-loader: 会把你的 svg 塞到一个个 symbol 中，合成一个大的 svg, 最后将这个大的 svg 放入 body 中, 通过symbol id引用, symbol的id如果不特别指定，就是你的文件名
++ svgo-loader: 帮助svg文件进行瘦身的库
+
+
+
+1. 首先我们需要安装这2个库
+```sh
+npm i --dev svg-sprite-loader svgo-loader
+```
+
+2. webpack配置使用vg-sprite-loader
 ```js
 // set svg-sprite-loader
+// 设置svg相对路径: src/icons
 config.module
 .rule('svg')
 .exclude.add(resolve('src/icons'))
 .end()
 
+// svg结尾的文件使用svg-sprite-loader处理
+// 在svg-sprite-loader处理之前, 使用svgo-loader提取处理
 config.module
 .rule('icons')
 .test(/\.svg$/)
@@ -279,15 +301,180 @@ config.module
     symbolId: 'icon-[name]'
 })
 .end()
+.before('svg-sprite-loader')
+.use('svgo-loader')
+.loader('svgo-loader')
+.end();
 ```
 
+3. 引入svg图片
+
+我们在src下新建icons文件夹，文件夹里再新建svg文件夹，将svg图片放至svg文件夹里
+
+把刚才的feishu.svg放到 icons/svg文件下面
+
+我们在icons下创建一个index.js用来加载这些svg文件
+```js
+const req = require.context('./svg', false, /\.svg$/)
+const requireAll = requireContext => requireContext.keys().map(requireContext)
+requireAll(req)
+```
+
+4. 通过svg-sprite-loader使用
+
+加载好了，我们就可以使用 svg标签和use标签来使用, 在App.Vue中加入:
+```html
+<svg>
+    <use xlink:href="#icon-feishu"></use>
+</svg>
+```
+
+![](./images/svg-icon.jpg)
+
+这样用有点原始，我们把它封装成一个组件
+
+5. 封装Svg Icon组件
+
+为了校验svg是不是外部资源, 在utils/validate模块中定义isExternal函数:
+```js
+/**
+ * @param {string} path
+ * @returns {Boolean}
+ */
+ export function isExternal(path) {
+    return /^(https?:|mailto:|tel:)/.test(path)
+  }
+```
+
+我们在components下面新建一个组件: SvgIcon
+
+```html
+<template>
+  <div v-if="isExternal" :style="styleExternalIcon" class="svg-external-icon svg-icon" v-on="$listeners" />
+  <svg v-else :class="svgClass" aria-hidden="true" v-on="$listeners">
+    <use :xlink:href="iconName" />
+  </svg>
+</template>
+
+<script>
+// doc: https://panjiachen.github.io/vue-element-admin-site/feature/component/svg-icon.html#usage
+import { isExternal } from '@/utils/validate'
+export default {
+  name: 'SvgIcon',
+  props: {
+    iconClass: {
+      type: String,
+      required: true
+    },
+    className: {
+      type: String,
+      default: ''
+    }
+  },
+  computed: {
+    isExternal() {
+      return isExternal(this.iconClass)
+    },
+    iconName() {
+      return `#icon-${this.iconClass}`
+    },
+    svgClass() {
+      if (this.className) {
+        return 'svg-icon ' + this.className
+      } else {
+        return 'svg-icon'
+      }
+    },
+    styleExternalIcon() {
+      return {
+        mask: `url(${this.iconClass}) no-repeat 50% 50%`,
+        '-webkit-mask': `url(${this.iconClass}) no-repeat 50% 50%`
+      }
+    }
+  }
+}
+</script>
+
+<style scoped>
+.svg-icon {
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.15em;
+  fill: currentColor;
+  overflow: hidden;
+}
+.svg-external-icon {
+  background-color: currentColor;
+  mask-size: cover!important;
+  display: inline-block;
+}
+</style>
+```
+
+修改icons/index.js 注册SvgIcon为全局组建, 这样我们就可以在模版中直接使用 svg-icon组件了
+```js
+import Vue from 'vue'
+import SvgIcon from '@/components/SvgIcon'// svg component
+
+// register globally
+Vue.component('svg-icon', SvgIcon)
+
+const req = require.context('./svg', false, /\.svg$/)
+const requireAll = requireContext => requireContext.keys().map(requireContext)
+requireAll(req)
+```
+
+6. 在App.vue中以组件的方式使用svg
+
+```html
+<svg-icon icon-class="feishu" />
+```
+
+#### 打包优化 
+
+在进行webpack打包的时候, 为了避免某个js库文件太大, 打包成单个文件加载过慢的问题, 需要对大文件进行切割, 让浏览器可以并行加载，提高页面加载速度
 
 ```js
-npm i -D svg-sprite-loade svgo-loader
+config
+    .when(process.env.NODE_ENV !== 'development',
+    config => {
+        config
+        .plugin('ScriptExtHtmlWebpackPlugin')
+        .after('html')
+        .use('script-ext-html-webpack-plugin', [{
+        // `runtime` must same as runtimeChunk name. default is `runtime`
+            inline: /runtime\..*\.js$/
+        }])
+        .end()
+        config
+        .optimization.splitChunks({
+            chunks: 'all',
+            cacheGroups: {
+            libs: {
+                name: 'chunk-libs',
+                test: /[\\/]node_modules[\\/]/,
+                priority: 10,
+                chunks: 'initial' // only package third parties that are initially dependent
+            },
+            elementUI: {
+                name: 'chunk-elementUI', // split elementUI into a single package
+                priority: 20, // the weight needs to be larger than libs and app or it will be packaged into libs or app
+                test: /[\\/]node_modules[\\/]_?element-ui(.*)/ // in order to adapt to cnpm
+            },
+            commons: {
+                name: 'chunk-commons',
+                test: resolve('src/components'), // can customize your rules
+                minChunks: 3, //  minimum common number
+                priority: 5,
+                reuseExistingChunk: true
+            }
+            }
+        })
+        // https:// webpack.js.org/configuration/optimization/#optimizationruntimechunk
+        config.optimization.runtimeChunk('single')
+    }
+    )
 ```
-
-
-## 
 
 
 ## 参考 
