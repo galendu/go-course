@@ -128,6 +128,10 @@ module.exports = {
 
 ### webpack基础配置
 
+webpack 是一个用于现代 JavaScript 应用程序的 静态模块打包工具。当 webpack 处理应用程序时，它会在内部从一个或多个入口点构建一个 依赖图(dependency graph)，然后将你项目中所需的每一个模块组合成一个或多个 bundles，它们均为静态资源，用于展示你的内容
+
+更多信息请查看: [webpack 中文文档](https://webpack.docschina.org/concepts/)
+
 ```js
 const name = defaultSettings.title || '极乐研发云' // page title
 /*
@@ -161,7 +165,7 @@ Vue CLI 内部的 webpack 配置是通过 webpack-chain 维护的。
 其中rel="prefetch"被称为Resource-Hints（资源提示），也就是辅助浏览器进行资源优化的指令
 类似的指令还有rel="preload"
 
-##### 预提取预prefetch
+1.预提取预prefetch
 
 prefetch通常翻译为预提取, 其利用浏览器空闲时间来下载或预取用户在不久的将来可能访问的文档,网页向浏览器提供一组预取提示，并在浏览器完成当前页面的加载后开始静默地拉取指定的文档并将其存储在缓存中。
 
@@ -180,7 +184,7 @@ when there are many pages, it will cause too many meaningless requests
 config.plugins.delete('prefetch')
 ```
 
-##### 加载(preload)
+2.加载(preload)
 
 preload则翻译为预加载, 对于页面即刻需要的资源，你可能希望在页面加载的生命周期的早期阶段就开始获取，在浏览器的主渲染机制介入前就进行预加载简单来说，就是通过标签显式声明一个高优先级资源，强制浏览器提前请求资源
 ```html
@@ -203,7 +207,59 @@ config.plugin('preload').tap(() => [
 ])
 ```
 
-#### svg-sprite-loader
+#### vue-loader
+
+Vue Loader 是一个 webpack 的 loader，它允许你以一种名为单文件组件 (SFCs)的格式撰写 Vue 组件
+
+作用: 解析和转换 .vue 文件，提取出其中的逻辑代码 script、样式代码 style、以及 HTML 模版 template，再分别把它们交给对应的 Loader 去处理
+
+Vue Loader 还提供了很多酷炫的特性：
++ 允许为 Vue 组件的每个部分使用其它的 webpack loader，例如在 <style> 的部分使用 Sass 和在 <template> 的部分使用 Pug；
++ 允许在一个 .vue 文件中使用自定义块，并对其运用自定义的 loader 链；
++ 使用 webpack loader 将 <style> 和 <template> 中引用的资源当作模块依赖来处理；
++ 为每个组件模拟出 scoped CSS；
++ 在开发过程中使用热重载来保持状态。
+
+简而言之，webpack 和 Vue Loader 的结合为你提供了一个现代、灵活且极其强大的前端工作流，来帮助撰写 Vue.js 应用
+
+关于 更多的vue loader信息请查看: [Vue Loader 官方文档](https://vue-loader.vuejs.org/zh/)
+
+一般 vue-loader 提取出template后, 会调用vue-template-compiler来编译模版, 所以vue-loader和vue-template-compiler经常一起安装, 一般而已使用vue cli时已经安装好了, 我们通过npm list 查看当前项目安装的vue-loader和vue-template-compiler信息
+
+```sh
+$ npm list  | grep vue-loader
+│ ├─┬ vue-loader@15.9.8
+│ ├─┬ vue-loader-v16@npm:vue-loader@16.8.1
+$ npm list  | grep vue-template-compiler
+├─┬ vue-template-compiler@2.6.14
+```
+
+
+如果没有安装, 使用下面命令安装:
+```sh
+npm install -D vue-loader vue-template-compiler
+```
+
+我们通过chainWebpack来配置 包含vue的文件使用 vue-loader来处理:
+```js
+// set preserveWhitespace
+config.module
+    .rule('vue')
+    .use('vue-loader')
+    .loader('vue-loader')
+    .tap(options => {
+    options.compilerOptions.preserveWhitespace = true
+    return options
+    })
+    .end()
+```
+
+#### svg图标处理
+
+无论我们使用那个UI组件, 总会遇到icon不够用的时候, 这时候为了保证icon放大不失真，我们需要使用svg icon, 最常用的svg icon库就是:
+[阿里巴巴矢量图标库](https://www.iconfont.cn/search/index?searchType=icon&q=gitee&page=1&fromCollection=-1&fills=&tag=)
+
+svg-sprite-loader
 
 ```js
 // set svg-sprite-loader
@@ -225,19 +281,13 @@ config.module
 .end()
 ```
 
-#### vue-loader
-
-
-#### svg图标处理
-
-无论我们使用那个UI组件, 总会遇到icon不够用的时候, 这时候为了保证icon放大不失真，我们需要使用svg icon, 最常用的svg icon库就是:
-[阿里巴巴矢量图标库](https://www.iconfont.cn/search/index?searchType=icon&q=gitee&page=1&fromCollection=-1&fills=&tag=)
-
-
 
 ```js
 npm i -D svg-sprite-loade svgo-loader
 ```
+
+
+## 
 
 
 ## 参考 
@@ -248,3 +298,5 @@ npm i -D svg-sprite-loade svgo-loader
 + [svg-sprite-loader 使用教程](https://www.jianshu.com/p/70f9c9268c83)
 + [JetBrains svg-sprite-loader](https://github.com/JetBrains/svg-sprite-loader)
 + [使用 svg-sprite-loader、svgo-loader 优化项目中的 Icon](https://juejin.cn/post/6854573215646875655)
++ [Vue Loader](https://vue-loader.vuejs.org/zh/)
++ [webpack 中文文档](https://webpack.docschina.org/concepts/)
