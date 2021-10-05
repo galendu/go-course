@@ -484,6 +484,253 @@ config
     )
 ```
 
+## 引入UI组件
+
+安装element ui: [官方安装文档](https://element.eleme.cn/#/zh-CN/component/installation)
+
+```sh
+$ npm i element-ui -S
+$ npm install --save js-cookie
+```
+
+
+将element ui组件库和样式库 引入到我们的vue项目中, 入口文件:main.js:
+```js
+import Cookies from 'js-cookie'
+import Element from 'element-ui'
+import "element-ui/lib/theme-chalk/index.css"
+
+Vue.use(Element, {
+  size: Cookies.get('size') || 'mini', // set element-ui default size
+})
+```
+
+然后我们到[element官网](https://element.eleme.cn/), 找个组件验证下
+
+```js
+<template>
+  <div id="app">
+    <img alt="Vue logo" src="./assets/logo.png">
+    <HelloWorld msg="Welcome to Your Vue.js App"/>
+    <el-row>
+      <el-button>默认按钮</el-button>
+      <el-button type="primary">主要按钮</el-button>
+      <el-button type="success">成功按钮</el-button>
+      <el-button type="info">信息按钮</el-button>
+      <el-button type="warning">警告按钮</el-button>
+      <el-button type="danger">危险按钮</el-button>
+    </el-row>
+  </div>
+</template>
+```
+
+## 项目样式配置
+
+我们创建一个styles文件夹, 用于存放项目的样式文件
+
+
+### element UI 主题定制
+我们定制下element的主题色: element-variables.scss
+
+```js
+/* icon font path, required */
+$--font-path: '~element-ui/lib/theme-chalk/fonts';
+
+@import "~element-ui/packages/theme-chalk/src/index";
+```
+
+然后修改样式引入我们定制后的主题样式
+```js
+import Cookies from 'js-cookie'
+import Element from 'element-ui'
+import './styles/element-variables.scss'
+
+Vue.use(Element, {
+  size: Cookies.get('size') || 'mini', // set element-ui default size
+})
+```
+
+### element UI组件样式定制
+我们可以按需调整全局element ui的某些样式: element-ui.scss
+
+比如我们把button的风格改为直角
+```scss
+.el-button {
+    border-radius: 0px;
+}
+```
+
+所有定制样式通过index.scss导出
+```scss
+@import './element-ui.scss';
+```
+
+## VUE全局指令
+
+我们把全局的所有指令都放在于目录: directives
+
+我们这里先添加1个全局指令: v-clipboard
+
+1. v-clipboard
+
+基于 clipboard 进行的封装, 关于clipboard的用法可以参考: [clipboard Github](https://github.com/zenorocha/clipboard.js)
+
+我们先安装clipboard这个依赖
+```sh
+npm install --save clipboard
+```
+
+然后是我们的指令组件封装: directives/clipboard/clipboard.js
+```js
+// Inspired by https://github.com/Inndy/vue-clipboard2
+const Clipboard = require('clipboard')
+if (!Clipboard) {
+  throw new Error('you should npm install `clipboard` --save at first ')
+}
+
+export default {
+  bind(el, binding) {
+    if (binding.arg === 'success') {
+      el._v_clipboard_success = binding.value
+    } else if (binding.arg === 'error') {
+      el._v_clipboard_error = binding.value
+    } else {
+      const clipboard = new Clipboard(el, {
+        text() { return binding.value },
+        action() { return binding.arg === 'cut' ? 'cut' : 'copy' }
+      })
+      clipboard.on('success', e => {
+        const callback = el._v_clipboard_success
+        callback && callback(e) // eslint-disable-line
+      })
+      clipboard.on('error', e => {
+        const callback = el._v_clipboard_error
+        callback && callback(e) // eslint-disable-line
+      })
+      el._v_clipboard = clipboard
+    }
+  },
+  update(el, binding) {
+    if (binding.arg === 'success') {
+      el._v_clipboard_success = binding.value
+    } else if (binding.arg === 'error') {
+      el._v_clipboard_error = binding.value
+    } else {
+      el._v_clipboard.text = function() { return binding.value }
+      el._v_clipboard.action = function() { return binding.arg === 'cut' ? 'cut' : 'copy' }
+    }
+  },
+  unbind(el, binding) {
+    if (binding.arg === 'success') {
+      delete el._v_clipboard_success
+    } else if (binding.arg === 'error') {
+      delete el._v_clipboard_error
+    } else {
+      el._v_clipboard.destroy()
+      delete el._v_clipboard
+    }
+  }
+}
+```
+
+2. 我们将这2个指令注册到全局, 我们在directives 目录下，定义一个index.js模块，用于注册我们所有全局指令
+```js
+import Vue from "vue";
+
+import Clipboard from './clipboard/clipboard'
+
+// 注册一个全局自定义指令
+Vue.directive('clipboard', Clipboard)
+```
+
+3. 最后我们在main.js中 引入
+
+```js
+// 加载全局指令
+import '@/directives' 
+```
+
+4. 测试这个全局指令
+
+在 App.vue中引入一个输入框组件:
+```html
+<el-input v-model="input" placeholder="请输入内容"></el-input>
+<el-button v-clipboard:copy="input" v-clipboard:success="clipboardSuccess" type="text" icon="el-icon-document-copy" style="padding:0px;margin-left:12px;" />
+<script>
+export default {
+  name: 'App',
+  data() {
+    return {
+      input: '',
+    }
+  },
+  methods: {
+    clipboardSuccess() {
+      this.$message({
+        message: '复制成功',
+        type: 'success'
+      })
+    },
+  }
+}
+</script>
+```
+
+> 之前不是做过一个v-focus的全局组件吗? 这里你为啥也把它注册成全局组件喃?
+
+答案是: element的 input组件 对其进行了封装, 直接使用el.focus是不可以的, 因此此时的el不是 input元素, 我们需要通过筛选才可以:
+```js
+el.querySelector('input').focus()
+```
+
+同学们可以自己去实践下
+
+## VUE全局过滤器
+
+我们把全局的所有过滤器都放在于目录: filters
+
+1. 我们创建一个: time.js, 定义parseTime过滤函数
+
+```js
+export function parseTime (value) {
+    let date = new Date(value)
+    return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}`
+  }
+```
+
+2. 然后我们创建一个: index.js 用于注册全局过滤器
+```js
+import Vue from "vue";
+
+import * as timeFilters from './time' 
+// register global utility filters
+Object.keys(timeFilters).forEach(key => {
+  Vue.filter(key, timeFilters[key])
+})
+```
+
+3. main.js中引入
+
+```js
+// 加载全局过滤器
+import '@/filters' 
+```
+
+4. 测试下
+
+```js
+{{ ts | parseTime}}
+
+data() {
+  return {
+    input: '',
+    ts: Date.now()
+  }
+},
+```
+
+## 
+
 ## 参考 
 
 + [VUE CLI 全局配置](https://cli.vuejs.org/zh/config/#vue-config-js)
