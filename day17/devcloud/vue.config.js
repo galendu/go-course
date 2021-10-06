@@ -36,22 +36,6 @@ module.exports = {
       warnings: false,
       errors: true,
     },
-    proxy: {
-      "/workflow/api": {
-        // target: 'http://127.0.0.1:9948',
-        target: "http://keyauth.nbtuan.vip",
-        ws: true,
-        secure: false,
-        changeOrigin: true,
-      },
-      "/": {
-        // target: 'http://127.0.0.1:8050',
-        target: "http://keyauth.nbtuan.vip",
-        ws: true,
-        secure: false,
-        changeOrigin: true,
-      },
-    },
   },
   configureWebpack: {
     // provide the app's title in webpack's name field, so that

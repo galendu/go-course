@@ -729,7 +729,252 @@ data() {
 },
 ```
 
-## 
+## Login页面
+
+![](./images/login-page.jpg)
+
+### 清理脚手架
+
+在做Login页面之前, 请清理脚手架给我生出的页面: 
++ views/About.vue
++ views/Home.vue
+
+删除路由: router/index.js
++ Home
++ About
+
+删除多于组件: components
++ HelloWorld.vue
+
+清理App.vue里面多于的元素:
+```html
+<template>
+  <div id="app">
+    <router-view />
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'App'
+}
+</script>
+```
+
+
+### Login组件
+
+由于后期登陆功能是由keyauth服务实现的, 因此我们把登陆页面的视图放到keyauth目录下: views/keyauth/login/index.vue
+
+我们使用一个elemnt 的From组件来实现这个登陆表单, 用法参考: [element form文档](https://element.eleme.cn/#/zh-CN/component/form)
+```html
+<template>
+  <div>
+      <el-form>
+        <!-- 切换 -->
+        <div>
+            <el-tabs>
+            <el-tab-pane label="普通登陆">
+
+            </el-tab-pane>
+            <el-tab-pane label="LDAP登陆">
+
+            </el-tab-pane>
+            </el-tabs>
+        </div>
+
+        <!-- 账号输入框 -->
+        <el-form-item>
+        <el-input>
+
+        </el-input>
+        </el-form-item>
+
+        <!-- 密码输入框 -->
+        <el-form-item>
+        <el-input>
+
+        </el-input>
+        </el-form-item>
+
+        <!-- 登陆按钮 -->
+        <el-button>
+            登陆
+        </el-button>
+      </el-form>
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'Login',
+  data() {
+    return {
+      loginForm: {
+        grant_type:'',
+        username: '',
+        password: ''
+      },
+    }
+  }
+}
+</script>
+```
+
+### 配置路由
+
+```js
+const routes = [
+  {
+    path: '/login',
+    name: "Login",
+    component: () => import('../views/keyauth/login/index'),
+  }
+];
+```
+
+然后访问login路径
+
+![](./images/login-raw.jpg)
+
+### 页面样式
+
+我们为这2个元素添加样式:
+
++ div: login-container
++ form: login-form
+
+```html
+<template>
+  <div class="login-container">
+      <el-form class="login-form">
+        ...
+      </el-form>
+  </div>
+</template>
+<style lang="scss" scoped>
+.login-container {
+  height: 100%;
+  width: 100%;
+  background-image: linear-gradient(to top, #3584A7 0%, #473B7B 100%);
+  .login-form {
+    width: 520px;
+    padding: 160px 35px 0;
+    margin: 0 auto;
+    .login-btn {
+        width:100%;
+    }
+  }
+}
+</style>
+```
+
+调整下全局输入框的样式, 取消输入框的圆角
+```css
+.el-input__inner {
+    border-radius: 0px;
+}
+```
+
+![](./images/login-css-only.jpg)
+
+### 全局样式调整
+
+上面可以看到高度不对，原因是 html的样式，我们没有设置100%的高度, 仅显示的元素本身的高度
+ 
+因此我们调整下 整体样式: styles/index.scss
+```css
+html {
+    height: 100%;
+    box-sizing: border-box;
+}
+
+body {
+    height: 100%;
+    margin: 0;
+    font-family: Helvetica Neue, Helvetica, PingFang SC, Hiragino Sans GB, Microsoft YaHei, Arial, sans-serif;
+}
+
+#app {
+    height: 100%;
+}
+```
+
+### 调整输入框样式
+
+调整输入框样式
+
+```scss
+/* reset element-ui css */
+.login-container ::v-deep .el-input {
+    display: inline-block;
+    height: 47px;
+    width: 85%;
+    input {
+      background: transparent;
+      border: 0px;
+      -webkit-appearance: none;
+      border-radius: 0px;
+      padding: 12px 5px 12px 15px;
+      height: 47px;
+      caret-color: #fff;
+    }
+  }
+
+.login-container ::v-deep .el-form-item {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #454545;
+}
+
+.login-container ::v-deep .el-tabs__item {
+  color: white;
+  font-size: 18px;
+}
+
+.login-container ::v-deep .is-active {
+  color:#13C2C2;
+}
+```
+
+### 添加svg icon
+
+我们去iconfont找2个icon过来: 
+
+```html
+<!-- 账号输入框 -->
+<el-form-item>
+<span class="svg-container">
+  <svg-icon icon-class="user" />
+</span>
+<el-input>
+
+</el-input>
+</el-form-item>
+
+<!-- 密码输入框 -->
+<el-form-item>
+<span class="svg-container">
+  <svg-icon icon-class="password" />
+</span>
+<el-input>
+
+</el-input>
+</el-form-item>
+```
+
+调整样式
+```scss
+.login-container {
+  ...
+  .svg-container {
+    padding: 6px 5px 6px 15px;
+    color: #889aa4;
+    vertical-align: middle;
+    width: 30px;
+    display: inline-block;
+  }
+}
+```
 
 ## 参考 
 
