@@ -4,6 +4,9 @@ import {beforeEach, afterEach} from './permission'
 
 Vue.use(VueRouter);
 
+/* Layout */
+import Layout from '@/layout'
+
 const routes = [
   {
     path: '/login',
@@ -12,8 +15,15 @@ const routes = [
   },
   {
     path: '/',
-    name: "Home",
-    component: () => import('../views/dashboard/index'),
+    component: Layout,
+    redirect: '/dashboard',
+    children: [
+      {
+        path: 'dashboard',
+        component: () => import('@/views/dashboard/index'),
+        name: 'Dashboard',
+      }
+    ]
   },
   {
     path: '/404',
