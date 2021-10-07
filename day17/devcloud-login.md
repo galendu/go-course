@@ -77,7 +77,7 @@ const routes = [
 
 ![](./images/login-raw.jpg)
 
-### 页面样式
+## 页面样式
 
 我们为这2个元素添加样式:
 
@@ -802,3 +802,7 @@ export function afterEach() {
     background:#13C2C2;
   }
 ```
+
+
+现在如果我们访问都其他不存在的页面，是一个空白页面，显然这样很有友好, 接下来我们添加一个404页面
+
