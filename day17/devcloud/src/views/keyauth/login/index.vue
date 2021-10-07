@@ -1,56 +1,91 @@
 <template>
   <div class="login-container">
-      <el-form class="login-form">
+      <el-form class="login-form" ref="loginForm" :model="loginForm" :rules="loginRules">
         <!-- 切换 -->
         <div>
-            <el-tabs>
-            <el-tab-pane label="普通登陆">
-
-            </el-tab-pane>
-            <el-tab-pane label="LDAP登陆">
-
-            </el-tab-pane>
+            <el-tabs v-model="loginForm.grant_type">
+            <el-tab-pane label="普通登录" name="password" />
+            <el-tab-pane label="LDAP登录" name="ldap" />
             </el-tabs>
         </div>
 
         <!-- 账号输入框 -->
-        <el-form-item>
+        <el-form-item prop="username">
         <span class="svg-container">
           <svg-icon icon-class="user" />
         </span>
-        <el-input>
-
-        </el-input>
+        <el-input key="username" placeholder="账号" ref="username" v-model="loginForm.username" name="username" type="text" tabindex="1" autocomplete="on" />
         </el-form-item>
 
         <!-- 密码输入框 -->
-        <el-form-item>
+        <el-form-item prop="password">
         <span class="svg-container">
           <svg-icon icon-class="password" />
         </span>
-        <el-input>
-
-        </el-input>
+        <el-input key="password" placeholder="密码" ref="password" v-model="loginForm.password" name="password" :type="passwordType" tabindex="2" autocomplete="on" />
+        <span class="show-pwd" @click="showPwd">
+          <svg-icon :icon-class="passwordType === 'password' ? 'eye-close' : 'eye-open'" />
+        </span>
         </el-form-item>
 
         <!-- 登陆按钮 -->
-        <el-button class="login-btn">
-            登陆
+        <el-button class="login-btn" size="medium" type="primary" tabindex="3" @click="handleLogin">
+            登录
         </el-button>
       </el-form>
   </div>
 </template>
 
 <script>
+const validateUsername = (rule, value, callback) => {
+  if (value === '') {
+    callback(new Error('请输入账号'))
+  } else {
+    callback()
+  }
+}
+const validatePassword = (rule, value, callback) => {
+  if (value === '') {
+    callback(new Error('请输入密码'))
+  } else {
+    callback()
+  }
+}
+
 export default {
   name: 'Login',
   data() {
     return {
+      passwordType: 'password',
       loginForm: {
-        grant_type:'',
+        grant_type:'password',
         username: '',
         password: ''
       },
+      loginRules: {
+        username: [{ trigger: 'blur', validator: validateUsername }],
+        password: [{ trigger: 'blur', validator: validatePassword }]
+      }
+    }
+  },
+  mounted() {
+    this.$refs.username.focus()
+  },
+  methods: {
+    handleLogin() {
+      this.$refs.loginForm.validate(valid => {
+        console.log(valid)
+      })
+    },
+    showPwd() {
+      if (this.passwordType === 'password') {
+        this.passwordType = ''
+      } else {
+        this.passwordType = 'password'
+      }
+      this.$nextTick(() => {
+        this.$refs.password.focus()
+      })
     }
   }
 }
@@ -76,6 +111,15 @@ export default {
     width: 30px;
     display: inline-block;
   }
+  .show-pwd {
+    position: absolute;
+    right: 10px;
+    top: 7px;
+    font-size: 16px;
+    color: #889aa4;
+    cursor: pointer;
+    user-select: none;
+  }
 }
 
 /* reset element-ui css */
@@ -91,6 +135,7 @@ export default {
       padding: 12px 5px 12px 15px;
       height: 47px;
       caret-color: #fff;
+      color: #fff;
     }
   }
 
@@ -107,5 +152,6 @@ export default {
 .login-container ::v-deep .is-active {
   color:#13C2C2;
 }
+
 
 </style>

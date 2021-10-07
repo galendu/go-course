@@ -15,5 +15,8 @@ body {
     height: 100%;
 }
   
-
-
+input:-internal-autofill-previewed,
+input:-internal-autofill-selected {
+    -webkit-text-fill-color: #fff !important;
+    transition: background-color 50000s ease-in-out 0.5s;
+}

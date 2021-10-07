@@ -729,9 +729,9 @@ data() {
 },
 ```
 
-## Login页面
+## Home页面
 
-![](./images/login-page.jpg)
+在做Home页面之前，先清理掉脚手架为我们生成的页面
 
 ### 清理脚手架
 
@@ -761,6 +761,44 @@ export default {
 </script>
 ```
 
+### Home组件
+
+由于home页面将来涉及到多个系统的数据展示, 所以独立一个目录来存放: views/dashboard
+
+```html
+<template>
+  <div class="dashboard-container">
+    Home 页面
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'Dashboard',
+  data() {
+    return {}
+  }
+}
+</script>
+```
+
+### 补充路由
+
+```js
+const routes = [
+  {
+    path: '/',
+    name: "Home",
+    component: () => import('../views/dashboard/index'),
+  },
+];
+```
+
+我们是一个后台管理系统, 需要用户登陆后才能看到Home页面, 因此我们接下来先完成登陆页面
+
+## 登陆页面
+
+![](./images/login-page.jpg)
 
 ### Login组件
 
@@ -918,6 +956,7 @@ body {
       padding: 12px 5px 12px 15px;
       height: 47px;
       caret-color: #fff;
+      color: #fff;
     }
   }
 
@@ -975,6 +1014,278 @@ body {
   }
 }
 ```
+
+### 绑定数据
+
+1. form绑定数据
+```html
+<el-form class="login-form" ref="loginForm" :model="loginForm">
+```
+
+关于ref: 元素的引用, 可以通过vm.$refs找到这些元素，方便后面操作他们, 比如后面需要操作form，就可以通过这样:
+```js
+$vm.$refs["loginForm"]
+```
+
+2. tabs绑定数据
+
+```html
+<el-tabs v-model="loginForm.grant_type">
+  <el-tab-pane label="普通登录" name="password" />
+  <el-tab-pane label="LDAP登录" name="ldap" />
+</el-tabs>
+```
+
+3. input绑定数据
+```html
+<el-input key="username" placeholder="账号" ref="username" v-model="loginForm.username" name="username" type="text" tabindex="1" autocomplete="on" />
+<el-input key="password" placeholder="密码" ref="password" v-model="loginForm.password" name="password" type="password" tabindex="2" autocomplete="on" />
+```
+
++ key: 元素的key, vue做数据绑定时，更新数据的标识符, vm实例内需要唯一
++ ref: 添加引用, 通过vm.$refs中 ref名字可以找到该元素
++ name/autocomplete: 一起使用, 自动填充功能
++ type: 输入框类型,  text 文本框, password 密码框
++ tabindex: 使用tab按键进行切换时的顺序控制
+
+4. 登陆绑定方法
+```html
+<!-- 登陆按钮 -->
+<el-button class="login-btn" size="medium" type="primary" tabindex="3" @click="handleLogin">
+    登录
+</el-button>
+<script>
+export default {
+  name: 'Login',
+  data() {
+    return {
+      loginForm: {
+        grant_type:'password',
+        username: '',
+        password: ''
+      },
+    }
+  },
+  methods: {
+    handleLogin() {
+      alert(`submit: ${this.loginForm.username},${this.loginForm.password}`)
+    }
+  }
+}
+</script>
+```
+
+### 修复自动填充背景颜色
+
+我们需要修复input输入框的背景填充色, 因为需要全局修复, 直接修改全局样式: styles/index.js: 
+```scss
+input:-internal-autofill-previewed,
+input:-internal-autofill-selected {
+    // 自动填充时的字体颜色
+    -webkit-text-fill-color: #fff;
+    // 采用过度的办法吃掉背景色, 网上都是这个办法
+    transition: background-color 5000s ease-out 0.5s;
+}
+```
+
+关于-webkit/ms: 表示对应浏览器内核私有属性:
++ -moz：匹配Firefox浏览器私有属性
++ -webkit：匹配Webkit枘核浏览器私有属性，如chrome and safari
++ -moz代表firefox浏览器私有属性
++ -ms代表ie浏览器私有属性
+
+关于动画过度: [CSS transition 属性](https://www.w3school.com.cn/cssref/pr_transition.asp)
+```
+transition: property duration timing-function delay;
+
+transition-property	规定设置过渡效果的 CSS 属性的名称。
+transition-duration	规定完成过渡效果需要多少秒或毫秒。
+transition-timing-function	规定速度效果的速度曲线。
+transition-delay	定义过渡效果何时开始。
+```
+
+### 补充查看密码
+
+为了让用户看到自己输入的秘密是多少, 允许用户看到自己密码, 我们添加一个eye
+找2个图标:
++ eye-close
++ eye-open
+
+```html
+<!-- 密码输入框 -->
+<el-form-item>
+<span class="svg-container">
+  <svg-icon icon-class="password" />
+</span>
+<el-input key="password" placeholder="密码" ref="password" v-model="loginForm.password" name="password" type="password" tabindex="2" autocomplete="on" />
+<span class="show-pwd">
+  <svg-icon icon-class="eye-close" />
+</span>
+</el-form-item>
+```
+
+对应的css
+```css
+.show-pwd {
+  position: absolute;
+  right: 10px;
+  top: 7px;
+  font-size: 16px;
+  color: #889aa4;
+  cursor: pointer;
+  user-select: none;
+}
+```
+
++ position/right/top: 采用绝对布局
++ font-size: 控制大小
++ color: 控制颜色
++ cursor: 控制光标, 显示成可点击的
++ user-select: 如果您在文本上双击，文本会被选取或高亮显示。此属性用于阻止这种行为
+
+我们通过一个函数控制: input的type属性, 就能完成 开眼与闭眼
+
+```html
+<!-- 密码输入框 -->
+<el-form-item>
+<span class="svg-container">
+  <svg-icon icon-class="password" />
+</span>
+<el-input key="password" placeholder="密码" ref="password" v-model="loginForm.password" name="password" :type="passwordType" tabindex="2" autocomplete="on" />
+<span class="show-pwd" @click="showPwd">
+  <svg-icon :icon-class="passwordType === 'password' ? 'eye-close' : 'eye-open'" />
+</span>
+</el-form-item>
+
+<script>
+export default {
+  name: 'Login',
+  data() {
+    return {
+      passwordType: 'password',
+      loginForm: {
+        grant_type:'password',
+        username: '',
+        password: ''
+      },
+    }
+  },
+  methods: {
+    handleLogin() {
+      alert(`submit: ${this.loginForm.username},${this.loginForm.password}`)
+    },
+    showPwd() {
+      if (this.passwordType === 'password') {
+        this.passwordType = ''
+      } else {
+        this.passwordType = 'password'
+      }
+      this.$nextTick(() => {
+        this.$refs.password.focus()
+      })
+    }
+  }
+}
+</script>
+```
+
+### 默认聚焦于输入框
+
+用户进入登陆页面, 光标默认于输入框
+
+```js
+mounted() {
+  this.$refs.username.focus()
+},
+```
+
+### 登陆表单校验
+
+在数据提交给后端之前, 我们需要在前端校验参数的合法性
+
+表单验证，通过为el-form提交一个rules参数进行验证
+```html
+<el-form class="login-form" ref="loginForm" :model="loginForm" :rules="loginRules">
+```
+
+然后我们定义校验规则
+```js
+data() {
+  return {
+    passwordType: 'password',
+    loginForm: {
+      grant_type:'password',
+      username: '',
+      password: ''
+    },
+    loginRules: {
+      // required 是否必填
+      // trigger  合适触发校验， change/blur
+      // message  校验失败信息
+      username: [{ required: true, trigger: 'change', message: '请输入账号' }],
+      password: [{ required: true, trigger: 'change', message: '请输入密码'}]
+    }
+  }
+},
+```
+
+表单在提交前，调用表单的校验函数
+```js
+handleLogin() {
+  this.$refs.loginForm.validate(valid => {
+    console.log(valid)
+  })
+},
+```
+
+恭喜你 没有任何效果！, 因为我们没有为form item添加 label, 不过没关系，我们可以自定义验证逻辑:
+
+先定义2个验证函数
+```js
+<script>
+const validateUsername = (rule, value, callback) => {
+  if (value === '') {
+    callback(new Error('请输入账号'))
+  } else {
+    callback()
+  }
+}
+const validatePassword = (rule, value, callback) => {
+  if (value === '') {
+    callback(new Error('请输入密码'))
+  } else {
+    callback()
+  }
+}
+```
+
+修改下我们的验证规则: 
+```js
+loginRules: {
+  username: [{ trigger: 'blur', validator: validateUsername }],
+  password: [{ trigger: 'blur', validator: validatePassword }]
+}
+```
+
+我们看下效果: 
+
+![](./images/form-validate.jpg)
+
+
+### 登陆逻辑
+
++ 表达校验
++ 通过后端验证登陆凭证, 如果正确 后端返回token, 前端保存
++ 验证成功后, 跳转到Home页面或者用户指定的URL页面
+
+
+
+
+
+
+
+
+
 
 ## 参考 
 

@@ -9,6 +9,11 @@ const routes = [
     name: "Login",
     component: () => import('../views/keyauth/login/index'),
   },
+  {
+    path: '/',
+    name: "Home",
+    component: () => import('../views/dashboard/index'),
+  },
 ];
 
 const router = new VueRouter({
