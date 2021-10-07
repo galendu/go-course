@@ -1278,6 +1278,331 @@ loginRules: {
 + 通过后端验证登陆凭证, 如果正确 后端返回token, 前端保存
 + 验证成功后, 跳转到Home页面或者用户指定的URL页面
 
+为了防止用户手抖，点击了多次登陆按钮, 为登陆按钮添加一个loadding状态
+```js
+  data() {
+    return {
+      loading: false,
+      ...
+    }
+```
+
+然后等了按钮绑定这个状态
+```html
+<!-- 登陆按钮 -->
+<el-button class="login-btn" :loading="loading" size="medium" type="primary" tabindex="3" @click="handleLogin">
+    登录
+</el-button>
+```
+
+接下来就是具体登陆逻辑: 
+```js
+handleLogin() {
+  this.$refs.loginForm.validate(async valid => {
+    if (valid) {
+      this.loading = true
+      try {
+        // 调用后端接口进行登录, 状态保存到vuex中
+        await this.$store.dispatch('user/login', this.loginForm)
+
+        // 调用后端接口获取用户profile, 状态保存到vuex中
+        const user = await this.$store.dispatch('user/getInfo')
+        console.log(user)
+      } catch (err) {
+        // 如果登陆异常, 中断登陆逻辑
+        console.log(err)
+        return
+      } finally {
+        this.loading = false
+      }
+
+      // 登陆成功, 重定向到Home或者用户指定的URL
+      this.$router.push({ path: this.redirect || '/', query: this.otherQuery })
+    }
+  })
+}
+```
+
+### 登陆状态
+
+登陆过程是全局的, 所有我们上面都是用的状态插件:vuex 来进行管理, 接下来我们就实现上面的3个状态管理
+
+我们的状态在src/store里面管理, 在上次课[Vue Router与Vuex](../day16/vue-all.md)已经讲了vuex的基础用法, 有不清楚的可以回过头去再看看
+
+#### mock接口
+
+因为还没开始写Keyauth后端服务, 这里直接mock后端数据: src/api/keyauth/token.js
+```js
+export function LOGIN(data) {
+  return {
+      code: 0,
+      data: {
+        access_token: 'mock ak',
+        namespace: 'mock namespace'
+      }
+  }
+}
+
+export function GET_PROFILE() {
+    return {
+        code: 0,
+        data: {
+            account: 'mock account',
+            type: 'mock type',
+            profile: {real_name: 'real name', avatar: 'mock avatar'}
+        }
+    }
+}
+```
+
+#### user状态模块
+我们先开发一个vuex的 user模块: src/store/modules/user.js
+```js
+import { LOGIN, GET_PROFILE } from '@/api/keyauth/token'
+
+const state = {
+    tokenToken: '',
+    namespace: '',
+    account: '',
+    type: '',
+    name: '',
+    avatar: '',
+}
+
+const mutations = {
+    SET_TOKEN: (state, token) => {
+        state.tokenToken = token.access_token
+        state.namespace = token.namespace
+    },
+    SET_PROFILE: (state, user) => {
+        state.type = user.type
+        state.account = user.account
+        state.name = user.profile.real_name
+        state.avatar = user.profile.avatar
+    },
+}
+
+const actions = {
+    // 用户登陆接口
+    login({ commit }, loginForm) {
+        return new Promise((resolve, reject) => {
+            const resp = LOGIN(loginForm)
+            commit('SET_TOKEN', resp.data)
+            resolve(resp)
+        })
+    },
+
+    // 获取用户Profile
+    getInfo({ commit }) {
+        return new Promise((resolve, reject) => {
+            const resp = GET_PROFILE()
+            commit('SET_PROFILE', resp.data)
+            resolve(resp)
+        })
+    }
+}
+
+export default {
+    // 这个是独立模块, 每个模块独立为一个namespace
+    namespaced: true,
+    state,
+    mutations,
+    actions
+}
+```
+
+#### 配置user模块
+
+现在我们的user模块还没有加载给vuex, 接下来我们完成这个配置, 如何把user作为模块配置到vuex中喃?
+```js
+modules = {
+  user: <我们刚才的模块>
+}
+
+const store = new Vuex.Store({
+  modules
+})
+```
+
+更多请参考: [vuex 模块](https://vuex.vuejs.org/zh/guide/modules.html)
+
+修改 src/store/index.js
+```js
+import Vue from "vue";
+import Vuex from "vuex";
+import user from './modules/user'
+
+Vue.use(Vuex);
+
+export default new Vuex.Store({
+  modules: {user: user},
+});
+```
+
+我们再补充一个getter, 用于访问vuex所有模块属性: src/store/getters.js
+```js
+const getters = {
+    accessToken: state => state.user.accessToken,
+    namespace: state => state.user.namespace,
+    account: state => state.user.account,
+    username: state => state.user.name,
+    userType: state => state.user.type,
+    userAvatar: state => state.user.avatar,
+  }
+  export default getters
+```
+
+我们能让vuex真的持久化, 我们需要为vuex安装vuex-persist插件
+```js
+// vuex-persist@3.1.3
+npm install --save vuex-persist
+```
+
+最终我们vuex index.js 就是这样:
+```js
+import Vue from "vue";
+import Vuex from "vuex";
+import VuexPersistence from 'vuex-persist'
+import user from './modules/user'
+import getters from './getters'
+
+const vuexLocal = new VuexPersistence({
+  storage: window.localStorage
+})
+
+Vue.use(Vuex);
+
+export default new Vuex.Store({
+  modules: {user: user},
+  getters,
+  plugins: [vuexLocal.plugin]
+});
+```
+
+#### 验证状态
+
+登陆后，会调整到Home页面, 也能在localstorage查看到我们存储的信息:
+
+![](./images/vuex-store.jpg)
+
+
+
+### 登陆守卫
+
+经过上面的逻辑我们可以登陆后 跳转到我们的Home页面, 但是现在我们登陆页面 依然形同虚设, 为啥?
+
+用户如果直接访问Home也是可以的, 所以我们需要做个守卫, 判断当用户没有登陆的时候，跳转到等了页面
+
+怎么做这个守卫, 答案就是vue router为我们提供的钩子, 在路由前我们做个判断: 我们在router下面创建一个permission.js模块, 用于定义钩子函数
+
+```js
+// 路由前钩子, 权限检查
+export function beforeEach(to, from, next) {
+    console.log(to, from)
+    next()
+}
+
+// 路由后构造
+export function afterEach() {
+    console.log("after")
+}
+```
+
+然后我们在router上配置上: router/index.js
+```js
+...
+import {beforeEach, afterEach} from './permission'
+
+...
+router.beforeEach(beforeEach)
+router.afterEach(afterEach)
+
+export default router;
+```
+
+#### 权限判断
+
+```js
+import store from '@/store'
+
+// 不需认证的页面
+const whiteList = ['/login']
+
+// 路由前钩子, 权限检查
+export function beforeEach(to, from, next) {
+    // 取出token
+    const hasToken = store.getters.accessToken
+
+    // 判断用户是否登陆
+    if (hasToken) {
+        // 已经登陆得用户, 再次访问登陆页面, 直接跳转到Home页面
+        if (to.path === '/login') {
+            next({ path: '/' })
+        } else {
+            next()
+        }
+    } else {
+        // 如果是不需要登录的页面直接放行
+        if (whiteList.indexOf(to.path) !== -1) {
+            // in the free login whitelist, go directly
+            next()
+        } else {
+          // 需要登录的页面, 如果未验证, 重定向到登录页面登录
+          next(`/login?redirect=${to.path}`)
+        }
+    }
+}
+```
+
+清空localstorage里面vuex对应的值, 进行测试:
++ Homoe页面测试
++ 其他页面测试(空页面, 无路由页面)
+
+#### Progress Bar
+
+```js
+// nprogress@0.2.0
+npm install --save nprogress
+```
+
+然后补充上相应配置, 需要注意的时，如果有跳转到其他访问的也代表这个页面加载结束, 需要NProgress.done()
+```js
+import NProgress from 'nprogress' // progress bar
+import 'nprogress/nprogress.css' // progress bar style
+
+NProgress.configure({ showSpinner: false }) // NProgress Configuration
+...
+
+// 路由前钩子, 权限检查
+export function beforeEach(to, from, next) {
+    // 路由开始
+    NProgress.start()
+
+    // 省略其他代码
+    next({ path: '/' })
+    NProgress.done()
+
+    // 省略其他代码
+    next(`/login?redirect=${to.path}`)
+    NProgress.done()
+}
+
+// 路由后构造
+export function afterEach() {
+    // 路由完成
+    NProgress.done()
+}
+```
+
+为了和主题颜色一致, 全局修改progress bar颜色: styles/index.js
+```css
+#nprogress .bar {
+    background:#13C2C2;
+  }
+```
+
+## 404页面
+
 
 
 

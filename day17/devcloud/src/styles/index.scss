@@ -20,3 +20,7 @@ input:-internal-autofill-selected {
     -webkit-text-fill-color: #fff !important;
     transition: background-color 50000s ease-in-out 0.5s;
 }
+
+#nprogress .bar {
+    background:#13C2C2;
+  }

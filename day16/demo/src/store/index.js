@@ -34,7 +34,6 @@ export default new Vuex.Store({
       commit('setPageSize', ps)
     }
   },
-  modules: {
-  },
+  modules: {},
   plugins: [vuexLocal.plugin],
 })

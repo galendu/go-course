@@ -29,7 +29,7 @@
         </el-form-item>
 
         <!-- 登陆按钮 -->
-        <el-button class="login-btn" size="medium" type="primary" tabindex="3" @click="handleLogin">
+        <el-button class="login-btn" :loading="loading" size="medium" type="primary" tabindex="3" @click="handleLogin">
             登录
         </el-button>
       </el-form>
@@ -57,6 +57,7 @@ export default {
   data() {
     return {
       passwordType: 'password',
+      loading: false,
       loginForm: {
         grant_type:'password',
         username: '',
@@ -73,8 +74,27 @@ export default {
   },
   methods: {
     handleLogin() {
-      this.$refs.loginForm.validate(valid => {
-        console.log(valid)
+      this.$refs.loginForm.validate(async valid => {
+        if (valid) {
+          this.loading = true
+          try {
+            // 调用后端接口进行登录, 状态保存到vuex中
+            await this.$store.dispatch('user/login', this.loginForm)
+
+            // 调用后端接口获取用户profile, 状态保存到vuex中
+            const user = await this.$store.dispatch('user/getInfo')
+            console.log(user)
+          } catch (err) {
+            // 如果登陆异常, 中断登陆逻辑
+            console.log(err)
+            return
+          } finally {
+            this.loading = false
+          }
+
+          // 登陆成功, 重定向到Home或者用户指定的URL
+          this.$router.push({ path: this.redirect || '/', query: this.otherQuery })
+        }
       })
     },
     showPwd() {
