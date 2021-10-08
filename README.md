@@ -107,7 +107,7 @@
   * [Vue路由与状态管理](./day16/vue-all.md)
   * [作业](./day16/homework.md)
 
-## Day17
+## Day17: 项目前端
   * [项目前端框架](./day17/devcloud-base.md)
   * [项目登录页面](./day17/devcloud-login.md)
   * [项目404页面](./day17/devcloud-404.md)
