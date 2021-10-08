@@ -26,14 +26,3 @@ input:-internal-autofill-selected {
 #nprogress .bar {
     background:#13C2C2;
 }
-
-.clearfix {
-    &:after {
-      visibility: hidden;
-      display: block;
-      font-size: 0;
-      content: " ";
-      clear: both;
-      height: 0;
-    }
-  }
