@@ -155,13 +155,45 @@ export default {
 ...
 ```
 
+我们使用scss, 可以定义变量, 我们把一些通用的变量定义在: styles/variables.scss
+```scss
+// 侧边栏宽度
+$sideBarWidth: 210px;
+```
+
 然后我们来为这3个组件补充基础样式
 ```scss
+$navbarHeight: 50px;
+
 #app {
     .navbar-container {
         width:100vw;
-        height:60px;
-        background-color: #444681;
+        height:$navbarHeight;
+        background-color: var(--cb-color-bg-primary,#fff);
+        box-shadow: 0 2px 4px 0 var(--cb-color-shadow,rgba(0,0,0,0.16));
+        position: fixed;
+    }
+    
+    .app-wrapper {
+        padding-top: $navbarHeight;
+    }
+
+    .sidebar-container {
+        transition: width 0.28s;
+        width: $sideBarWidth !important;
+        height: calc(100vh - #{$navbarHeight});
+        float: left;
+        background-color: #f5f5f5;
+    }
+
+    .main-container {
+        min-height: 100%;
+        transition: margin-left .28s;
+        margin-left: $sideBarWidth;
+        position: relative;
     }
 }
 ```
+有了基本的样式, 骨架终于显示出来了:
+
+![](./images/nav-1.jpg)
