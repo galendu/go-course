@@ -26,6 +26,23 @@ const routes = [
     ]
   },
   {
+    path: '/cmdb',
+    component: Layout,
+    redirect: '/cmdb/search',
+    children: [
+      {
+        path: 'search',
+        component: () => import('@/views/cmdb/search/index'),
+        name: 'ResourceSearch',
+      },
+      {
+        path: 'host',
+        component: () => import('@/views/cmdb/host/index'),
+        name: 'ResourceHost',
+      }
+    ]
+  },
+  {
     path: '/404',
     component: () => import('@/views/common/error-page/404'),
     hidden: true

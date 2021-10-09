@@ -659,11 +659,139 @@ methods: {
 
 ![](./images/sidebar-fix.jpg)
 
-接下来我们完成导航条目的渲染
+### 侧边栏结合路由
 
-### 动态生成sidebar导航
+我们先不忙动态生成导航路由,  先来看看如何手动写侧边栏条目
 
+裁截掉刚才的测试数据, 添加一个 基础资源的导航条目: 
+```html
+<template>
+  <div class="sidebar" :style="{'--sidebar-width': sidebarWidth}">
+    <hamburger id="hamburger-container" :is-active="sidebar.opened" class="hamburger-container" @toggleClick="toggleSideBar" />
+    <el-scrollbar wrap-class="scrollbar-wrapper">
+      <el-menu default-active="1-4-1" class="sidebar-el-menu" :collapse="isCollapse">
+        <el-submenu index="host">
+          <!-- 添加个title -->
+          <template slot="title">
+            <i class="el-icon-location"></i>
+            <span slot="title">基础资源</span>
+          </template>
+          <!-- 导航条目 -->
+          <el-menu-item index="1-1">资源检索</el-menu-item>
+          <el-menu-item index="1-2">主机</el-menu-item>
+        </el-submenu>
+      </el-menu>
+    </el-scrollbar>
+  </div>
+</template>
+```
 
+参考element的文档: [NavMenu 导航菜单](https://element.eleme.cn/#/zh-CN/component/menu)
+
+官方给了一个很快捷的办法:
+
+![](./images/em-menu.jpg)
+
+因此我们直接使用router模式, 配置index就可以:
+
+```html
+<el-submenu index="/host">
+  <!-- 添加个title -->
+  <template slot="title">
+    <i class="el-icon-location"></i>
+    <span slot="title">基础资源</span>
+  </template>
+  <!-- 导航条目 -->
+  <el-menu-item index="/cmdb/search">资源检索</el-menu-item>
+  <el-menu-item index="/cmdb/host" >主机</el-menu-item>
+</el-submenu>
+```
+
+接下来我们来补充路由和页面:
+
+views/cmdb/host/index.vue:
+```html
+<template>
+  <div class="cmdb-host-container">
+    CMDB HOST
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'Host',
+  data() {
+    return {}
+  }
+}
+</script>
+```
+
+views/cmdb/search/index.vue:
+```html
+<template>
+  <div class="cmdb-search-container">
+    CMDB Search页面
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'Search',
+  data() {
+    return {}
+  }
+}
+</script>
+```
+
+添加路由: router/index.js
+```js
+{
+  path: '/cmdb',
+  component: Layout,
+  redirect: '/cmdb/search',
+  children: [
+    {
+      path: 'search',
+      component: () => import('@/views/cmdb/search/index'),
+      name: 'ResourceSearch',
+    },
+    {
+      path: 'host',
+      component: () => import('@/views/cmdb/host/index'),
+      name: 'ResourceHost',
+    }
+  ]
+},
+```
+
+测试下试试
+
+可以发现main页面的排版并有好友, 简单调整下样式
+
+## 调整main页面样式 
+
+添加全局样式: styles/index.scss
+```scss
+//main-container全局样式
+.main-container {
+    padding: 10px;
+}
+```
+
+然后页面引入
+```html
+<template>
+  <div class="main-container">
+    CMDB HOST
+  </div>
+</template>
+```
+
+基本像个样子了:
+
+![](./images/main-padding.jpg)
 
 ## 参考
 
