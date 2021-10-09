@@ -6,7 +6,7 @@
     </div>
     <!-- 主导航栏 -->
     <div class="navbar-main">
-      <el-menu :default-active="activeIndex" mode="horizontal" @select="handleSelect">
+      <el-menu :default-active="activeIndex" mode="horizontal" menu-trigger="click">
         <el-menu-item index="dashboard">首页</el-menu-item>
         <el-menu-item index="product">产品运营</el-menu-item>
         <el-menu-item index="resource">资源管理</el-menu-item>
@@ -45,6 +45,11 @@
 <script>
 export default {
   name: 'Navbar',
+  data() {
+    return {
+      activeIndex: 'dashboard'
+    }
+  }
 }
 </script>
 
