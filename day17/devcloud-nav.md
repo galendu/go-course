@@ -793,6 +793,11 @@ export default {
 
 ![](./images/main-padding.jpg)
 
+## 主见列表页面
+
+我们可以把之前demo的页面搬过来了
+
+
 ## 参考
 
 + [CSS 变量教程](https://www.ruanyifeng.com/blog/2017/05/css-variables.html)
