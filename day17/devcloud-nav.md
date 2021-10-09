@@ -793,7 +793,7 @@ export default {
 
 ![](./images/main-padding.jpg)
 
-## 主见列表页面
+## 主机列表页面
 
 我们可以把之前demo的页面搬过来了
 
