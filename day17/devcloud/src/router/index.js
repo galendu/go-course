@@ -22,7 +22,7 @@ const routes = [
     path: "/login",
     name: "Login",
     component: () =>
-      import("../views/keyauth/login/index.vue"),
+      import("../views/keyauth/login/new.vue"),
   },
   {
     path: '/cmdb',

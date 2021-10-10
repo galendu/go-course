@@ -114,6 +114,8 @@
   * [项目导航页面](./day17/devcloud-nav.md)
 
 ## Day18: RPC入门
+  * [新得登录页面](./day18/devcloud-new-login.md)
+  * [项目导航页面](./day18/devcloud-nav.md)
   * [RPC入门](./day17/rpc-basic.md)
   * [Protobuf编解码](./day17/protobuf.md)
   * [GRPC入门](./day17/grpc.md)
