@@ -77,6 +77,28 @@ const routes = [
 
 ![](./images/login-raw.jpg)
 
+## 全局样式调整
+
+上面可以看到高度不对，原因是 html的样式，我们没有设置100%的高度, 仅显示的元素本身的高度
+ 
+因此我们调整下 整体样式: styles/index.scss
+```css
+html {
+    height: 100%;
+    box-sizing: border-box;
+}
+
+body {
+    height: 100%;
+    margin: 0;
+    font-family: Helvetica Neue, Helvetica, PingFang SC, Hiragino Sans GB, Microsoft YaHei, Arial, sans-serif;
+}
+
+#app {
+    height: 100%;
+}
+```
+
 ## 页面样式
 
 我们为这2个元素添加样式:
@@ -117,28 +139,6 @@ const routes = [
 ```
 
 ![](./images/login-css-only.jpg)
-
-## 全局样式调整
-
-上面可以看到高度不对，原因是 html的样式，我们没有设置100%的高度, 仅显示的元素本身的高度
- 
-因此我们调整下 整体样式: styles/index.scss
-```css
-html {
-    height: 100%;
-    box-sizing: border-box;
-}
-
-body {
-    height: 100%;
-    margin: 0;
-    font-family: Helvetica Neue, Helvetica, PingFang SC, Hiragino Sans GB, Microsoft YaHei, Arial, sans-serif;
-}
-
-#app {
-    height: 100%;
-}
-```
 
 ## 调整输入框样式
 
@@ -563,7 +563,7 @@ export function GET_PROFILE() {
 import { LOGIN, GET_PROFILE } from '@/api/keyauth/token'
 
 const state = {
-    tokenToken: '',
+    accessToken: '',
     namespace: '',
     account: '',
     type: '',
@@ -573,7 +573,7 @@ const state = {
 
 const mutations = {
     SET_TOKEN: (state, token) => {
-        state.tokenToken = token.access_token
+        state.accessToken = token.access_token
         state.namespace = token.namespace
     },
     SET_PROFILE: (state, user) => {

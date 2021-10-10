@@ -1,4 +1,5 @@
 @import './variables.scss';
+@import './element-variables.scss';
 @import './element-ui.scss';
 @import './layout.scss';
 
@@ -16,18 +17,15 @@ body {
 #app {
     height: 100%;
 }
-  
+
 input:-internal-autofill-previewed,
 input:-internal-autofill-selected {
-    -webkit-text-fill-color: #fff !important;
-    transition: background-color 50000s ease-in-out 0.5s;
+    // 自动填充时的字体颜色
+    -webkit-text-fill-color: #fff;
+    // 采用过度的办法吃掉背景色, 网上都是这个办法
+    transition: background-color 5000s ease-out 0.5s;
 }
 
 #nprogress .bar {
     background:#13C2C2;
-}
-
-//main-container全局样式
-.main-container {
-    padding: 10px;
-}
+  }

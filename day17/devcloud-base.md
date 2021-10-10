@@ -309,11 +309,16 @@ config.module
 
 把刚才的feishu.svg放到 icons/svg文件下面
 
-我们在icons下创建一个index.js用来加载这些svg文件
+我们在icons下创建一个index.js用来加载这些svg文件, require(相当于import)自动化加载文件夹下所有模块: 参考[webpack中require.context的作用](https://zhuanlan.zhihu.com/p/59564277)
 ```js
 const req = require.context('./svg', false, /\.svg$/)
 const requireAll = requireContext => requireContext.keys().map(requireContext)
 requireAll(req)
+```
+
+引入到main.js中
+```js
+import './icons'
 ```
 
 4. 通过svg-sprite-loader使用

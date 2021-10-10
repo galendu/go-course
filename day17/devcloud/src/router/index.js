@@ -1,18 +1,11 @@
 import Vue from "vue";
 import VueRouter from "vue-router";
 import {beforeEach, afterEach} from './permission'
+import Layout from '../layout'
 
 Vue.use(VueRouter);
 
-/* Layout */
-import Layout from '@/layout'
-
 const routes = [
-  {
-    path: '/login',
-    name: "Login",
-    component: () => import('../views/keyauth/login/index'),
-  },
   {
     path: '/',
     component: Layout,
@@ -26,29 +19,29 @@ const routes = [
     ]
   },
   {
+    path: "/login",
+    name: "Login",
+    component: () =>
+      import("../views/keyauth/login/index.vue"),
+  },
+  {
     path: '/cmdb',
     component: Layout,
-    redirect: '/cmdb/search',
+    redirect: '/cmdb/host',
     children: [
       {
-        path: 'search',
-        component: () => import('@/views/cmdb/search/index'),
-        name: 'ResourceSearch',
-      },
-      {
         path: 'host',
-        component: () => import('@/views/cmdb/host/index'),
-        name: 'ResourceHost',
+        component: () => import('@/views/cmdb/host/index.vue'),
+        name: 'CmdbHost',
       }
     ]
   },
   {
     path: '/404',
     component: () => import('@/views/common/error-page/404'),
-    hidden: true
   },
-  // 如果前面所有路径都没有匹配就跳转到404页面
-  { path: '*', redirect: '/404', hidden: true }
+  // 如果前面所有路径都没有匹配到页面 就跳转到404页面
+  { path: '*', redirect: '/404'}
 ];
 
 const router = new VueRouter({

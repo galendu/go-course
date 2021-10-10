@@ -14,6 +14,7 @@ export function beforeEach(to, from, next) {
 
     // 取出token
     const hasToken = store.getters.accessToken
+    console.log(hasToken)
 
     // 判断用户是否登陆
     if (hasToken) {
@@ -25,14 +26,14 @@ export function beforeEach(to, from, next) {
             next()
         }
     } else {
-        // 未登录的用户, 重定向到登录页面
+        // 如果是不需要登录的页面直接放行
         if (whiteList.indexOf(to.path) !== -1) {
             // in the free login whitelist, go directly
             next()
         } else {
-            // other pages that do not have permission to access are redirected to the login page.
-            next(`/login?redirect=${to.path}`)
-            NProgress.done()
+          // 需要登录的页面, 如果未验证, 重定向到登录页面登录
+          next(`/login?redirect=${to.path}`)
+          NProgress.done()
         }
     }
 }

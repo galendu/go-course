@@ -1,13 +1,12 @@
 <template>
-  <div class="login-container">
-      <el-form class="login-form" ref="loginForm" :model="loginForm" :rules="loginRules">
-        <!-- 切换 -->
-        <div>
-            <el-tabs v-model="loginForm.grant_type">
-            <el-tab-pane label="普通登录" name="password" />
-            <el-tab-pane label="LDAP登录" name="ldap" />
-            </el-tabs>
-        </div>
+<div class="login-container">
+    <!-- 登录表单 -->
+    <el-form class="login-form" ref="loginForm" :model="loginForm" :rules="loginRules">
+        <!-- 登录方式切换Tab -->
+        <el-tabs v-model="loginForm.grant_type">
+            <el-tab-pane label="普通登录" name="password"></el-tab-pane>
+            <el-tab-pane label="LDAP登录" name="ldap"></el-tab-pane>
+        </el-tabs>
 
         <!-- 账号输入框 -->
         <el-form-item prop="username">
@@ -28,12 +27,12 @@
         </span>
         </el-form-item>
 
-        <!-- 登陆按钮 -->
-        <el-button class="login-btn" :loading="loading" size="medium" type="primary" tabindex="3" @click="handleLogin">
+        <!-- 提交表单 -->
+        <el-button class="login-btn" :loading="loading" tabindex="3" size="medium" type="primary" @click="handleLogin">
             登录
         </el-button>
-      </el-form>
-  </div>
+    </el-form>
+</div>
 </template>
 
 <script>
@@ -53,93 +52,81 @@ const validatePassword = (rule, value, callback) => {
 }
 
 export default {
-  name: 'Login',
-  data() {
-    return {
-      passwordType: 'password',
-      loading: false,
-      loginForm: {
-        grant_type:'password',
-        username: '',
-        password: ''
-      },
-      loginRules: {
-        username: [{ trigger: 'blur', validator: validateUsername }],
-        password: [{ trigger: 'blur', validator: validatePassword }]
-      }
-    }
-  },
-  mounted() {
-    this.$refs.username.focus()
-  },
-  methods: {
-    handleLogin() {
-      this.$refs.loginForm.validate(async valid => {
-        if (valid) {
-          this.loading = true
-          try {
-            // 调用后端接口进行登录, 状态保存到vuex中
-            await this.$store.dispatch('user/login', this.loginForm)
-
-            // 调用后端接口获取用户profile, 状态保存到vuex中
-            const user = await this.$store.dispatch('user/getInfo')
-            console.log(user)
-          } catch (err) {
-            // 如果登陆异常, 中断登陆逻辑
-            console.log(err)
-            return
-          } finally {
-            this.loading = false
-          }
-
-          // 登陆成功, 重定向到Home或者用户指定的URL
-          this.$router.push({ path: this.redirect || '/', query: this.otherQuery })
+    name: "Login",
+    data() {
+        return {
+            loading: false,
+            passwordType: 'password',
+            loginForm: {
+                grant_type: 'password',
+                username: '',
+                password: '',
+            },
+            loginRules: {
+                username: [{ trigger: 'blur', validator: validateUsername }],
+                password: [{ trigger: 'blur', validator: validatePassword }]
+            }
         }
-      })
     },
-    showPwd() {
-      if (this.passwordType === 'password') {
-        this.passwordType = ''
-      } else {
-        this.passwordType = 'password'
-      }
-      this.$nextTick(() => {
-        this.$refs.password.focus()
-      })
+    methods: {
+        handleLogin() {
+            this.$refs.loginForm.validate(async (valid) => {
+                if(valid) {
+                    this.loading = true
+                    try {
+                        // 调用后端接口进行登录, 状态保存到vuex中
+                        await this.$store.dispatch('user/login', this.loginForm)
+
+                        // 调用后端接口获取用户profile, 状态保存到vuex中
+                        const user = await this.$store.dispatch('user/getInfo')
+                        console.log(user)                        
+                    } catch (error) {
+                        console.log(error)
+                        return
+                    } finally {
+                        this.loading = false
+                    }
+                    
+                    
+                    // 登陆成功, 重定向到Home或者用户指定的URL
+                    this.$router.push({ path: this.$route.query.redirect || '/', query: this.otherQuery })
+                }
+            })
+        },
+        showPwd() {
+            if (this.passwordType === 'password') {
+                this.passwordType = ''
+            } else {
+                this.passwordType = 'password'
+            }
+            this.$nextTick(() => {
+                this.$refs.password.focus()
+            })
+        }
     }
-  }
 }
 </script>
 
 <style lang="scss" scoped>
 .login-container {
-  height: 100%;
-  width: 100%;
-  background-image: linear-gradient(to top, #3584A7 0%, #473B7B 100%);
-  .login-form {
-    width: 520px;
-    padding: 160px 35px 0;
-    margin: 0 auto;
-    .login-btn {
-        width:100%;
+    width: 100%;
+    height: 100%;
+    background-image: linear-gradient(to top, #3584A7 0%, #473B7B 100%);
+    .login-form {
+        width: 520px;
+        padding: 160px 35px 0;
+        margin: auto;
+        .login-btn {
+            width: 100%;
+        }
     }
-  }
-  .svg-container {
-    padding: 6px 5px 6px 15px;
-    color: #889aa4;
-    vertical-align: middle;
-    width: 30px;
-    display: inline-block;
-  }
-  .show-pwd {
-    position: absolute;
-    right: 10px;
-    top: 7px;
-    font-size: 16px;
-    color: #889aa4;
-    cursor: pointer;
-    user-select: none;
-  }
+    .svg-container {
+        padding: 6px 5px 6px 15px;
+        color: #889aa4;
+        vertical-align: middle;
+        width: 12px;
+        display: inline-block;
+    }
 }
 
 /* reset element-ui css */
@@ -161,7 +148,7 @@ export default {
 
 .login-container ::v-deep .el-form-item {
     border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #454545;
+    color: #867d7d;
 }
 
 .login-container ::v-deep .el-tabs__item {
@@ -173,5 +160,14 @@ export default {
   color:#13C2C2;
 }
 
+.show-pwd {
+  position: absolute;
+  right: 10px;
+  top: 7px;
+  font-size: 16px;
+  color: white;
+  cursor: pointer;
+  user-select: none;
+}
 
 </style>

@@ -1,12 +1,12 @@
 <template>
-  <div class="main-container">
-    CMDB HOST
+  <div class="host-container">
+    Host 页面
   </div>
 </template>
 
 <script>
 export default {
-  name: 'Host',
+  name: 'CmdbHost',
   data() {
     return {}
   }

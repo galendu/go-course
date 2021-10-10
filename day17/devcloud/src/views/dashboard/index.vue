@@ -1,6 +1,6 @@
 <template>
   <div class="dashboard-container">
-    Home 页面 测试
+    Home 页面
   </div>
 </template>
 

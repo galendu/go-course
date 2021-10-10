@@ -3,27 +3,25 @@ import App from "./App.vue";
 import router from "./router";
 import store from "./store";
 
-import "./icons"; // icon
-
-import Cookies from 'js-cookie'
 import Element from 'element-ui'
-import './styles/element-variables.scss'
+import "element-ui/lib/theme-chalk/index.css"
 
-// 引入全局样式
-import '@/styles/index.scss' // global css
+// 加载 svg icons
+import './icons'
+
+// 加载全局样式
+import './styles/index.scss'
 
 // 加载全局指令
-import '@/directives' 
+import './directives'
 
 // 加载全局过滤器
-import '@/filters' 
-
-
-Vue.use(Element, {
-  size: Cookies.get('size') || 'mini', // set element-ui default size
-})
+import './filters'
 
 Vue.config.productionTip = false;
+Vue.use(Element, {
+  size: 'mini'
+})
 
 new Vue({
   router,
