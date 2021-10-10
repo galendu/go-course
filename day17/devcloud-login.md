@@ -519,7 +519,7 @@ handleLogin() {
       }
 
       // 登陆成功, 重定向到Home或者用户指定的URL
-      this.$router.push({ path: this.redirect || '/', query: this.otherQuery })
+      this.$router.push({ path: this.$route.query.redirect || '/', query: this.otherQuery })
     }
   })
 }
@@ -802,7 +802,6 @@ export function afterEach() {
     background:#13C2C2;
   }
 ```
-
 
 现在如果我们访问都其他不存在的页面，是一个空白页面，显然这样很有友好, 接下来我们添加一个404页面
 
