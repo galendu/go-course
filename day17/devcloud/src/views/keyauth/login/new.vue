@@ -72,6 +72,7 @@ export default {
                 this.shake('password')
                 return false
             }
+            return true
         },
         addEventHandler() {
             const inputs = document.querySelectorAll(".input");

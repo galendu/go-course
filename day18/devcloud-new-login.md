@@ -204,6 +204,7 @@ check() {
         this.shake('password')
         return false
     }
+    return true
 },
 ```
 
