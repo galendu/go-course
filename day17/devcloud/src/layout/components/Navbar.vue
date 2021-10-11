@@ -2,22 +2,20 @@
   <div class="navbar">
     <!-- logo -->
     <div class="logo-container">
-      <span>极乐研发云</span>
+      <span class="title">极乐研发云</span>
     </div>
     <!-- 主导航栏 -->
     <div class="navbar-main">
-      <el-menu :default-active="activeIndex" mode="horizontal" menu-trigger="click">
-        <el-menu-item index="dashboard">首页</el-menu-item>
-        <el-menu-item index="product">产品运营</el-menu-item>
-        <el-menu-item index="resource">资源管理</el-menu-item>
-        <el-menu-item index="develop">研发交付</el-menu-item>
-        <el-menu-item index="eventbox">监控告警</el-menu-item>
-      </el-menu>
+      <span>首页</span>
+      <span>产品运营</span>
+      <span>资源管理</span>
+      <span>研发交付</span>
+      <span>监控告警</span>
     </div>
     <!-- 用户信息区 -->
     <div class="navbar-user">
       <el-dropdown>
-        <el-button type="text">
+        <el-button type="text" style="color:white">
           <span>老喻</span>
           <i class="el-icon-arrow-down el-icon--right dropdown-color" />
         </el-button>
@@ -57,7 +55,7 @@ export default {
 .navbar {
   display: flex;
   align-content: center;
-  justify-content: flex-start;
+  justify-content: space-between;
   align-items: center;
 }
 
@@ -65,7 +63,11 @@ export default {
   box-sizing: border-box;
   width: 210px;
   padding-left: 28px;
-  color: #909398;
+  color: rgba(255, 255, 255, 0.8);
+
+  .title {
+    font-size: 20px;
+  }
 }
 
 .navbar ::v-deep .el-menu-item {

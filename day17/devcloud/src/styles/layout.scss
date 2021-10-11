@@ -2,23 +2,23 @@ $navbarHeight: 50px;
 
 #app {
     .navbar-container {
+        position: fixed;
         width:100vw;
         height:$navbarHeight;
-        background-color: var(--cb-color-bg-primary,#fff);
-        box-shadow: 0 2px 4px 0 var(--cb-color-shadow,rgba(0,0,0,0.16));
-        position: fixed;
+        line-height: $navbarHeight;
+        background: linear-gradient(to right, #2ebf91, #8360c3);
+        box-shadow: 0 5px 5px -3px var(--cb-color-shadow,rgba(0,0,0,0.16));
     }
     
     .app-wrapper {
         padding-top: $navbarHeight;
+        height: calc(100vh - #{$navbarHeight});
     }
 
     .sidebar-container {
         transition: width 0.28s;
         width: $sideBarWidth !important;
-        height: calc(100vh - #{$navbarHeight});
         float: left;
-        background-color: #f5f5f5;
     }
 
     .main-container {
@@ -26,5 +26,6 @@ $navbarHeight: 50px;
         transition: margin-left .28s;
         margin-left: $sideBarWidth;
         position: relative;
+        background-color: #eff2fa;
     }
 }

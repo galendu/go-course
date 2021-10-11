@@ -78,6 +78,23 @@
 </style>
 ```
 
+调整我们的icon
+```html
+<span class="svg-container">
+    <svg-icon icon-class="password" />
+</span>
+```
+
+调整样式:
+```css
+.svg-container {
+    padding-top: 11px;
+    color: #d9d9d9;
+    vertical-align: middle;
+    display: inline-block;
+}
+```
+
 ## 搬迁Js
 
 原项目的Js处理很简单, 核心就是添加focus和blur的事件处理:
@@ -145,3 +162,64 @@ component: () =>
 
 
 到此我们基础的搬迁工作就完成了, 剩下适配我们的登录逻辑了
+
+## 前端输入验证改造
+
+之前的表单验证:
+```js
+this.$refs.loginForm.validate(async (valid) => {})
+```
+
+我们自己写一个check函数来完成验证, 如果没用输入用户名或者密码 我们就晃动下输入框
+
+网上去找个晃动的样式 放到我们 login的css文件 style.scss中:
+```css
+.shake {
+    animation: shake 800ms ease-in-out;
+}
+@keyframes shake {
+    10%, 90% { transform: translate3d(-1px, 0, 0); }
+    20%, 80% { transform: translate3d(+2px, 0, 0); }
+    30%, 70% { transform: translate3d(-4px, 0, 0); }
+    40%, 60% { transform: translate3d(+4px, 0, 0); }
+    50% { transform: translate3d(-4px, 0, 0); }
+}
+```
+
+然我们写一个动态添加晃动样式的函数和check的函数:
+```js
+shake(elemId) {
+    let elem = document.getElementById(elemId)
+    if (elem) {
+        elem.classList.add('shake')
+        setTimeout(()=>{ elem.classList.remove('shake') }, 800)
+    }
+},
+check() {
+    if (this.loginForm.username === '') {
+        this.shake('username')
+        return false
+    }
+    if (this.loginForm.password === '') {
+        this.shake('password')
+        return false
+    }
+},
+```
+
+我们为我们需要添加样式的元素添加上id:
+```html
+<!-- 账号输入框组 -->
+<div id="username" class="input-group">
+<!-- 密码输入框组 -->
+<div id="password" class="input-group">
+```
+
+最后调整我们的验证函数: handleLogin
+```js
+async handleLogin() {
+    if (this.check()) {
+        // 省略...
+    }
+}
+```

@@ -155,6 +155,14 @@ a:hover{
 .btn:hover{
     background-position: right;
 }
+
+.svg-container {
+    padding-top: 11px;
+    color: #d9d9d9;
+    vertical-align: middle;
+    display: inline-block;
+}
+
 .copyright{
     position: absolute;
     width: 100%;
@@ -164,6 +172,17 @@ a:hover{
     text-align: center;
     font-size: 18px;
     font-family: 'Roboto', sans-serif;
+}
+
+.shake {
+    animation: shake 800ms ease-in-out;
+}
+@keyframes shake {
+    10%, 90% { transform: translate3d(-1px, 0, 0); }
+    20%, 80% { transform: translate3d(+2px, 0, 0); }
+    30%, 70% { transform: translate3d(-4px, 0, 0); }
+    40%, 60% { transform: translate3d(+4px, 0, 0); }
+    50% { transform: translate3d(-4px, 0, 0); }
 }
 
 /*媒体查询*/

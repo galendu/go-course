@@ -9,19 +9,19 @@
             <form action="">
                 <img src="@/assets/login/avatar.svg" alt="" class="avatar">
                 <h2>极乐研发云</h2>
-                <div class="input-group">
-                    <div class="icon">
-                        <i class="fa fa-user"></i>
-                    </div>
+                <div id="username" class="input-group">
+                    <span class="svg-container">
+                        <svg-icon icon-class="user" />
+                    </span>
                     <div>
                         <h5>账号</h5>
                         <input v-model="loginForm.username" type="text" class="input">
                     </div>
                 </div>
-                <div class="input-group">
-                    <div class="icon">
-                        <i class="fa fa-lock"></i>
-                    </div>
+                <div id="password" class="input-group">
+                    <span class="svg-container">
+                        <svg-icon icon-class="password" />
+                    </span>
                     <div>
                         <h5>密码</h5>
                         <input v-model="loginForm.password" type="password" class="input">
@@ -56,6 +56,23 @@ export default {
       this.addEventHandler()
     },
     methods: {
+        shake(elemId) {
+            let elem = document.getElementById(elemId)
+			if (elem) {
+				elem.classList.add('shake')
+				setTimeout(()=>{ elem.classList.remove('shake') }, 800)
+			}
+        },
+        check() {
+            if (this.loginForm.username === '') {
+                this.shake('username')
+                return false
+            }
+            if (this.loginForm.password === '') {
+                this.shake('password')
+                return false
+            }
+        },
         addEventHandler() {
             const inputs = document.querySelectorAll(".input");
 
@@ -75,29 +92,26 @@ export default {
                 input.addEventListener('blur',blurFunction);
             });  
         },
-        handleLogin() {
-            this.$refs.loginForm.validate(async (valid) => {
-                if(valid) {
-                    this.loading = true
-                    try {
-                        // 调用后端接口进行登录, 状态保存到vuex中
-                        await this.$store.dispatch('user/login', this.loginForm)
+        async handleLogin() {
+            if (this.check()) {
+                this.loading = true
+                try {
+                    // 调用后端接口进行登录, 状态保存到vuex中
+                    await this.$store.dispatch('user/login', this.loginForm)
 
-                        // 调用后端接口获取用户profile, 状态保存到vuex中
-                        const user = await this.$store.dispatch('user/getInfo')
-                        console.log(user)                        
-                    } catch (error) {
-                        console.log(error)
-                        return
-                    } finally {
-                        this.loading = false
-                    }
-                    
-                    
-                    // 登陆成功, 重定向到Home或者用户指定的URL
-                    this.$router.push({ path: this.$route.query.redirect || '/', query: this.otherQuery })
+                    // 调用后端接口获取用户profile, 状态保存到vuex中
+                    const user = await this.$store.dispatch('user/getInfo')
+                    console.log(user)                        
+                } catch (error) {
+                    console.log(error)
+                    return
+                } finally {
+                    this.loading = false
                 }
-            })
+                
+                // 登陆成功, 重定向到Home或者用户指定的URL
+                this.$router.push({ path: this.$route.query.redirect || '/', query: this.otherQuery })
+            }
         },
         showPwd() {
             if (this.passwordType === 'password') {
