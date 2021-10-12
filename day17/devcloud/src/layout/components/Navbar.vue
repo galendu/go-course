@@ -6,11 +6,11 @@
     </div>
     <!-- 主导航栏 -->
     <div class="navbar-main">
-      <span>首页</span>
-      <span>产品运营</span>
-      <span>资源管理</span>
-      <span>研发交付</span>
-      <span>监控告警</span>
+      <span class="navbar-item" @click="changeSystem('dashboard')" :class="{ active: activeIndex === 'dashboard' }">首页</span>
+      <span class="navbar-item" @click="changeSystem('product')" :class="{ active: activeIndex === 'product' }">产品运营</span>
+      <span class="navbar-item" @click="changeSystem('cmdb')" :class="{ active: activeIndex === 'cmdb' }">资源管理</span>
+      <span class="navbar-item" @click="changeSystem('workflow')" :class="{ active: activeIndex === 'workflow' }">研发交付</span>
+      <span class="navbar-item" @click="changeSystem('monitor')" :class="{ active: activeIndex === 'monitor' }">监控告警</span>
     </div>
     <!-- 用户信息区 -->
     <div class="navbar-user">
@@ -47,6 +47,11 @@ export default {
     return {
       activeIndex: 'dashboard'
     }
+  },
+  methods: {
+    changeSystem(index) {
+      this.activeIndex = index
+    }
   }
 }
 </script>
@@ -54,34 +59,49 @@ export default {
 <style lang="scss" scoped>
 .navbar {
   display: flex;
+  width: 100%;
   align-content: center;
   justify-content: space-between;
   align-items: center;
+  padding: 0 12px;
+}
+
+.navbar-main {
+  display: flex;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 12px;
+  .navbar-item {
+    width: 68px;
+    display: flex;
+    justify-content: center;
+    cursor: pointer;
+    line-height: 32px;
+    margin: 0 3px;
+  }
+
+  .navbar-item:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+  }
+
+  .active {
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;    
+  }
+  
 }
 
 .logo-container {
   box-sizing: border-box;
-  width: 210px;
-  padding-left: 28px;
+  width: 200px;
   color: rgba(255, 255, 255, 0.8);
 
   .title {
-    font-size: 20px;
+    font-size: 16px;
   }
-}
-
-.navbar ::v-deep .el-menu-item {
-  height: 50px;
-  line-height: 50px;
 }
 
 .navbar-user {
   margin-left: auto;
-  padding-right: 12px;
-}
-
-.dropdown-item-text {
-  margin-left: 12px;
-  margin-right: 12px;
 }
 </style>

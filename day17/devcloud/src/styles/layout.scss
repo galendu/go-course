@@ -2,10 +2,10 @@ $navbarHeight: 50px;
 
 #app {
     .navbar-container {
+        display: flex;
         position: fixed;
         width:100vw;
         height:$navbarHeight;
-        line-height: $navbarHeight;
         background: linear-gradient(to right, #2ebf91, #8360c3);
         box-shadow: 0 5px 5px -3px var(--cb-color-shadow,rgba(0,0,0,0.16));
     }

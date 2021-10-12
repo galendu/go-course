@@ -167,23 +167,23 @@ $navbarHeight: 50px;
 
 #app {
     .navbar-container {
+        display: flex;
+        position: fixed;
         width:100vw;
         height:$navbarHeight;
-        background-color: var(--cb-color-bg-primary,#fff);
-        box-shadow: 0 2px 4px 0 var(--cb-color-shadow,rgba(0,0,0,0.16));
-        position: fixed;
+        background: linear-gradient(to right, #2ebf91, #8360c3);
+        box-shadow: 0 5px 5px -3px var(--cb-color-shadow,rgba(0,0,0,0.16));
     }
     
     .app-wrapper {
         padding-top: $navbarHeight;
+        height: calc(100vh - #{$navbarHeight});
     }
 
     .sidebar-container {
         transition: width 0.28s;
         width: $sideBarWidth !important;
-        height: calc(100vh - #{$navbarHeight});
         float: left;
-        background-color: #f5f5f5;
     }
 
     .main-container {
@@ -191,6 +191,7 @@ $navbarHeight: 50px;
         transition: margin-left .28s;
         margin-left: $sideBarWidth;
         position: relative;
+        background-color: #eff2fa;
     }
 }
 ```
@@ -199,8 +200,6 @@ $navbarHeight: 50px;
 ![](./images/nav-1.jpg)
 
 ## 顶部导航
-
-我们使用elemntui提供的导航: [NavMenu 导航菜单](https://element.eleme.cn/#/zh-CN/component/menu)
 
 现在我们开始填充顶部导航的内容: layout/components/Navbar.vue
 ```html
@@ -212,13 +211,11 @@ $navbarHeight: 50px;
     </div>
     <!-- 主导航栏 -->
     <div class="navbar-main">
-      <el-menu :default-active="activeIndex" mode="horizontal" menu-trigger="click">
-        <el-menu-item index="dashboard">首页</el-menu-item>
-        <el-menu-item index="product">产品运营</el-menu-item>
-        <el-menu-item index="resource">资源管理</el-menu-item>
-        <el-menu-item index="develop">研发交付</el-menu-item>
-        <el-menu-item index="eventbox">监控告警</el-menu-item>
-      </el-menu>
+      <span class="navbar-item" @click="changeSystem('dashboard')" :class="{ active: activeIndex === 'dashboard' }">首页</span>
+      <span class="navbar-item" @click="changeSystem('product')" :class="{ active: activeIndex === 'product' }">产品运营</span>
+      <span class="navbar-item" @click="changeSystem('cmdb')" :class="{ active: activeIndex === 'cmdb' }">资源管理</span>
+      <span class="navbar-item" @click="changeSystem('workflow')" :class="{ active: activeIndex === 'workflow' }">研发交付</span>
+      <span class="navbar-item" @click="changeSystem('monitor')" :class="{ active: activeIndex === 'monitor' }">监控告警</span>
     </div>
     <!-- 用户信息区 -->
     <div class="navbar-user">
@@ -255,6 +252,11 @@ export default {
     return {
       activeIndex: 'dashboard'
     }
+  },
+  methods: {
+    changeSystem(index) {
+      this.activeIndex = index
+    }
   }
 }
 </script>
@@ -267,38 +269,57 @@ export default {
 <style lang="scss" scoped>
 .navbar {
   display: flex;
+  width: 100%;
   align-content: center;
-  justify-content: flex-start;
+  justify-content: space-between;
   align-items: center;
+  padding: 0 12px;
+}
+
+.navbar-main {
+  display: flex;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 12px;
+  .navbar-item {
+    width: 68px;
+    display: flex;
+    justify-content: center;
+    cursor: pointer;
+    line-height: 32px;
+    margin: 0 3px;
+  }
+
+  .navbar-item:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+  }
+
+  .active {
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;    
+  }
+  
 }
 
 .logo-container {
   box-sizing: border-box;
-  width: 210px;
-  padding-left: 28px;
-  color: #909398;
-}
+  width: 200px;
+  color: rgba(255, 255, 255, 0.8);
 
-.navbar ::v-deep .el-menu-item {
-  height: 50px;
-  line-height: 50px;
+  .title {
+    font-size: 16px;
+  }
 }
 
 .navbar-user {
   margin-left: auto;
-  padding-right: 12px;
-}
-
-.dropdown-item-text {
-  margin-left: 12px;
-  margin-right: 12px;
 }
 </style>
 ```
 
 最终我们顶部导航栏:
 
-![](./images/navbar.jpg)
+![](./images/navbar.png)
 
 ## 侧边栏导航
 
