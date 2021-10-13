@@ -115,9 +115,10 @@
 
 ## Day18: RPC入门
   * [新登录页面](./day18/devcloud-new-login.md)
-  * [RPC入门](./day17/rpc-basic.md)
-  * [Protobuf编解码](./day17/protobuf.md)
-  * [GRPC入门](./day17/grpc.md)
+  * [主机列表页面](./day18/cmdb-host.md)
+  * [RPC入门](./day18/rpc-basic.md)
+  * [Protobuf编解码](./day18/protobuf.md)
+  * [GRPC入门](./day18/grpc.md)
 
 ## Day19: 用户中心(一)
   * [用户管理](./day18/user.md)
