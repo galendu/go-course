@@ -15,7 +15,7 @@
                     </span>
                     <div>
                         <h5>账号</h5>
-                        <input v-model="loginForm.username" type="text" class="input">
+                        <input v-model="loginForm.username" tabindex="1" type="text" class="input">
                     </div>
                 </div>
                 <div id="password" class="input-group">
@@ -24,7 +24,7 @@
                     </span>
                     <div>
                         <h5>密码</h5>
-                        <input v-model="loginForm.password" type="password" class="input">
+                        <input v-model="loginForm.password" type="password" tabindex="2" class="input">
                     </div>
                 </div>
                 <a href="#">忘记密码</a>

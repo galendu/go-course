@@ -191,7 +191,7 @@ $navbarHeight: 50px;
         transition: margin-left .28s;
         margin-left: $sideBarWidth;
         position: relative;
-        background-color: #eff2fa;
+        background-color: #f6f8fa;
     }
 }
 ```
@@ -327,11 +327,7 @@ export default {
 ```html
 <template>
   <div class="sidebar">
-    <el-radio-group v-model="isCollapse" style="margin-bottom: 20px;">
-      <el-radio-button :label="false">展开</el-radio-button>
-      <el-radio-button :label="true">收起</el-radio-button>
-    </el-radio-group>
-    <el-menu default-active="1-4-1" class="el-menu-vertical-demo" :collapse="isCollapse">
+    <el-menu default-active="1-4-1" class="el-menu-vertical-demo" :collapse="sidebar.opened">
       <el-submenu index="1">
           <template slot="title">
             <i class="el-icon-location"></i>
@@ -367,13 +363,18 @@ export default {
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
+
 export default {
   name: 'Sidebar',
   data() {
-    return {
-      isCollapse: true
-    }
-  }
+    return {}
+  },
+  computed: {
+    ...mapGetters([
+      'sidebar'
+    ])
+  },
 }
 </script>
 ```
@@ -509,14 +510,14 @@ export default {
 更多详情请参考: [mapGetters 辅助函数](https://vuex.vuejs.org/zh/guide/getters.html#mapgetters-%E8%BE%85%E5%8A%A9%E5%87%BD%E6%95%B0)
 
 
-在layout/components/Sidebar.vue中使用
+在layout/components/Navbar.vue中使用
 ```html
 <script>
 import { mapGetters } from 'vuex'
 import Hamburger from '@/components/Hamburger'
 
 export default {
-  name: 'Sidebar',
+  name: 'Navbar',
   components: { Hamburger },
   computed: {
     // 使用对象展开运算符将 getter 混入 computed 对象中
@@ -577,7 +578,7 @@ methods: {
 ```html
 <style lang="scss" scoped>
 .sidebar-el-menu {
-  height: calc(100vh - 70px);
+  height: calc(100vh - 50px);
 }
 </style>
 ```
@@ -591,7 +592,6 @@ overflow:scroll
 ```html
 <template>
   <div class="sidebar" :style="{'--sidebar-width': sidebarWidth}">
-    <hamburger id="hamburger-container" :is-active="sidebar.opened" class="hamburger-container" @toggleClick="toggleSideBar" />
     <el-scrollbar wrap-class="scrollbar-wrapper">
       <el-menu default-active="1-4-1" class="sidebar-el-menu" :collapse="isCollapse">
         ...
@@ -611,27 +611,30 @@ overflow:scroll
 ```scss
 .app-wrapper {
     padding-top: $navbarHeight;
+    height: calc(100vh - #{$navbarHeight});
     display: flex;
+}
+
+.sidebar-container {
+    transition: width 0.28s;
+    // width: $sideBarWidth !important; 宽带又内部点
+    
+    // reset element-ui css
+    .horizontal-collapse-transition {
+        transition: 0s width ease-in-out, 0s padding-left ease-in-out, 0s padding-right ease-in-out;
+    }
+}
+
+.main-container {
+    min-height: 100%;
+    width: 100%;
+    background-color: #f6f8fa;
 }
 ```
 
 我们之前给侧边栏设置的宽度是210px, 当我们折叠侧边栏的时候, 大概宽度是65px, 只要我们能动态调整这个宽带 就可以解决这个问题,
 
-如何动态调整样式, 需要理解2个知识点:
-
-+ css 变量语法: 
-```css
-color: var(--primary, #7F583F);
-/* css选择器: var(变量名称, 默认值), 变量命名--<name> */
-```
-
-然后我们可以通过js直接修改变量的值
-```js
-// 设置变量
-el.style.setProperty('--primary', '#FFF');
-```
-
-当然我们也可以通过vue直接绑定一个变量
+如何动态调整样式, 需要理解1个知识点: 当然我们也可以通过vue直接绑定一个变量
 
 + vue 样式绑定: [Class 与 Style 绑定](https://cn.vuejs.org/v2/guide/class-and-style.html)
 ```html
@@ -639,41 +642,44 @@ el.style.setProperty('--primary', '#FFF');
 ```
 
 基于上面的方法, 我们先设置一个sidebar宽度的变量: layout/componets/Sidebar.vue
-```scss
-.sidebar{
-  width: var(--sidebar-width);
-}
+```html
+<template>
+  <div class="sidebar" :style="{'width': sidebarWidth}">
+    <!-- 省略 -->
+  </div>
+</template>
 ```
 
-然后我们在模版上直接绑定改变量:
-```scss
-<div class="sidebar" :style="{'--sidebar-width': sidebarWidth}">
-```
+然后我们watch住sidebar.opened状态的变化, 来动态修改sidebar的宽度, [Vue Watch API](https://cn.vuejs.org/v2/api/#vm-watch)
 
-最后我们通过js操作修改变量的值:
 ```js
-data() {
-  return {
-    sidebarWidth: '210px',
-  }
-},
-mounted() {
-  if (!this.sidebar.opened) {
-    this.sidebarWidth='65px'
-  } else {
-    this.sidebarWidth='210px'
-  }
-},
-methods: {
-  toggleSideBar() {
-    if (!this.isCollapse) {
-      this.sidebarWidth='65px'
-    } else {
-      this.sidebarWidth='210px'
+<script>
+export default {
+  name: 'Sidebar',
+  data() {
+    return {
+      sidebarWidth: '',
     }
-    this.$store.dispatch('app/toggleSideBar')
+  },
+  watch: {
+    isCollapse: {
+      handler(newV) {
+        if (newV) {
+          this.sidebarWidth = '65px'
+        } else {
+          this.sidebarWidth = '210px'
+        }
+      },
+      immediate: true
+    }
+  },
+  computed: {
+    isCollapse() {
+      return this.$store.getters.sidebar.opened
+    }
   },
 }
+</script>
 ```
 
 到此我们侧边栏的样式基本正常了
@@ -812,7 +818,7 @@ export default {
 
 基本像个样子了:
 
-![](./images/main-padding.jpg)
+![](./images/main-padding.png)
 
 ## 主机列表页面
 

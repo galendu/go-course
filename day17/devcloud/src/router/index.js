@@ -27,12 +27,17 @@ const routes = [
   {
     path: '/cmdb',
     component: Layout,
-    redirect: '/cmdb/host',
+    redirect: '/cmdb/search',
     children: [
       {
+        path: 'search',
+        component: () => import('@/views/cmdb/search/index'),
+        name: 'ResourceSearch',
+      },
+      {
         path: 'host',
-        component: () => import('@/views/cmdb/host/index.vue'),
-        name: 'CmdbHost',
+        component: () => import('@/views/cmdb/host/index'),
+        name: 'ResourceHost',
       }
     ]
   },

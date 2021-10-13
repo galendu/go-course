@@ -2,6 +2,7 @@
   <div class="navbar">
     <!-- logo -->
     <div class="logo-container">
+      <hamburger id="hamburger-container" :is-active="sidebar.opened" class="hamburger-container" @toggleClick="toggleSideBar" />
       <span class="title">极乐研发云</span>
     </div>
     <!-- 主导航栏 -->
@@ -41,17 +42,29 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
+import Hamburger from '@/components/Hamburger'
+
 export default {
   name: 'Navbar',
+  components: { Hamburger },
   data() {
     return {
       activeIndex: 'dashboard'
     }
   },
+  computed: {
+    ...mapGetters([
+      'sidebar'
+    ])
+  },
   methods: {
     changeSystem(index) {
       this.activeIndex = index
-    }
+    },
+    toggleSideBar() {
+      this.$store.dispatch('app/toggleSideBar')
+    },
   }
 }
 </script>
@@ -92,6 +105,8 @@ export default {
 }
 
 .logo-container {
+  display: flex;
+  align-items: center;
   box-sizing: border-box;
   width: 200px;
   color: rgba(255, 255, 255, 0.8);
