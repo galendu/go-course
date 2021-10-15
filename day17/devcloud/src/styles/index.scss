@@ -3,9 +3,12 @@
 @import './element-ui.scss';
 @import './layout.scss';
 
+* {
+    box-sizing: border-box;
+}
+
 html {
     height: 100%;
-    box-sizing: border-box;
 }
 
 body {
@@ -29,4 +32,8 @@ input:-internal-autofill-selected {
 
 #nprogress .bar {
     background:#13C2C2;
-  }
+}
+
+.box-shadow {
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1)
+}

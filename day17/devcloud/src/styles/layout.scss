@@ -12,7 +12,6 @@ $navbarHeight: 50px;
     
     .app-wrapper {
         padding-top: $navbarHeight;
-        height: calc(100vh - #{$navbarHeight});
         display: flex;
     }
 
@@ -29,6 +28,6 @@ $navbarHeight: 50px;
         padding: 10px;
         min-height: 100%;
         width: 100%;
-        background-color: #f6f8fa;
+        background-color: #f2f2f2;
     }
 }
