@@ -380,17 +380,61 @@ export default {
 </script>
 ```
 
+这样切换顶部导航时，状态就没问题了
+
 ## 退出登录
 
 我们的登录状态通过vuex维护, 因此退出登录 只需要清除当前token即可, 因此我们为user模块添加一个 logout的action
 
 ```js
+const mutations = {
+    // ...
+    CLEAN_TOKEN: () => {
+        state.accessToken = ''
+    },
+}
 
+const actions = {
+    // ...
+    // 退出登录
+    logout({ commit }) {
+        return new Promise((resolve, reject) => {
+            commit('CLEAN_TOKEN')
+            resolve()
+        })
+    },
+}
 ```
 
+然后我们在界面上进行logout, 退出后我们讲用户重定向到登录页面
 
+1. 下拉菜单的退出项 添加logout点击事件
+```html
+<!-- 退出系统 -->
+<el-dropdown-item @click.native="logout" divided>
+  <span style="display:block;">退出登录</span>
+</el-dropdown-item>
+```
 
-这样切换顶部导航时，状态就没问题了
+> 注意
+```
+在封装的组件中，使用点击事件时必须应用native点击才可以生效
+vue @click.native 原生点击事件：
+
+1，给vue组件绑定事件时候，必须加上native，否则会认为监听的是来自el-dropdown-item组件自定义的事件, 不会生效, 
+2，等同于在子组件中：子组件内部处理click事件然后向外发送click事件：$emit("click".fn)
+```
+
+2. methods里面补充logout函数
+```js
+methods: {
+  // ...
+  async logout() {
+    await this.$store.dispatch('user/logout')
+    this.$router.push({path: '/login'})
+  }
+}
+```
 
 ## 侧边栏导航
 
