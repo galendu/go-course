@@ -25,15 +25,13 @@
         </el-table-column>
       </el-table>
 
-      <el-pagination
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
-        :current-page="query.page_number"
-        :page-sizes="[2,10, 20, 30, 50]"
-        :page-size="query.page_size"
-        layout="total, sizes, prev, pager, next, jumper"
-        :total="total">
-      </el-pagination>
+      <pagination 
+        v-show="total>0" 
+        :total="total" 
+        :page.sync="query.page_number" 
+        :limit.sync="query.page_size" 
+        @pagination="get_hosts" 
+      />
     </div>
     Host 页面
   </div>
@@ -41,6 +39,7 @@
 
 <script>
 import Tips from '@/components/Tips'
+import Pagination from '@/components/Pagination'
 import { LIST_HOST } from '@/api/cmdb/host.js'
 
 const tips = [
@@ -49,7 +48,7 @@ const tips = [
 
 export default {
   name: 'CmdbHost',
-  components: { Tips },
+  components: { Tips, Pagination },
   data() {
     return {
       tips: tips,
