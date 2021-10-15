@@ -262,7 +262,7 @@ export default {
 </script>
 ```
 
-## 顶部导航样式
+### 顶部导航样式
 
 添加样式:
 ```html
@@ -321,7 +321,7 @@ export default {
 
 ![](./images/navbar.png)
 
-## 保存顶部导航切换状态 
+### 保存顶部导航切换状态 
 
 app模块添加system属性:  store/modules/app.js
 ```js
@@ -382,7 +382,7 @@ export default {
 
 这样切换顶部导航时，状态就没问题了
 
-## 退出登录
+### 退出登录
 
 我们的登录状态通过vuex维护, 因此退出登录 只需要清除当前token即可, 因此我们为user模块添加一个 logout的action
 
