@@ -7,6 +7,7 @@ const getters = {
     userAvatar: state => state.user.avatar,
     sidebar: state => state.app.sidebar,
     size: state => state.app.size,
+    system: state => state.app.system
   }
   
   export default getters

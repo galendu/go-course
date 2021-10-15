@@ -14,7 +14,6 @@ export function beforeEach(to, from, next) {
 
     // 取出token
     const hasToken = store.getters.accessToken
-    console.log(hasToken)
 
     // 判断用户是否登陆
     if (hasToken) {

@@ -2,7 +2,8 @@ const state = {
     sidebar: {
       opened: true,
     },
-    size: 'medium'
+    size: 'medium',
+    system: 'dashboard'
   }
   
   const mutations = {
@@ -14,6 +15,9 @@ const state = {
     },
     SET_SIZE: (state, size) => {
       state.size = size
+    },
+    SET_SYSTEM: (state, system) => {
+      state.system = system
     }
   }
   
@@ -26,6 +30,9 @@ const state = {
     },
     setSize({ commit }, size) {
       commit('SET_SIZE', size)
+    },
+    setSystem({ commit }, system) {
+      commit('SET_SYSTEM', system)
     }
   }
   

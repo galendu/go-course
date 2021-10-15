@@ -14,6 +14,9 @@ const mutations = {
         state.accessToken = token.access_token
         state.namespace = token.namespace
     },
+    CLEAN_TOKEN: (state) => {
+        state.accessToken = ''
+    },
     SET_PROFILE: (state, user) => {
         state.type = user.type
         state.account = user.account
@@ -29,6 +32,14 @@ const actions = {
             const resp = LOGIN(loginForm)
             commit('SET_TOKEN', resp.data)
             resolve(resp)
+        })
+    },
+
+    // 退出登录
+    logout({ commit }) {
+        return new Promise((resolve, reject) => {
+            commit('CLEAN_TOKEN')
+            resolve()
         })
     },
 

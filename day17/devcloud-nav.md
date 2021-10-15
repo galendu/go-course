@@ -321,6 +321,77 @@ export default {
 
 ![](./images/navbar.png)
 
+## 保存顶部导航切换状态 
+
+app模块添加system属性:  store/modules/app.js
+```js
+const state = {
+    sidebar: {
+      opened: true,
+    },
+    size: 'medium',
+    system: 'dashboard'
+  }
+// 补充
+  const mutations = {
+    // ...
+    SET_SYSTEM: (state, system) => {
+      state.system = system
+    }
+  }
+  
+  const actions = {
+    // ...
+    setSystem({ commit }, system) {
+      commit('SET_SYSTEM', system)
+    }
+  }
+```
+
+补充 getters属性:
+```js
+const getters = {
+    // ...
+    system: state => state.app.system
+  }
+```
+
+然后顶部导航切换时, 调用store持久化
+```js
+<script>
+export default {
+  computed: {
+    isCollapse() {
+      return this.$store.getters.sidebar.opened
+    },
+    activeSystem() {
+      return this.$store.getters.system
+    }
+  },
+  methods: {
+    changeSystem(system) {
+      this.$store.dispatch('app/setSystem', system)
+    },
+    toggleSideBar() {
+      this.$store.dispatch('app/toggleSideBar')
+    },
+  }
+}
+</script>
+```
+
+## 退出登录
+
+我们的登录状态通过vuex维护, 因此退出登录 只需要清除当前token即可, 因此我们为user模块添加一个 logout的action
+
+```js
+
+```
+
+
+
+这样切换顶部导航时，状态就没问题了
+
 ## 侧边栏导航
 
 我们先去element copy一个样例过来
