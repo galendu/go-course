@@ -295,8 +295,164 @@ getHosts() {
 
 这样并不方便互用和维护, 因此我们把这个路径都放到API模块下: api/cmdb/host.js
 
-如果每个API都直接使用 axios, 那么后面做一些 中间件处理异常的逻辑就没发做了, 因此我们需要构造一个全局的axios实例
+如果每个API都直接使用 axios, 那么后面做一些 中间件处理异常的逻辑就没发做了, 因此我们需要构造一个
 
+### 封装axios实例
+
+安装引入的依赖:
+```
+npm i axios
+```
+
+api/client.js
+```js
+import axios from 'axios'
+
+// http client
+const client = axios.create({
+    // API请求的base URL
+    baseURL: "http://localhost:8050",
+    // 超时时间
+    timeout: 5000,
+})
+
+// request中间件
+client.interceptors.request.use(
+    // 成功的处理逻辑
+    request => {
+        return request
+    },
+    // 错误时的处理逻辑
+    err => {
+        console.log(err)
+        return Promise.reject(err)
+    }
+)
+
+// response中间件
+client.interceptors.response.use(
+    response => {
+        const resp = response.data
+        // 判断返回的error code是否为0, 如果为0请求成功
+        if (resp.code === 0) {
+            return resp
+        }
+
+        // 如果不为0, 请求失败
+        console.log(resp)
+    },
+    err => {
+        // 错误时的处理逻辑
+        console.log(err)
+        return Promise.reject(err)
+    }
+)
+
+export default client
+```
+
+### 编写API
+
+api/cmdb/host.js
+```js
+import request from '@/api/client'
+
+export function LIST_HOST(params) {
+    return request({
+        url: '/cmdb/api/v1/hosts',
+        method: 'get',
+        params: params
+    })
+}
+```
+
+### 视图数据请求
+
+启动我们的demo-api，测试
+```
+go run main.go start -f etc/demo-api.toml
+```
+
+可以看到hosts的数据已经请求回来了:
+
+![](./images/hosts_data.png)
+
+调整下我们页面视图显示的数据和描述:
+```html
+<template>
+  <div class="host-container">
+    <tips :tips="tips" />
+    <div class="box-shadow">
+      <el-table
+        :data="hosts"
+        style="width: 100%">
+        <el-table-column
+          prop="name"
+          label="名称"
+          width="180">
+        </el-table-column>
+        <el-table-column
+          prop="sync_at"
+          label="同步时间"
+          width="180">
+          <template slot-scope="scope">
+            {{ scope.row.sync_at | parseTime}}
+          </template>
+          
+        </el-table-column>
+        <el-table-column
+          prop="description"
+          label="描述">
+        </el-table-column>
+      </el-table>
+    </div>
+    Host 页面
+  </div>
+</template>
+```
+
+
+### 后端分页
+
+我们的API并没显示 总条数和分页, 这里需要适配后端分页, 最简单的做法是直接使用element的分页组件: [Pagination 分页](https://element.eleme.cn/#/zh-CN/component/pagination)
+
+在表格下面补充分页组件: 
+```html
+<el-pagination
+  @size-change="handleSizeChange"
+  @current-change="handleCurrentChange"
+  :current-page="query.page_number"
+  :page-sizes="[2,10, 20, 30, 50]"
+  :page-size="query.page_size"
+  layout="total, sizes, prev, pager, next, jumper"
+  :total="total">
+</el-pagination>
+```
+
+data里面补充相关参数:
+```js
+data() {
+  return {
+    tips: tips,
+    query: {page_size: 20, page_number: 1},
+    total: 0,
+    hosts: []
+  }
+```
+
+最后是实现分页切换时的methods:
+```js
+handleSizeChange(val) {
+  this.query.page_size = val
+  this.get_hosts()
+},
+handleCurrentChange(val) {
+  this.query.page_number = val
+  this.get_hosts()
+}
+```
+
+定制分页组件
 
 
 ## 搜索框
