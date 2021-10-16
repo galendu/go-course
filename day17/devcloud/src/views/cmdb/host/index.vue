@@ -1,6 +1,21 @@
 <template>
   <div class="host-container">
     <tips :tips="tips" />
+    <div class="table-op">
+      <div class="search">
+        <el-input placeholder="请输入内容" v-model="filterValue" class="input-with-select">
+          <el-select v-model="filterKey" slot="prepend" placeholder="请选择">
+            <el-option label="餐厅名" value="1"></el-option>
+            <el-option label="订单号" value="2"></el-option>
+            <el-option label="用户电话" value="3"></el-option>
+          </el-select>
+          <el-button slot="append" icon="el-icon-search"></el-button>
+        </el-input>
+      </div>
+      <div class="op">
+
+      </div>
+    </div>
     <div class="box-shadow">
       <el-table
         :data="hosts"
@@ -52,6 +67,8 @@ export default {
   data() {
     return {
       tips: tips,
+      filterKey: '',
+      filterValue: '',
       query: {page_size: 20, page_number: 1},
       total: 0,
       hosts: []
