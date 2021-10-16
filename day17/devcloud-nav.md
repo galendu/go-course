@@ -389,7 +389,7 @@ export default {
 ```js
 const mutations = {
     // ...
-    CLEAN_TOKEN: () => {
+    CLEAN_TOKEN: (state) => {
         state.accessToken = ''
     },
 }

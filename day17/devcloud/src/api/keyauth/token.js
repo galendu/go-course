@@ -8,7 +8,7 @@ export function LOGIN(data) {
     }
   }
   
-  export function GET_PROFILE() {
+export function GET_PROFILE() {
       return {
           code: 0,
           data: {
