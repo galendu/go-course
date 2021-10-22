@@ -11,6 +11,7 @@
 node_modules
 
 secret.md
+.secret.env
 
 demo-api.toml
 demo-api

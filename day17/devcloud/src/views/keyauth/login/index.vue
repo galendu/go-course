@@ -28,7 +28,7 @@
         </el-form-item>
 
         <!-- 提交表单 -->
-        <el-button class="login-btn" :loading="loading" tabindex="3" size="medium" type="primary" @click="handleLogin">
+        <el-button class="btn" :loading="loading" tabindex="3" size="medium" type="primary" @click="handleLogin">
             登录
         </el-button>
     </el-form>

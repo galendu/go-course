@@ -1,25 +1,52 @@
 <template>
   <div class="host-container">
     <tips :tips="tips" />
+    <div class="table-op">
+      <div class="search">
+        <el-input placeholder="请输入内容" v-model="filterValue" class="input-with-select">
+          <el-select v-model="filterKey" slot="prepend" placeholder="请选择">
+            <el-option label="餐厅名" value="1"></el-option>
+            <el-option label="订单号" value="2"></el-option>
+            <el-option label="用户电话" value="3"></el-option>
+          </el-select>
+          <el-button slot="append" icon="el-icon-search"></el-button>
+        </el-input>
+      </div>
+      <div class="op">
+
+      </div>
+    </div>
     <div class="box-shadow">
       <el-table
-        :data="tableData"
+        :data="hosts"
         style="width: 100%">
         <el-table-column
-          prop="date"
-          label="日期"
-          width="180">
-        </el-table-column>
-        <el-table-column
           prop="name"
-          label="姓名"
+          label="名称"
           width="180">
         </el-table-column>
         <el-table-column
-          prop="address"
-          label="地址">
+          prop="sync_at"
+          label="同步时间"
+          width="180">
+          <template slot-scope="scope">
+            {{ scope.row.sync_at | parseTime}}
+          </template>
+          
+        </el-table-column>
+        <el-table-column
+          prop="description"
+          label="描述">
         </el-table-column>
       </el-table>
+
+      <pagination 
+        v-show="total>0" 
+        :total="total" 
+        :page.sync="query.page_number" 
+        :limit.sync="query.page_size" 
+        @pagination="get_hosts" 
+      />
     </div>
     Host 页面
   </div>
@@ -27,6 +54,8 @@
 
 <script>
 import Tips from '@/components/Tips'
+import Pagination from '@/components/Pagination'
+import { LIST_HOST } from '@/api/cmdb/host.js'
 
 const tips = [
   '现在仅同步了阿里云主机资产'
@@ -34,27 +63,34 @@ const tips = [
 
 export default {
   name: 'CmdbHost',
-  components: { Tips },
+  components: { Tips, Pagination },
   data() {
     return {
       tips: tips,
-      tableData: [{
-          date: '2016-05-02',
-          name: '王小虎',
-          address: '上海市普陀区金沙江路 1518 弄'
-        }, {
-          date: '2016-05-04',
-          name: '王小虎',
-          address: '上海市普陀区金沙江路 1517 弄'
-        }, {
-          date: '2016-05-01',
-          name: '王小虎',
-          address: '上海市普陀区金沙江路 1519 弄'
-        }, {
-          date: '2016-05-03',
-          name: '王小虎',
-          address: '上海市普陀区金沙江路 1516 弄'
-        }]
+      filterKey: '',
+      filterValue: '',
+      query: {page_size: 20, page_number: 1},
+      total: 0,
+      hosts: []
+    }
+  },
+  created() {
+    this.get_hosts()
+  },
+  methods: {
+    async get_hosts() {
+      const resp = await LIST_HOST(this.query)
+      console.log(resp)
+      this.hosts = resp.data.items
+      this.total = resp.data.total
+    },
+    handleSizeChange(val) {
+      this.query.page_size = val
+      this.get_hosts()
+    },
+    handleCurrentChange(val) {
+      this.query.page_number = val
+      this.get_hosts()
     }
   }
 }
