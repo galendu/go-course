@@ -1,9 +1,78 @@
-# 云资源同步
+# 云资源Provider
 
 设计注意事项:
   + 为了让cmdb服务无状态, 因此cmdb服务自己并不做定时任务配置, 只提供同步API
 
 我们的目标: 可以通过云商账号同步不同区域的资产
+
+项目所有源码:  [CMDB项目源码](https://github.com/infraboard/cmdb)
+
+
+## 效果演示
+
+1. 创建secret
+
+![](./images/secret-create.jpg)
+
+2. 使用改secret同步腾讯云cvm
+
+![](./images/sync-api.jpg)
+
+3. 查看刚才同步的主机
+
+![](./images/sync-result.jpg)
+
+
+## 脚本可以吗
+
+如果以解决问题的思路来做, 一个脚本应该就可以了
+
++ 看下官方SDK: [阿里云官方SDK](https://github.com/aliyun/alibaba-cloud-sdk-go)
++ 建一个表, 把查询出来的数据 写进去
++ 写个API 提供一个接口
+
+下面是伪代码:
+```go
+
+func syncHandler() {
+	// new client
+	client, err := sdk.NewClientWithAccessKey("REGION_ID", "ACCESS_KEY_ID", "ACCESS_KEY_SECRET")
+	if err != nil {
+		// Handle exceptions
+		panic(err)
+	}
+
+	// query instances
+	resp, err := client.DescribeInstances(req)
+	if err != nil {
+		return nil, err
+	}
+
+	// save hosts
+	db.save(transfer(resp))
+}
+
+func main() {
+	ht := http.HandlerFunc(syncHandler)
+	if ht != nil {
+		http.Handle("/sync", ht)
+	}
+	err := http.ListenAndServe(":8090", nil)
+	if err != nil {
+		log.Fatal("ListenAndServe: ", err.Error())
+	}
+}
+```
+
+这样写是不是很容易理解?
+
+但是如果后面还有这些需求:
++ rds, redis, 域名, slb, oss, 账单 都需要同步怎么办
++ 需要支持 其他云厂商: 腾讯云/华为云/Vshpere/AWS/...
++ 云商有接口有速率限制怎么办
++ 需要对接云商的事件, 通过云商创建了资源，需要立马同步
++ 资产状态管理, 云商资源释放了，需要标准归档
++ 有很多个云账号都需要同步怎么办?
 
 
 ## 云资产提供商
@@ -386,7 +455,7 @@ func (o *EcsOperater) PageQuery() host.Pager {
 + 假设桶中最多可以存放b个令牌。如果令牌到达时令牌桶已经满了，那么这个令牌会被丢弃；
 + 服务请求时，尝试从桶里面获取一个token, 可以里面返回失败，或者直到有可用token放入
 
-![tokenbucket的一种实现](https://github.com/infraboard/mcube/blob/master/flowcontrol/tokenbucket/limter.go)
+我们使用之前的一个实现: [tokenbucket](https://github.com/infraboard/mcube/blob/master/flowcontrol/tokenbucket/limter.go)
 
 创建一个令牌桶:
 ```go
@@ -441,6 +510,60 @@ func (p *pager) nextReq() *ecs.DescribeInstancesRequest {
 ```
 
 最后验证是否生效
+
+
+#### Pager添加Rate参数
+
+1. 为Pager补充 rate参数
+```go
+func newPager(pageSize int, operater *EcsOperater, rate int) *pager {
+	req := ecs.CreateDescribeInstancesRequest()
+	req.PageSize = requests.NewInteger(pageSize)
+
+	return &pager{
+		size:     pageSize,
+		number:   1,
+		operater: operater,
+		req:      req,
+		log:      zap.L().Named("Pagger"),
+		tb:       tokenbucket.NewBucket(time.Duration(rate)*time.Second, 1),
+	}
+}
+```
+
+2. operater 支持rate参数
+```go
+func NewPageQueryRequest() *PageQueryRequest {
+	return &PageQueryRequest{
+		Rate: 1,
+	}
+}
+
+type PageQueryRequest struct {
+	Rate int
+}
+
+func (o *EcsOperater) PageQuery(req *PageQueryRequest) host.Pager {
+	return newPager(20, o, req.Rate)
+}
+
+```
+
+3. 调整测试用例再次测试:
+```go
+func TestQuery(t *testing.T) {
+	pager := operater.PageQuery(op.NewPageQueryRequest())
+
+	hasNext := true
+	for hasNext {
+		p := pager.Next()
+		hasNext = p.HasNext
+		fmt.Println(p.Data)
+	}
+}
+```
+
+
 
 ### 腾讯云/华为云/Vshpere
 
@@ -501,17 +624,176 @@ CREATE TABLE `resource` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
 ```
 
+### resource模块
 
-## API Key管理
+我们cmdb有一个核心功能叫做: 全局资源解索:
+
+![](./images/resource-search.jpg)
+
+因此我们需要把基础数据独立出来, 专门准备一个Resource模块, 迁移之前host里面的关于resource的定义到:
+
+1. 定义resource数据结构
+
+```go
+const (
+	Unsuport Type = iota
+	HostResource
+	RdsResource
+)
+
+type Type int
+
+const (
+	VendorAliYun Vendor = iota
+	VendorTencent
+	VendorHuaWei
+	VendorVsphere
+)
+
+type Vendor int
+
+type Resource struct {
+	*Base
+	*Information
+}
+
+type Base struct {
+	Id           string `json:"id"`            // 全局唯一Id
+	SyncAt       int64  `json:"sync_at"`       // 同步时间
+	SecretID     string `json:"secret_id"`     // 用于同步的凭证ID
+	Vendor       Vendor `json:"vendor"`        // 厂商
+	ResourceType Type   `json:"resource_type"` // 资源类型
+	Region       string `json:"region"`        // 地域
+	Zone         string `json:"zone"`          // 区域
+	CreateAt     int64  `json:"create_at"`     // 创建时间
+	InstanceId   string `json:"instance_id"`   // 实例ID
+	ResourceHash string `json:"resource_hash"` // 基础数据Hash
+	DescribeHash string `json:"describe_hash"` // 描述数据Hash
+}
+
+type Information struct {
+	ExpireAt    int64             `json:"expire_at"`   // 过期时间
+	Category    string            `json:"category"`    // 种类
+	Type        string            `json:"type"`        // 规格
+	Name        string            `json:"name"`        // 名称
+	Description string            `json:"description"` // 描述
+	Status      string            `json:"status"`      // 服务商中的状态
+	Tags        map[string]string `json:"tags"`        // 标签
+	UpdateAt    int64             `json:"update_at"`   // 更新时间
+	SyncAccount string            `json:"sync_accout"` // 同步的账号
+	PublicIP    []string          `json:"public_ip"`   // 公网IP
+	PrivateIP   []string          `json:"private_ip"`  // 内网IP
+	PayType     string            `json:"pay_type"`    // 实例付费方式
+}
+```
 
 
-### Secret 相关接口定义
+定义 resource service接口
+```go
+type Service interface {
+	Search(context.Context, *SearchRequest) (*ResourceSet, error)
+}
+
+type SearchRequest struct {
+	Vendor       Vendor
+	ResourceType Type
+}
+
+type ResourceSet struct {
+	Items []*Resource `json:"items"`
+	Total int64       `json:"total"`
+}
+```
+
+### 数据库如何存储Slice
+
+我们数据库直接使用字符串来存储, 这是反模式的, 你也可以设计独立的表来存储。
+
+这里在入库和出库时，单独处理那些无法直接存储到数据库的数据结构:
+
+```go
+func (i *Information) PrivateIPToString() string {
+	return strings.Join(i.PrivateIP, ",")
+}
+
+func (i *Information) PublicIPToString() string {
+	return strings.Join(i.PublicIP, ",")
+}
+
+func (i *Information) LoadPrivateIPString(s string) {
+	if s != "" {
+		i.PrivateIP = strings.Split(s, ",")
+	}
+}
+
+func (i *Information) LoadPublicIPString(s string) {
+	if s != "" {
+		i.PublicIP = strings.Split(s, ",")
+	}
+}
+```
+
+存入:
+```go
+// vendor  h.Version.String()
+_, err = stmt.Exec(
+	h.Id, h.Vendor, h.Region, h.Zone, h.CreateAt, h.ExpireAt, h.Category, h.Type, h.InstanceId,
+	h.Name, h.Description, h.Status, h.UpdateAt, h.SyncAt, h.SyncAccount, h.PublicIPToString(),
+	h.PrivateIPToString(), h.PayType, h.DescribeHash, h.ResourceHash,
+)
+```
+
+读取
+```go
+set := host.NewHostSet()
+var (
+	publicIPList, privateIPList, keyPairNameList, securityGroupsList string
+)
+for rows.Next() {
+	ins := host.NewDefaultHost()
+	err := rows.Scan(
+		&ins.Id, &ins.Vendor, &ins.Region, &ins.Zone, &ins.CreateAt, &ins.ExpireAt,
+		&ins.Category, &ins.Type, &ins.InstanceId, &ins.Name, &ins.Description,
+		&ins.Status, &ins.UpdateAt, &ins.SyncAt, &ins.SyncAccount,
+		&publicIPList, &privateIPList, &ins.PayType, &ins.DescribeHash, &ins.ResourceHash, &ins.ResourceId,
+		&ins.CPU, &ins.Memory, &ins.GPUAmount, &ins.GPUSpec, &ins.OSType, &ins.OSName,
+		&ins.SerialNumber, &ins.ImageID, &ins.InternetMaxBandwidthOut, &ins.InternetMaxBandwidthIn,
+		&keyPairNameList, &securityGroupsList,
+	)
+	if err != nil {
+		return nil, exception.NewInternalServerError("query host error, %s", err.Error())
+	}
+	ins.LoadPrivateIPString(privateIPList)
+	ins.LoadPublicIPString(publicIPList)
+	ins.LoadKeyPairNameString(keyPairNameList)
+	ins.LoadSecurityGroupsString(securityGroupsList)
+	set.Add(ins)
+}
+```
+
+### 重构后的测试
+
+通过Postman 测试我们重构后的Host模块, 确保其依然可以正常工作
 
 
 
-### Secret CRUD实现
 
 
+## 思考
+到现在我们准备好了:
++ Provider模块: 云资源查询
++ Host模块: 入库逻辑
+
+最直接的方法: 
+```
+|----------|      |-------|
+| Provider | ---> | Host  |
+|----------|      |-------|
+```
+
+那Provider的配置我们怎么读取?
+
+配置文件？有多个账号怎么办？
 
 
 ## 参考

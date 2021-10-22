@@ -117,7 +117,9 @@
   * [主机列表页面](./day18/cmdb-host.md)
 
 ## Day19: CMDB(一)
-  * [云资源同步](./day19/cmdb-api.md)
+  * [云资源Provider](./day19/cmdb-provider.md)
+  * [云凭证管理](./day19/cmdb-secret.md)
+  * [云资源同步API](./day19/cmdb-sync.md)
 
 ## Day20 RCP入门
   * [RPC入门](./day18/rpc-basic.md)
