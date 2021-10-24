@@ -26,6 +26,5 @@ func (c *AliCloudClient) EcsClient() (*ecs.Client, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	return client, nil
 }

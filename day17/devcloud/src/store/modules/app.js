@@ -7,32 +7,26 @@ const state = {
   }
   
   const mutations = {
-    TOGGLE_SIDEBAR: state => {
-      state.sidebar.opened = !state.sidebar.opened
-    },
-    CLOSE_SIDEBAR: (state) => {
-      state.sidebar.opened = false
-    },
     SET_SIZE: (state, size) => {
       state.size = size
     },
     SET_SYSTEM: (state, system) => {
       state.system = system
+    },
+    TOGGLE_SIDEBAR: (state) => {
+      state.sidebar.opened = !state.sidebar.opened
     }
   }
   
   const actions = {
-    toggleSideBar({ commit }) {
-      commit('TOGGLE_SIDEBAR')
-    },
-    closeSideBar({ commit }, { withoutAnimation }) {
-      commit('CLOSE_SIDEBAR', withoutAnimation)
-    },
     setSize({ commit }, size) {
       commit('SET_SIZE', size)
     },
     setSystem({ commit }, system) {
       commit('SET_SYSTEM', system)
+    },
+    toggleSideBar({ commit }) {
+      commit('TOGGLE_SIDEBAR')
     }
   }
   

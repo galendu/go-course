@@ -22,21 +22,72 @@
         style="width: 100%">
         <el-table-column
           prop="name"
-          label="名称"
-          width="180">
+          label="实例名称">
+          <template slot-scope="scope">
+            {{ scope.row.instance_id}}
+            <br>
+            {{ scope.row.name}} 
+          </template>
         </el-table-column>
         <el-table-column
-          prop="sync_at"
-          label="同步时间"
+          prop="name"
+          label="资产来源">
+          <template slot-scope="scope">
+            {{ scope.row.vendor}}
+            <br>
+            {{ scope.row.region}} 
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="private_ip"
+          label="内网IP">
+          <template slot-scope="scope">
+            {{ scope.row.private_ip}} 
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="os_name"
+          label="系统类型">
+          <template slot-scope="scope">
+            {{ scope.row.os_name}} 
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="create_at"
+          label="创建时间">
+          <template slot-scope="scope">
+            {{ scope.row.create_at | parseTime}}
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="expire_at"
+          label="过期时间">
+          <template slot-scope="scope">
+            {{ scope.row.expire_at | parseTime}}
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="create_at"
+          label="配置规格">
+          <template slot-scope="scope">
+            {{ scope.row.cpu}} / {{ scope.row.memory }}
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="expire_at"
+          label="状态">
+          <template slot-scope="scope">
+            {{ scope.row.status}}
+          </template>
+        </el-table-column>
+        <el-table-column
+          label="操作"
+          align="center"
           width="180">
           <template slot-scope="scope">
-            {{ scope.row.sync_at | parseTime}}
+            <el-button type="text" disabled>归档</el-button>
+            <el-button type="text" @click="jumpToMonitor(scope.row.instance_id)">监控</el-button>
           </template>
-          
-        </el-table-column>
-        <el-table-column
-          prop="description"
-          label="描述">
         </el-table-column>
       </el-table>
 
@@ -48,7 +99,6 @@
         @pagination="get_hosts" 
       />
     </div>
-    Host 页面
   </div>
 </template>
 
@@ -91,6 +141,9 @@ export default {
     handleCurrentChange(val) {
       this.query.page_number = val
       this.get_hosts()
+    },
+    jumpToMonitor(id) {
+      console.log(id)
     }
   }
 }
