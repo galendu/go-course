@@ -122,14 +122,15 @@
   * [云资源同步API](./day19/cmdb-sync.md)
 
 ## Day20 RCP入门
+  * [CMDB前端页面](./day20/cmdb-ui.md)
   * [RPC入门](./day18/rpc-basic.md)
   * [Protobuf编解码](./day18/protobuf.md)
   * [GRPC入门](./day18/grpc.md)
+
+## Day20: 用户中心(二)
   * [用户管理](./day18/user.md)
   * [服务管理](./day18/service.md)
   * [登陆认证](./day18/login.md)
-
-## Day20: 用户中心(二)
   * [登陆日志](./day18/login_log.md)
   * [权限管理](./day18/permission.md)
 
