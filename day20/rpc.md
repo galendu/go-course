@@ -128,7 +128,7 @@ hello:hello
 
 一个基础的rpc服务就是这么简单
 
-### 基于接口的RPC服务
+## 基于接口的RPC服务
 
 ```go
 // Call invokes the named function, waits for it to complete, and returns its error status.
@@ -204,7 +204,7 @@ func main() {
 着和我们之前写的pkg下的服务是不是很像, 一切都是有备而来
 
 
-### gob编码
+## gob编码
 
 标准库的RPC默认采用Go语言特有的gob编码, 标准库gob是golang提供的“私有”的编解码方式，它的效率会比json，xml等更高，特别适合在Go语言程序间传递数据
 ```go
@@ -257,7 +257,7 @@ func TestGobCode(t *testing.T) {
 }
 ```
 
-### Json ON TCP
+## Json ON TCP
 
 gob是golang提供的“私有”的编解码方式，因此从其它语言调用Go语言实现的RPC服务将比较困难
 
@@ -325,7 +325,7 @@ $ echo -e '{"method":"HelloService.Hello","params":["hello"],"id":1}' | nc local
 {"id":1,"result":"hello:hello","error":null}
 ```
 
-### Json ON HTTP
+## Json ON HTTP
 
 Go语言内在的RPC框架已经支持在Http协议上提供RPC服务, 为了支持跨语言，编码我们依然使用Json
 
