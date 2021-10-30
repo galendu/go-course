@@ -122,7 +122,8 @@
   * [云资源同步API](./day19/cmdb-sync.md)
 
 ## Day20 RCP入门
-  * [CMDB前端页面](./day20/cmdb-ui.md)
+  * [CMDB主机页面](./day20/cmdb-host.md)
+  * [CMDB搜索页面](./day20/cmdb-search.md)
   * [RPC入门](./day18/rpc-basic.md)
   * [Protobuf编解码](./day18/protobuf.md)
   * [GRPC入门](./day18/grpc.md)
