@@ -1,5 +1,7 @@
 # CMDB主机页面
 
+![](./images/host-list-page.png)
+
 ## 调整script
 
 之前我们使用 npm run serve, 是因为package.json配置的脚手架如下:
@@ -590,6 +592,3 @@ data() {
 ```
 
 具体事件后面补充
-
-
-## CMDB搜索页面
