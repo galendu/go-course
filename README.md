@@ -32,7 +32,7 @@
   * [作业](./day03/README.md)
 
 ## Day04
-  * [重点知识回顾与答疑](./day4/README.md)
+  * [重点知识回顾与答疑](./day04/README.md)
 
 ## Day05
   * [字符串](./zh-cn/base/string.md)
@@ -133,7 +133,6 @@
   * [用户管理](./day18/user.md)
   * [服务管理](./day18/service.md)
   * [登陆认证](./day18/login.md)
-  * [登陆日志](./day18/login_log.md)
   * [权限管理](./day18/permission.md)
 
 ## Day21: CMDB(一)
