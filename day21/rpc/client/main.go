@@ -7,7 +7,7 @@ import (
 	"net/rpc"
 	"net/rpc/jsonrpc"
 
-	"gitee.com/infraboard/go-course/day20/rpc/service"
+	"gitee.com/infraboard/go-course/day21/rpc/service"
 )
 
 // 约束客户端

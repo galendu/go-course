@@ -121,35 +121,29 @@
   * [云凭证管理](./day19/cmdb-secret.md)
   * [云资源同步API](./day19/cmdb-sync.md)
 
-## Day20 RCP入门
+## Day20 CMDB(二)
   * [CMDB主机页面](./day20/cmdb-host.md)
   * [CMDB搜索页面](./day20/cmdb-search.md)
   * [CMDB同步页面](./day20/cmdb-sync.md)
-  * [RPC入门](./day20/rpc.md)
-  * [Protobuf编解码](./day20/protobuf.md)
 
-## Day20: 用户中心(二)
-  * [GRPC入门](./day18/grpc.md)
+## Day21: RPC入门
+  * [RPC入门](./day21/rpc.md)
+  * [Protobuf编解码](./day21/protobuf.md)
+  * [GRPC入门](./day21/grpc.md)
+
+## Day22: 权限中心
   * [用户管理](./day18/user.md)
   * [服务管理](./day18/service.md)
   * [登陆认证](./day18/login.md)
   * [权限管理](./day18/permission.md)
 
-## Day21: CMDB(一)
-  * [资源管理](./day20/cmdb-api.md)
-  * [云资源同步](./day20/cmdb-api.md)
-  * [主机发现对接Prometheus](./day20/cmdb-api.md)
-
-
-## Day22: CMDB(二)
-  * [WebShell登录](./day21/cmdb-ui.md)
-  * [登陆权限管理](./day21/cmdb-ui.md)
-
 ## Day23: CI/CD系统(一)
   * [K8s架构解读](./day22/k8s-arch.md)
   * [流水线服务框架开发](./day22/workflow-)
 
+
 ## Day24: CI/CD系统(二)
+
 
 ## Day25: CI/CD系统(三)
 
