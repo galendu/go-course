@@ -2,7 +2,7 @@
   <div class="navbar">
     <!-- logo -->
     <div class="logo-container">
-      <hamburger id="hamburger-container" :is-active="isCollapse" class="hamburger-container" @toggleClick="toggleSideBar" />
+      <hamburger :is-active="isActive" @toggleClick="toggleClick"> </hamburger>
       <span class="title">极乐研发云</span>
     </div>
     <!-- 主导航栏 -->
@@ -51,23 +51,23 @@ export default {
     return {}
   },
   computed: {
-    isCollapse() {
-      return this.$store.getters.sidebar.opened
-    },
     activeSystem() {
       return this.$store.getters.system
+    },
+    isActive() {
+      return this.$store.getters.sidebar.opened
     }
   },
   methods: {
     changeSystem(system) {
       this.$store.dispatch('app/setSystem', system)
     },
-    toggleSideBar() {
-      this.$store.dispatch('app/toggleSideBar')
-    },
     async logout() {
       await this.$store.dispatch('user/logout')
       this.$router.push({path: '/login'})
+    },
+    toggleClick() {
+      this.$store.dispatch('app/toggleSideBar')
     }
   }
 }
