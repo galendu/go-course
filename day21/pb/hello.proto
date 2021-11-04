@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+package hello;
+option go_package="gitee.com/infraboard/go-course/day21/pb";
+
+message String {
+    string value = 1;
+}
