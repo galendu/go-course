@@ -12,6 +12,10 @@ import (
 func main() {
 	clientObj := &pb.String{Value: "hello proto3"}
 
+	// of := &pb.SampleMessage{}
+	// of.GetSub1()
+	// of.GetSub2()
+
 	// 序列化
 	out, err := proto.Marshal(clientObj)
 	if err != nil {

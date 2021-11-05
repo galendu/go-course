@@ -126,10 +126,10 @@
   * [CMDB搜索页面](./day20/cmdb-search.md)
   * [CMDB同步页面](./day20/cmdb-sync.md)
 
-## Day21: RPC入门
+## Day21: 从RPC到GRPC
   * [RPC入门](./day21/rpc.md)
   * [Protobuf编解码](./day21/protobuf.md)
-  * [proto3语法详解](./day21/proto3_synx.md)
+  * [proto3语法入门](./day21/proto3_synx.md)
   * [GRPC入门](./day21/grpc.md)
 
 ## Day22: 权限中心
