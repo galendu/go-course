@@ -19,5 +19,6 @@ require (
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.270
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cvm v1.0.270
 	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97
+	google.golang.org/grpc v1.38.0
 	google.golang.org/protobuf v1.27.1
 )
