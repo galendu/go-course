@@ -365,8 +365,8 @@ message ErrorStatus {
 ```protobuf
 syntax = "proto3";
 
-# 由于这个文件的pkg 也叫hello, 因此我们可以不用添加 pkg前缀
-# 如果不是同一个pkg 就需要添加 pkg名称前缀, 比如hello.ErrorStatus
+// 由于这个文件的pkg 也叫hello, 因此我们可以不用添加 pkg前缀
+//  如果不是同一个pkg 就需要添加 pkg名称前缀, 比如hello.ErrorStatus
 import "pb/any.proto";
 
 package hello;
