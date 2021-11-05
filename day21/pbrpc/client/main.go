@@ -5,8 +5,8 @@ import (
 	"log"
 	"net"
 	"net/rpc"
-	"net/rpc/jsonrpc"
 
+	"gitee.com/infraboard/go-course/day21/pbrpc/codec/client"
 	"gitee.com/infraboard/go-course/day21/pbrpc/service"
 )
 
@@ -30,7 +30,7 @@ func DialHelloService(network, address string) (*HelloServiceClient, error) {
 	}
 
 	// 采用Json编解码的客户端
-	c := rpc.NewClientWithCodec(jsonrpc.NewClientCodec(conn))
+	c := rpc.NewClientWithCodec(client.NewClientCodec(conn))
 	return &HelloServiceClient{Client: c}, nil
 }
 

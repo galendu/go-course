@@ -377,6 +377,127 @@ func main() {
 }
 ```
 
+#### Proto Codec编解码
+
+定义Header相关数据结构
+```protobuf
+// Copyright 2013 <chaishushan{AT}gmail.com>. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+syntax = "proto3";
+
+//
+//	protorpc wire format wrapper
+//
+//	0. Frame Format
+//	len : uvarint64
+//	data: byte[len]
+//
+//	1. Client Send Request
+//	Send RequestHeader: sendFrame(zsock, hdr, len(hdr))
+//	Send Request: sendFrame(zsock, body, hdr.snappy_compressed_request_len)
+//
+//	2. Server Recv Request
+//	Recv RequestHeader: recvFrame(zsock, hdr, max_hdr_len, 0)
+//	Recv Request: recvFrame(zsock, body, hdr.snappy_compressed_request_len, 0)
+//
+//	3. Server Send Response
+//	Send ResponseHeader: sendFrame(zsock, hdr, len(hdr))
+//	Send Response: sendFrame(zsock, body, hdr.snappy_compressed_response_len)
+//
+//	4. Client Recv Response
+//	Recv ResponseHeader: recvFrame(zsock, hdr, max_hdr_len, 0)
+//	Recv Response: recvFrame(zsock, body, hdr.snappy_compressed_response_len, 0)
+//
+package pb;
+option go_package="gitee.com/infraboard/go-course/day21/pbrpc/codec/pb";
+
+enum Const {
+	ZERO = 0;
+	MAX_REQUEST_HEADER_LEN = 1024;
+}
+
+message RequestHeader {
+	uint64 id = 1;
+	string method = 2;
+
+	uint32 raw_request_len = 3;
+	uint32 snappy_compressed_request_len = 4;
+	uint32 checksum = 5;
+}
+
+message ResponseHeader {
+	uint64 id = 1;
+	string error = 2;
+
+	uint32 raw_response_len = 3;
+	uint32 snappy_compressed_response_len = 4;
+	uint32 checksum = 5;
+}
+```
+
+生成代码
+```
+protoc -I=. --go_out=./codec/pb --go_opt=module="gitee.com/infraboard/go-course/day21/pbrpc/codec/pb" codec/pb/header.proto
+```
+
+我们实现了一套protobuf 的编解码rpc插件: codec, 具体代码见 pbrpc/codec 目录
+
++ codec/client: 客户端编解码实现
++ codec/server: 服务端编解码实现
+
+
+修改客户端:
+```go
+func DialHelloService(network, address string) (*HelloServiceClient, error) {
+	// 建立链接
+	conn, err := net.Dial("tcp", "localhost:1234")
+	if err != nil {
+		log.Fatal("net.Dial:", err)
+	}
+
+	// 采用Porobuf编解码的客户端
+	c := rpc.NewClientWithCodec(client.NewClientCodec(conn))
+	return &HelloServiceClient{Client: c}, nil
+}
+```
+
+修改服务端:
+```go
+func main() {
+	// 把我们的对象注册成一个rpc的 receiver
+	// 其中rpc.Register函数调用会将对象类型中所有满足RPC规则的对象方法注册为RPC函数，
+	// 所有注册的方法会放在“HelloService”服务空间之下
+	rpc.RegisterName("HelloService", new(HelloService))
+
+	// 然后我们建立一个唯一的TCP链接，
+	listener, err := net.Listen("tcp", ":1234")
+	if err != nil {
+		log.Fatal("ListenTCP error:", err)
+	}
+
+	// 通过rpc.ServeConn函数在该TCP链接上为对方提供RPC服务。
+	// 没Accept一个请求，就创建一个goroutie进行处理
+	for {
+		conn, err := listener.Accept()
+		if err != nil {
+			log.Fatal("Accept error:", err)
+		}
+
+		// // 前面都是tcp的知识, 到这个RPC就接管了
+		// // 因此 你可以认为 rpc 帮我们封装消息到函数调用的这个逻辑,
+		// // 提升了工作效率, 逻辑比较简洁，可以看看他代码
+		// go rpc.ServeConn(conn)
+
+		// 代码中最大的变化是用rpc.ServeCodec函数替代了rpc.ServeConn函数，
+		// 传入的参数是针对服务端的protobuf编解码器
+		go rpc.ServeCodec(server.NewServerCodec(conn))
+	}
+}
+```
+
+
 #### 测试RPC
 
 ```sh

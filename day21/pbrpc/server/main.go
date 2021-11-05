@@ -4,8 +4,8 @@ import (
 	"log"
 	"net"
 	"net/rpc"
-	"net/rpc/jsonrpc"
 
+	"gitee.com/infraboard/go-course/day21/pbrpc/codec/server"
 	"gitee.com/infraboard/go-course/day21/pbrpc/service"
 )
 
@@ -51,6 +51,6 @@ func main() {
 
 		// 代码中最大的变化是用rpc.ServeCodec函数替代了rpc.ServeConn函数，
 		// 传入的参数是针对服务端的json编解码器
-		go rpc.ServeCodec(jsonrpc.NewServerCodec(conn))
+		go rpc.ServeCodec(server.NewServerCodec(conn))
 	}
 }
