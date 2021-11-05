@@ -219,25 +219,176 @@ func main() {
 
 我们新建一个目录: pbrpc
 
-定义protobuf
+#### 定义交互数据结构
+
+pbrpc/service/service.proto
+```protobuf
+syntax = "proto3";
+
+package hello;
+option go_package="gitee.com/infraboard/go-course/day21/pbrpc/service";
+
+message Request {
+    string value = 1;
+}
+
+message Response {
+    string value = 1;
+}
+```
+
+生成Go语言数据结构
+```sh
+## 当前目录day21/pbrpc
+protoc -I=. --go_out=./service --go_opt=module="gitee.com/infraboard/go-course/day21/pbrpc/service" service/service.proto
+```
+
+#### 定义接口
+
+基于生成的数据结构，定义接口 pbrpc/service/interface.go
+```go
+package service
+
+const HelloServiceName = "HelloService"
+
+type HelloService interface {
+	Hello(*Request, *Response) error
+}
+```
+
+#### 服务端
+
+pbrpc/server/main.go
+```go
+import (
+	"log"
+	"net"
+	"net/rpc"
+	"net/rpc/jsonrpc"
+
+	"gitee.com/infraboard/go-course/day21/pbrpc/service"
+)
+
+// 通过接口约束HelloService服务
+var _ service.HelloService = (*HelloService)(nil)
+
+type HelloService struct{}
+
+// Hello的逻辑 就是 将对方发送的消息前面添加一个Hello 然后返还给对方
+// 由于我们是一个rpc服务, 因此参数上面还是有约束：
+// 		第一个参数是请求
+// 		第二个参数是响应
+// 可以类比Http handler
+func (p *HelloService) Hello(req *service.Request, resp *service.Response) error {
+	resp.Value = "hello:" + req.Value
+	return nil
+}
+
+func main() {
+	// 把我们的对象注册成一个rpc的 receiver
+	// 其中rpc.Register函数调用会将对象类型中所有满足RPC规则的对象方法注册为RPC函数，
+	// 所有注册的方法会放在“HelloService”服务空间之下
+	rpc.RegisterName("HelloService", new(HelloService))
+
+	// 然后我们建立一个唯一的TCP链接，
+	listener, err := net.Listen("tcp", ":1234")
+	if err != nil {
+		log.Fatal("ListenTCP error:", err)
+	}
+
+	// 通过rpc.ServeConn函数在该TCP链接上为对方提供RPC服务。
+	// 没Accept一个请求，就创建一个goroutie进行处理
+	for {
+		conn, err := listener.Accept()
+		if err != nil {
+			log.Fatal("Accept error:", err)
+		}
+
+		// // 前面都是tcp的知识, 到这个RPC就接管了
+		// // 因此 你可以认为 rpc 帮我们封装消息到函数调用的这个逻辑,
+		// // 提升了工作效率, 逻辑比较简洁，可以看看他代码
+		// go rpc.ServeConn(conn)
+
+		// 代码中最大的变化是用rpc.ServeCodec函数替代了rpc.ServeConn函数，
+		// 传入的参数是针对服务端的json编解码器
+		go rpc.ServeCodec(jsonrpc.NewServerCodec(conn))
+	}
+}
+```
 
 
 
+#### 客户端
 
+pbrpc/client/main.go
+```go
+package main
 
+import (
+	"fmt"
+	"log"
+	"net"
+	"net/rpc"
+	"net/rpc/jsonrpc"
 
+	"gitee.com/infraboard/go-course/day21/pbrpc/service"
+)
 
-## Proto3语法
+// 约束客户端
+var _ service.HelloService = (*HelloServiceClient)(nil)
 
+type HelloServiceClient struct {
+	*rpc.Client
+}
 
+func DialHelloService(network, address string) (*HelloServiceClient, error) {
+	// c, err := rpc.Dial(network, address)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
+	// 建立链接
+	conn, err := net.Dial("tcp", "localhost:1234")
+	if err != nil {
+		log.Fatal("net.Dial:", err)
+	}
 
-## 数据映射关系
- 
+	// 采用Json编解码的客户端
+	c := rpc.NewClientWithCodec(jsonrpc.NewClientCodec(conn))
+	return &HelloServiceClient{Client: c}, nil
+}
 
+func (p *HelloServiceClient) Hello(req *service.Request, resp *service.Response) error {
+	return p.Client.Call(service.HelloServiceName+".Hello", req, resp)
+}
+
+func main() {
+	client, err := DialHelloService("tcp", "localhost:1234")
+	if err != nil {
+		log.Fatal("dialing:", err)
+	}
+
+	resp := &service.Response{}
+	err = client.Hello(&service.Request{Value: "hello"}, resp)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(resp)
+}
+```
+
+#### 测试RPC
+
+```sh
+# 启动服务端
+$ go run server/main.go
+
+# 客户端调用
+$ go run client/main.go
+value:"hello:hello"
+```
 
 ## 参考
 
 + [Protocol Buffers Google官网](https://developers.google.com/protocol-buffers)
 + [Protocol Buffer Basics: Go](https://developers.google.com/protocol-buffers/docs/gotutorial)
-+ [Language Guide (proto3) ](https://developers.google.com/protocol-buffers/docs/proto3)

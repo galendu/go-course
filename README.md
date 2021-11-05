@@ -129,6 +129,7 @@
 ## Day21: RPC入门
   * [RPC入门](./day21/rpc.md)
   * [Protobuf编解码](./day21/protobuf.md)
+  * [proto3语法详解](./day21/proto3_synx.md)
   * [GRPC入门](./day21/grpc.md)
 
 ## Day22: 权限中心
