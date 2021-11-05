@@ -204,7 +204,7 @@ of.GetSub2()
 
 ## Any
 
-当我们无法明确定义数据类型的时候， 可以使用Any表示, 
+当我们无法明确定义数据类型的时候， 可以使用Any表示: 
 
 ```protobuf
 // 这里是应用其他的proto文件, 后面会讲 ipmort用法
@@ -216,26 +216,173 @@ message ErrorStatus {
 }
 ```
 
+any本质上就是一个bytes数据结构
 
+```go
+type ErrorStatus struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Message string       `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
+	Details []*anypb.Any `protobuf:"bytes,2,rep,name=details,proto3" json:"details,omitempty"`
+}
+```
+
+下面是 any的定义
+```go
+// `Any` contains an arbitrary serialized protocol buffer message along with a
+// URL that describes the type of the serialized message.
+//
+// Protobuf library provides support to pack/unpack Any values in the form
+// of utility functions or additional generated methods of the Any type.
+//  Example 4: Pack and unpack a message in Go
+//
+//      foo := &pb.Foo{...}
+//      any, err := anypb.New(foo)
+//      if err != nil {
+//        ...
+//      }
+//      ...
+//      foo := &pb.Foo{}
+//      if err := any.UnmarshalTo(foo); err != nil {
+//        ...
+//      }
+//
+// The pack methods provided by protobuf library will by default use
+// 'type.googleapis.com/full.type.name' as the type URL and the unpack
+// methods only use the fully qualified type name after the last '/'
+// in the type URL, for example "foo.bar.com/x/y.z" will yield type
+// name "y.z".
+//
+//
+// JSON
+// ====
+// The JSON representation of an `Any` value uses the regular
+// representation of the deserialized, embedded message, with an
+// additional field `@type` which contains the type URL. Example:
+//
+//     package google.profile;
+//     message Person {
+//       string first_name = 1;
+//       string last_name = 2;
+//     }
+//
+//     {
+//       "@type": "type.googleapis.com/google.profile.Person",
+//       "firstName": <string>,
+//       "lastName": <string>
+//     }
+//
+// If the embedded message type is well-known and has a custom JSON
+// representation, that representation will be embedded adding a field
+// `value` which holds the custom JSON in addition to the `@type`
+// field. Example (for message [google.protobuf.Duration][]):
+//
+//     {
+//       "@type": "type.googleapis.com/google.protobuf.Duration",
+//       "value": "1.212s"
+//     }
+//
+type Any struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+  ...
+	// Note: this functionality is not currently available in the official
+	// protobuf release, and it is not used for type URLs beginning with
+	// type.googleapis.com.
+	//
+	// Schemes other than `http`, `https` (or the empty scheme) might be
+	// used with implementation specific semantics.
+	//
+	TypeUrl string `protobuf:"bytes,1,opt,name=type_url,json=typeUrl,proto3" json:"type_url,omitempty"`
+	// Must be a valid serialized protocol buffer of the above specified type.
+	Value []byte `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
+}
+```
 
 ## 类型嵌套
 
+我们可以再message里面嵌套message
 
 ```protobuf
-message SearchResponse {
-  message Result {
-    string url = 1;
-    string title = 2;
-    repeated string snippets = 3;
+message Outer {                  // Level 0
+  message MiddleAA {  // Level 1
+    message Inner {   // Level 2
+      int64 ival = 1;
+      bool  booly = 2;
+    }
   }
-  repeated Result results = 1;
+  message MiddleBB {  // Level 1
+    message Inner {   // Level 2
+      int32 ival = 1;
+      bool  booly = 2;
+    }
+  }
+}
+```
+
+与Go结构体嵌套一样, 但是不允许 匿名嵌套, 必须指定字段名称
+
+## 引用包
+
+```protobuf
+// 这里是应用其他的proto文件, 后面会讲 ipmort用法
+import "google/protobuf/any.proto";
+```
+上面这在情况就是读取的标准库, 我们在安装protoc的时候, 已经把改lib 挪到usr/local/include下面了，所以可以找到
+
+
+如果我们proto文件并没有在/usr/local/include目录下, 我们如何导入，比如:
+```
+import "myproject/other_protos.proto";
+```
+
+
+通过-I 可以添加搜索的路径, 这样就编译器就可以找到我们引入的包了
+
+引入后通过包的名称.变量的方式使用
+
+比如我们要应用该结构中的ErrorStatus
+```protobuf
+syntax = "proto3";
+
+// 这里是应用其他的proto文件, 后面会讲 ipmort用法
+import "google/protobuf/any.proto";
+
+package hello;
+option go_package="gitee.com/infraboard/go-course/day21/pb";
+
+message ErrorStatus {
+  string message = 1;
+  repeated google.protobuf.Any details = 2;
+}
+```
+
+引入ErrorStatus
+```protobuf
+syntax = "proto3";
+
+# 由于这个文件的pkg 也叫hello, 因此我们可以不用添加 pkg前缀
+# 如果不是同一个pkg 就需要添加 pkg名称前缀, 比如hello.ErrorStatus
+import "pb/any.proto";
+
+package hello;
+option go_package="gitee.com/infraboard/go-course/day21/pb";
+
+message ErrorStatusExt {
+    ErrorStatus error_status = 1;
 }
 ```
 
 
-
-## 引用包
-
+```sh
+# 当前目录: day21
+protoc -I=. --go_out=./pb --go_opt=module="gitee.com/infraboard/go-course/day21/pb" pb/import.proto 
+```
+由于我们使用的import是相对路径, 因此我们必须在day21下编译, 这样编译器根据相对位置 才能找到pb/any.proto这个引用
 
 
 
@@ -244,9 +391,6 @@ message SearchResponse {
 + Don't change the field numbers for any existing fields.
 
 更多请参考 [Updating A Message Type](https://developers.google.com/protocol-buffers/docs/proto3#updating)
-
-
-
 
 
 ## 参考
