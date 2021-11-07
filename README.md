@@ -131,7 +131,7 @@
   * [Protobuf编解码](./day21/protobuf.md)
   * [proto3语法入门](./day21/proto3_synx.md)
   * [GRPC入门](./day21/grpc.md)
-  * [CMDB-GRPC改造](./day21/cmdb-grpc.md)
+  * [CMDB改造](./day21/cmdb-grpc.md)
 
 ## Day22: 权限中心
   * [用户管理](./day18/user.md)
