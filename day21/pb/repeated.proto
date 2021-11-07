@@ -3,10 +3,11 @@ syntax = "proto3";
 package hello;
 option go_package="gitee.com/infraboard/go-course/day21/pb";
 
-service HelloService {
-    rpc Hello (String) returns (String);
+message Result {
+    string value = 1;
+    map<string, int32> a =2;
 }
 
-message String {
-    string value = 1;
-}
+message SearchResponse {
+    repeated Result results = 1;
+  }
