@@ -134,7 +134,8 @@
   * [CMDB改造](./day21/cmdb-grpc.md)
 
 ## Day22: 权限中心
-  * [认证与授权](./day22/arch.md)
+  * [框架介绍](./day22/framework.md)
+  * [认证与授权](./day22/auth.md)
   * [用户管理](./day22/user.md)
   * [服务管理](./day22/service.md)
   * [权限管理](./day22/permission.md)
