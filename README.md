@@ -134,10 +134,10 @@
   * [CMDB改造](./day21/cmdb-grpc.md)
 
 ## Day22: 权限中心
-  * [用户管理](./day18/user.md)
-  * [服务管理](./day18/service.md)
-  * [登陆认证](./day18/login.md)
-  * [权限管理](./day18/permission.md)
+  * [认证与授权](./day22/arch.md)
+  * [用户管理](./day22/user.md)
+  * [服务管理](./day22/service.md)
+  * [权限管理](./day22/permission.md)
 
 ## Day23: CI/CD系统(一)
   * [K8s架构解读](./day22/k8s-arch.md)
