@@ -7,7 +7,6 @@
 
 常见的代码组织方式有类:
 
-
 ### 功能式架构
 
 按照功能分层, MVC就是其中典型, cmdb项目就是采用这种功能架构
@@ -28,15 +27,11 @@
 
 ![](./images/keyauth-app.png)
 
-
-
-
 ## App开发
 
 比如我们按照分区架构来开发一个App, 注意 这里说的App就是 app目录下一个具体的包
 
 ### 接口定义
-
 
 下面是Token业务领域提供的接口定义:
 
@@ -533,17 +528,116 @@ func (s *service) start() error {
 
 主要是基于Httprouter定制 认证功能和注册功能
 
+### 路由创建
+
+通过Use使用中间件: 中间件时链式调用，是栈结构, 有先后顺序
+
++ Recovery: Hold住所有的Panic
++ AccessLog: 记录Access Log
++ cors: 允许跨域
++ EnableAPIRoot: / 可以访问注册的 Endpoint，及API ROOT
++ SetAuther: 添加认证拦截器
++ Auth: 全局变量，后面每个endpoinit可单独覆盖
+
 ```go
+r := httprouter.New()
+r.Use(recovery.NewWithLogger(zap.L().Named("Recovery")))
+r.Use(accesslog.NewWithLogger(zap.L().Named("AccessLog")))
+r.Use(cors.AllowAll())
+r.EnableAPIRoot()
+r.SetAuther(pkg.NewAuther())
+r.Auth(true)
 ```
 
+### 路由配置
+
+r.Handle 提供路由处理, path语法和httprouter语法一样， 只是把路径参数封装到了ctx里面了
+
+```go
+// Registry 注册HTTP服务路由
+func (h *handler) Registry(router router.SubRouter) {
+	self := router.ResourceRouter("application")
+	self.BasePath("applications")
+	self.Handle("POST", "/", h.CreateApplication)
+	self.Handle("GET", "/", h.QueryApplication)
+	self.Handle("GET", "/:id", h.GetApplication)
+	self.Handle("DELETE", "/:id", h.DestroyApplication)
+}
+```
+
+### 请求上下文
+
+context包封装了请求上下午, auther中间件认证完后的结果也存储在当前ctx中, 通过GetContext获取
+```go
+func (h *handler) QueryApplication(w http.ResponseWriter, r *http.Request) {
+	ctx := context.GetContext(r)
+	tk := ctx.AuthInfo.(*token.Token)
+
+	page := request.NewPageRequestFromHTTP(r)
+	req := application.NewQueryApplicationRequest(page)
+	req.Account = tk.Account
+
+	apps, err := h.service.QueryApplication(r.Context(), req)
+	if err != nil {
+		response.Failed(w, err)
+		return
+	}
+
+	response.Success(w, apps)
+}
+```
+
+req 请求对象
+```go
+// ReqContext context
+type ReqContext struct {
+        Entry    *router.Entry
+        PS       httprouter.Params
+        AuthInfo interface{}
+}
+```
+
++ entry 当前服务条目
++ ps: path参数
++ AuthInfo: 认证完成后的数据
+
+### 认证中间件
+
+那这个 上下文是如何设置到每个请求当中的喃? 答案是 认证中间件
+
+我们在router上 留了 auther设置的口子: r.SetAuther(pkg.NewAuther())
+```go
+// Auther 设置受保护路由使用的认证器
+// Header 用于鉴定身份
+// Entry 用于鉴定权限
+type Auther interface {
+	Auth(req *http.Request, entry httppb.Entry) (authInfo interface{}, err error)
+	ResponseHook(http.ResponseWriter, *http.Request, httppb.Entry)
+}
+```
+
+该中间件会获取token，并根据entry做权限判定, 在后面的keyauth部分会讲 认证中间件, 这里只需要知道留有口子
 
 ## 程序配置
 
 全局实例: conf.C()
 
-
-
+```go
+func (s *service) Config() error {
+	db := conf.C().Mongo.GetDB()
+	ac := db.Collection("application")
+    ...
+}
+```
 
 ## 程序日志
 
 全局实例: zap.L()
+
+```go
+func (s *service) Config() error {
+    ...
+	s.log = zap.L().Named("Department")
+	return nil
+}
+```
