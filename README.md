@@ -135,10 +135,10 @@
 
 ## Day22: 权限中心
   * [框架介绍](./day22/framework.md)
-  * [认证与授权](./day22/auth.md)
+  * [登录认证](./day22/auth.md)
+  * [权限判定](./day22/permission.md)
   * [用户管理](./day22/user.md)
   * [服务管理](./day22/service.md)
-  * [权限管理](./day22/permission.md)
 
 ## Day23: CI/CD系统(一)
   * [K8s架构解读](./day22/k8s-arch.md)
