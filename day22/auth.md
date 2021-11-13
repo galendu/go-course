@@ -631,14 +631,165 @@ func (s *service) Login(ctx context.Context, tk *token.Token) (*session.Session,
 
 ## 接口认证
 
-现在我们颁发了token, 但是我们的接口并没有 验证token的逻辑, 
-
-
-### Keyauth本身的认证
-
 我们服务的认证分为2类:
 + HTTP接口认证: token认证
 + GRPC接口认证: 服务凭证认证
+
+
+### GRPC 认证
+
+
+#### keyauth自身
+
+依赖内部ioc的 token服务
+
+```go
+// GrpcAuthUnaryServerInterceptor returns a new unary server interceptor for auth.
+func GrpcAuthUnaryServerInterceptor() grpc.UnaryServerInterceptor {
+	return newGrpcAuther().Auth
+}
+
+func newGrpcAuther() *grpcAuther {
+	return &grpcAuther{
+		log:   zap.L().Named("Grpc Auther"),
+		micro: app.GetGrpcApp(micro.AppName).(micro.MicroServiceServer),
+	}
+}
+
+// internal todo
+type grpcAuther struct {
+	log   logger.Logger
+	micro micro.MicroServiceServer
+}
+
+func (a *grpcAuther) Auth(
+	ctx context.Context, req interface{},
+	info *grpc.UnaryServerInfo,
+	handler grpc.UnaryHandler,
+) (resp interface{}, err error) {
+	// 重上下文中获取认证信息
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, fmt.Errorf("ctx is not an grpc incoming context")
+	}
+
+	clientId, clientSecret := a.GetClientCredentialsFromMeta(md)
+
+	// 校验调用的客户端凭证是否有效
+	if err := a.validateServiceCredential(clientId, clientSecret); err != nil {
+		return nil, err
+	}
+
+	resp, err = handler(ctx, req)
+	return resp, err
+}
+
+func (a *grpcAuther) GetClientCredentialsFromMeta(md metadata.MD) (
+	clientId, clientSecret string) {
+	cids := md.Get(header.ClientHeaderKey)
+	sids := md.Get(header.ClientSecretKey)
+	if len(cids) > 0 {
+		clientId = cids[0]
+	}
+	if len(sids) > 0 {
+		clientSecret = sids[0]
+	}
+	return
+}
+
+func (a *grpcAuther) validateServiceCredential(clientId, clientSecret string) error {
+	if clientId == "" && clientSecret == "" {
+		return status.Errorf(codes.Unauthenticated, "client_id or client_secret is \"\"")
+	}
+
+	vsReq := micro.NewValidateClientCredentialRequest(clientId, clientSecret)
+	_, err := a.micro.ValidateClientCredential(context.Background(), vsReq)
+	if err != nil {
+		return status.Errorf(codes.Unauthenticated, "service auth error, %s", err)
+	}
+
+	return nil
+}
+```
+
+
+#### 其他服务
+
+依赖keyauht的 client 也能实现 服务凭证的认证
+
+```go
+// GrpcAuthUnaryServerInterceptor returns a new unary server interceptor for auth.
+func GrpcAuthUnaryServerInterceptor(c *Client) grpc.UnaryServerInterceptor {
+	return newGrpcAuther(c).Auth
+}
+
+func newGrpcAuther(c *Client) *grpcAuther {
+	return &grpcAuther{
+		log: zap.L().Named("Grpc Auther"),
+	}
+}
+
+// internal todo
+type grpcAuther struct {
+	log     logger.Logger
+	keyauth *Client
+}
+
+func (a *grpcAuther) Auth(
+	ctx context.Context, req interface{},
+	info *grpc.UnaryServerInfo,
+	handler grpc.UnaryHandler,
+) (resp interface{}, err error) {
+	// 重上下文中获取认证信息
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, fmt.Errorf("ctx is not an grpc incoming context")
+	}
+
+	clientId, clientSecret := a.GetClientCredentialsFromMeta(md)
+
+	// 校验调用的客户端凭证是否有效
+	if err := a.validateServiceCredential(clientId, clientSecret); err != nil {
+		return nil, err
+	}
+
+	resp, err = handler(ctx, req)
+	return resp, err
+}
+
+func (a *grpcAuther) GetClientCredentialsFromMeta(md metadata.MD) (
+	clientId, clientSecret string) {
+	cids := md.Get(header.ClientHeaderKey)
+	sids := md.Get(header.ClientSecretKey)
+	if len(cids) > 0 {
+		clientId = cids[0]
+	}
+	if len(sids) > 0 {
+		clientSecret = sids[0]
+	}
+	return
+}
+
+func (a *grpcAuther) validateServiceCredential(clientId, clientSecret string) error {
+	if clientId == "" && clientSecret == "" {
+		return status.Errorf(codes.Unauthenticated, "client_id or client_secret is \"\"")
+	}
+
+	vsReq := micro.NewValidateClientCredentialRequest(clientId, clientSecret)
+	_, err := a.keyauth.Micro().ValidateClientCredential(context.Background(), vsReq)
+	if err != nil {
+		return status.Errorf(codes.Unauthenticated, "service auth error, %s", err)
+	}
+
+	return nil
+}
+```
+
+### HTTP接口认证
+
+现在我们颁发了token, 但是我们的接口并没有 验证token的逻辑, 
+
+#### Keyauth本身的认证
 
 因此我们这里讨论的是 http 接口认证
 
@@ -655,271 +806,7 @@ type Auther interface {
 }
 ```
 
-### 认证中间件
-
-要讲清楚啥是认证中间件，需要了解中间件的原理
-
-#### Hello World
-
-```go
-package main
-
-func hello(wr http.ResponseWriter, r *http.Request) {
-    wr.Write([]byte("hello"))
-}
-
-func main() {
-    http.HandleFunc("/", hello)
-    err := http.ListenAndServe(":8080", nil)
-    ...
-}
-```
-
-现在突然来了一个新的需求，我们想要统计之前写的hello服务的处理耗时，需求很简单，我们对上面的程序进行少量修改
-```go
-func hello(wr http.ResponseWriter, r *http.Request) {
-    timeStart := time.Now()
-    wr.Write([]byte("hello"))
-    timeElapsed := time.Since(timeStart)
-    log.Println(timeElapsed)
-}
-```
-
-这样便可以在每次接收到http请求时，打印出当前请求所消耗的时间
-
-#### 重复的代码
-
-完成了这个需求之后，我们继续进行业务开发，提供的API逐渐增加，现在我们的路由看起来是这个样子
-
-```go
-// 省略了一些相同的代码
-package main
-
-func helloHandler(wr http.ResponseWriter, r *http.Request) {
-    // ...
-}
-
-func showInfoHandler(wr http.ResponseWriter, r *http.Request) {
-    // ...
-}
-
-func showEmailHandler(wr http.ResponseWriter, r *http.Request) {
-    // ...
-}
-
-func showFriendsHandler(wr http.ResponseWriter, r *http.Request) {
-    timeStart := time.Now()
-    wr.Write([]byte("your friends is tom and alex"))
-    timeElapsed := time.Since(timeStart)
-    logger.Println(timeElapsed)
-}
-
-func main() {
-    http.HandleFunc("/", helloHandler)
-    http.HandleFunc("/info/show", showInfoHandler)
-    http.HandleFunc("/email/show", showEmailHandler)
-    http.HandleFunc("/friends/show", showFriendsHandler)
-    // ...
-}
-```
-
-每一个handler里都有之前提到的记录运行时间的代码，每次增加新的路由我们也同样需要把这些看起来长得差不多的代码拷贝到我们需要的地方去。因为代码不太多，所以实施起来也没有遇到什么大问题。
-
-渐渐的我们的系统增加到了30个路由和handler函数，每次增加新的handler，我们的第一件工作就是把之前写的所有和业务逻辑无关的周边代码先拷贝过来
-
-
-#### 代码泥潭
-
-接下来系统安稳地运行了一段时间，突然有一天，老板找到你，我们最近找人新开发了监控系统，为了系统运行可以更加可控，需要把每个接口运行的耗时数据主动上报到我们的监控系统里。给监控系统起个名字吧，叫metrics。现在你需要修改代码并把耗时通过HTTP Post的方式发给metrics系统了
-
-```go
-func helloHandler(wr http.ResponseWriter, r *http.Request) {
-    timeStart := time.Now()
-    wr.Write([]byte("hello"))
-    timeElapsed := time.Since(timeStart)
-    logger.Println(timeElapsed)
-    // 新增耗时上报
-    metrics.Upload("timeHandler", timeElapsed)
-}
-```
-
-修改到这里，本能地发现我们的开发工作开始陷入了泥潭
-
-
-#### 使用中间件剥离非业务逻辑
-
-我们来分析一下，一开始在哪里做错了呢？我们只是一步一步地满足需求，把我们需要的逻辑按照流程写下去呀？
-
-我们犯的最大的错误，是把业务代码和非业务代码揉在了一起。对于大多数的场景来讲，非业务的需求都是在http请求处理前做一些事情，并且在响应完成之后做一些事情。
-
-我们有没有办法使用一些重构思路把这些公共的非业务功能代码剥离出去呢？
-
-写一个Wrapper函数, 返回一个符合之前函数签名的函数, 也就是我们常说的 装饰器(修饰器/面向切面)编程模式
-
-```go
-func hello(wr http.ResponseWriter, r *http.Request) {
-    wr.Write([]byte("hello"))
-}
-
-func timeMiddleware(next http.Handler) http.Handler {
-    return http.HandlerFunc(func(wr http.ResponseWriter, r *http.Request) {
-        timeStart := time.Now()
-
-        // next handler
-        next.ServeHTTP(wr, r)
-
-        timeElapsed := time.Since(timeStart)
-        logger.Println(timeElapsed)
-    })
-}
-
-func main() {
-	// http.HandleFunc("/", hello)
-	// HandlerFunc 是一个类型, 我们把hello这个函数，转换为了HandlerFunc类型, 这我们使用int(a)是一个语法 为啥要这样喃?
-	// 因为 HandlerFunc 实现了ServeHTTP方法, 这样我们的hello函数对象也就有了ServeHTTP方法
-	// 是不是很骚, HandlerFunc 是个函数， 我们把他定义为一个Type, 然后给这个Type 绑定了一个函数
-	// 这样凡事 被转换为HandlerFunc的类型，都是一个http.Handler
-	// 当然 要完成 Type()的转换，函数签名必须一致
-	http.Handle("/", timeMiddleware(http.HandlerFunc(hello)))
-	err := http.ListenAndServe(":8080", nil)
-	fmt.Println(err)
-}
-```
-
-这样就非常轻松地实现了业务与非业务之间的剥离，魔法就在于这个timeMiddleware。可以从代码中看到，我们的timeMiddleware()也是一个函数，其参数为http.Handler，http.Handler的定义在net/http包中
-
-```go
-type Handler interface {
-    ServeHTTP(ResponseWriter, *Request)
-}
-```
-
-任何方法实现了ServeHTTP，即是一个合法的http.Handler，读到这里你可能会有一些混乱，我们先来梳理一下http库的Handler，HandlerFunc和ServeHTTP的关系
-```go
-type Handler interface {
-    ServeHTTP(ResponseWriter, *Request)
-}
-
-type HandlerFunc func(ResponseWriter, *Request)
-
-func (f HandlerFunc) ServeHTTP(w ResponseWriter, r *Request) {
-    f(w, r)
-}
-```
-
-只要你的handler函数签名是
-```go
-func (ResponseWriter, *Request)
-```
-
-
-#### 更多中间件
-
-如果我们有更多的中间件喃?
-
-比如再加一个限速的中间件:
-```go
-customizedHandler = logger(timeout(ratelimit(helloHandler)))
-```
-
-![](./images/middleware_flow.png)
-
-再直白一些，这个流程在进行请求处理的时候就是不断地进行函数压栈再出栈，有一些类似于递归的执行流
-```
-[exec of logger logic]           函数栈: []
-
-[exec of timeout logic]          函数栈: [logger]
-
-[exec of ratelimit logic]        函数栈: [timeout/logger]
-
-[exec of helloHandler logic]     函数栈: [ratelimit/timeout/logger]
-
-[exec of ratelimit logic part2]  函数栈: [timeout/logger]
-
-[exec of timeout logic part2]    函数栈: [logger]
-
-[exec of logger logic part2]     函数栈: []
-```
-
-#### 更优雅的中间件写法
-
-上一节中解决了业务功能代码和非业务功能代码的解耦，但也提到了，看起来并不美观，如果需要修改这些函数的顺序，或者增删中间件还是有点费劲，本节我们来进行一些“写法”上的优化。
-
-思路很简单: 递归变迭代, 我们把这些函数放到一个[]middleware里面, 进行迭代调用
-
-```go
-package middleware
-
-import (
-	"log"
-	"net/http"
-	"time"
-)
-
-type Middleware func(http.Handler) http.Handler
-
-type Router struct {
-	middlewareChain []Middleware
-    // mux map[string] http.Handler
-}
-
-func NewRouter() *Router {
-	return &Router{}
-}
-
-func (r *Router) Use(m Middleware) {
-	r.middlewareChain = append(r.middlewareChain, m)
-}
-
-func (r *Router) Merge(h http.Handler) http.Handler {
-	var mergedHandler = h
-
-	// customizedHandler = logger(timeout(ratelimit(helloHandler)))
-	for i := len(r.middlewareChain) - 1; i >= 0; i-- {
-		mergedHandler = r.middlewareChain[i](mergedHandler)
-	}
-
-    // r.mux[route] = mergedHandler
-	return mergedHandler
-}
-
-func TimeMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(wr http.ResponseWriter, r *http.Request) {
-		timeStart := time.Now()
-
-		// next handler
-		next.ServeHTTP(wr, r)
-
-		timeElapsed := time.Since(timeStart)
-		log.Println(timeElapsed)
-	})
-}
-
-func LogMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(wr http.ResponseWriter, r *http.Request) {
-		log.Println("start")
-
-		// next handler
-		next.ServeHTTP(wr, r)
-
-		log.Println("end")
-	})
-}
-```
-
-然后我们就可以进行调用了: 
-```go
-func main() {
-	r := middleware.NewRouter()
-	r.Use(middleware.LogMiddleware)
-	r.Use(middleware.TimeMiddleware)
-	http.Handle("/", r.Merge(http.HandlerFunc(hello)))
-	err := http.ListenAndServe(":8080", nil)
-	fmt.Println(err)
-}
-```
-
-#### HttpRouter的中间件
+#### 自身认证
 
 httprouter 也就是这样封装的, 可以看看封装后的httprouter
 
@@ -928,7 +815,6 @@ httprouter 也就是这样封装的, 可以看看封装后的httprouter
 
 + 从Header中获取Token
 + 对于Keyauth服务本身而已，就是调用Ioc内的token app进行验证
-+ 对于CMDB而已 就需要调用keyauth client, 通过client 调用token服务
 + 验证后返回token对象
 
 ```go
@@ -1002,9 +888,148 @@ func (a *HTTPAuther) ValidateIdentity(ctx context.Context, accessToken string) (
 ```
 
 
+#### 其他服务认证
+
+其他服务想要对接keyauth怎么办?
+
+对于CMDB而已 就需要调用keyauth client, 通过client 调用token服务
+
+```go
+// NewInternalAuther 内部使用的auther
+func NewHTTPAuther(c *Client) *HTTPAuther {
+	return &HTTPAuther{
+		keyauth: c,
+		l:       zap.L().Named("Http Interceptor"),
+	}
+}
+
+// internal todo
+type HTTPAuther struct {
+	l       logger.Logger
+	keyauth *Client
+}
+
+func (a *HTTPAuther) Auth(r *http.Request, entry httpb.Entry) (
+	authInfo interface{}, err error) {
+	var tk *token.Token
+
+	// 从请求中获取access token
+	acessToken := r.Header.Get(header.OAuthTokenHeader)
+
+	if entry.AuthEnable {
+		ctx := r.Context()
+
+		// 校验身份
+		tk, err = a.ValidateIdentity(ctx, acessToken)
+		if err != nil {
+			return nil, err
+		}
+
+		// namesapce检查
+		if entry.RequiredNamespace && tk.Namespace == "" {
+			return nil, exception.NewBadRequest("namespace required!")
+		}
+
+		// 权限检查
+		err = a.ValidatePermission(ctx, tk, entry)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// 设置RequestID
+	if r.Header.Get(header.RequestIdHeader) == "" {
+		r.Header.Set(header.RequestIdHeader, xid.New().String())
+	}
+
+	return tk, nil
+}
+
+func (a *HTTPAuther) ValidateIdentity(ctx context.Context, accessToken string) (*token.Token, error) {
+	a.l.Debug("start token identity check ...")
+
+	if accessToken == "" {
+		return nil, exception.NewBadRequest("token required")
+	}
+
+	req := token.NewValidateTokenRequest()
+	req.AccessToken = accessToken
+	tk, err := a.keyauth.Token().ValidateToken(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	a.l.Debugf("token check ok, username: %s", tk.Account)
+	return tk, nil
+}
+
+func (a *HTTPAuther) ValidatePermission(ctx context.Context, tk *token.Token, e httpb.Entry) error {
+	if tk == nil {
+		return exception.NewUnauthorized("validate permission need token")
+	}
+
+	// 如果是超级管理员不做权限校验, 直接放行
+	if tk.UserType.IsIn(types.UserType_SUPPER) {
+		a.l.Debugf("[%s] supper admin skip permission check!", tk.Account)
+		return nil
+	}
+
+	// 检查是否是允许的类型
+	if len(e.Allow) > 0 {
+		a.l.Debugf("[%s] start check permission to keyauth ...", tk.Account)
+		if !e.IsAllow(tk.UserType) {
+			return exception.NewPermissionDeny("no permission, allow: %s, but current: %s", e.Allow, tk.UserType)
+		}
+		a.l.Debugf("[%s] permission check passed", tk.Account)
+	}
+
+	return nil
+}
+
+func (a *HTTPAuther) ResponseHook(w http.ResponseWriter, r *http.Request, entry httpb.Entry) {
+	ctx := httpctx.GetContext(r)
+	tk := ctx.AuthInfo.(*token.Token)
+
+	// 审计日志
+	od := newOperateEventData(&entry, tk)
+	hd := newEventHeaderFromHTTP(r)
+	if entry.AuditLog {
+		if err := SendOperateEvent(r.URL.String(), nil, hd, od); err != nil {
+			a.l.Errorf("send operate event error, %s", err)
+		}
+	}
+}
+
+func (a *HTTPAuther) log() logger.Logger {
+	if a == nil {
+		a.l = zap.L().Named("HTTP Auther")
+	}
+
+	return a.l
+}
+
+// SetLogger todo
+func (a *HTTPAuther) SetLogger(l logger.Logger) {
+	a.l = l
+}
+
+```
+
 ### CMDB对接认证
 
+我们现在的cmdb服务还没有接入认证
++ grpc认证
++ http认证
 
+我们将基于keyauth 客户端提供的认证中间件来完成认证对接
+
+#### GRPC认证对接
+
+
+
+
+
+#### HTTP认证对接
 
 
 ### 测试
@@ -1014,7 +1039,7 @@ func (a *HTTPAuther) ValidateIdentity(ctx context.Context, accessToken string) (
 ## 前端对接
 
 
-### 携带token访问接口
+### 登录页面对接
 
 
 ### 前端页面验证
