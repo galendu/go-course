@@ -133,19 +133,18 @@
   * [GRPC入门](./day21/grpc.md)
   * [CMDB改造](./day21/cmdb-grpc.md)
 
-## Day22: 权限中心
+## Day22: 权限中心(一)
   * [框架介绍](./day22/framework.md)
   * [登录认证](./day22/auth.md)
 
-## Day23: CI/CD系统(一)
-  * [权限判定](./day22/permission.md)
-  * [用户管理](./day22/user.md)
-  * [服务管理](./day22/service.md)
+## Day23: 权限中心(二)
+  * [用户管理](./day23/user.md)
+  * [权限判定](./day23/permission.md)
   * [K8s架构解读](./day22/k8s-arch.md)
   * [流水线服务框架开发](./day22/workflow-)
 
-
 ## Day24: CI/CD系统(二)
+
 
 
 ## Day25: CI/CD系统(三)
