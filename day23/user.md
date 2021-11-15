@@ -387,7 +387,7 @@ s.log.Debugf("save password to db ...")
 
 ## 概念介绍
 
-
+![](./images/keyauth_arch.png)
 
 
 
