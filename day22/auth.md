@@ -726,6 +726,7 @@ func GrpcAuthUnaryServerInterceptor(c *Client) grpc.UnaryServerInterceptor {
 func newGrpcAuther(c *Client) *grpcAuther {
 	return &grpcAuther{
 		log: zap.L().Named("Grpc Auther"),
+		keyauth: c,
 	}
 }
 
@@ -1022,6 +1023,47 @@ func (a *HTTPAuther) SetLogger(l logger.Logger) {
 + http认证
 
 我们将基于keyauth 客户端提供的认证中间件来完成认证对接
+
+添加keyauth 客户端配置
+```go
+type Config struct {
+	App     *app     `toml:"app"`
+	Log     *log     `toml:"log"`
+	MySQL   *mySQL   `toml:"mysql"`
+	Keyauth *keyauth `toml:"keyauth"`
+}
+
+// Auth auth 配置
+type keyauth struct {
+	Host         string `toml:"host" env:"KEYAUTH_HOST"`
+	Port         string `toml:"port" env:"KEYAUTH_PORT"`
+	ClientID     string `toml:"client_id" env:"KEYAUTH_CLIENT_ID"`
+	ClientSecret string `toml:"client_secret" env:"KEYAUTH_CLIENT_SECRET"`
+}
+
+func (a *keyauth) Addr() string {
+	return a.Host + ":" + a.Port
+}
+
+func (a *keyauth) Client() (*kc.Client, error) {
+	if kc.C() == nil {
+		conf := kc.NewDefaultConfig()
+		conf.SetAddress(a.Addr())
+		conf.SetClientCredentials(a.ClientID, a.ClientSecret)
+		client, err := kc.NewClient(conf)
+		if err != nil {
+			return nil, err
+		}
+		kc.SetGlobal(client)
+	}
+
+	return kc.C(), nil
+}
+
+func newDefaultKeyauth() *keyauth {
+	return &keyauth{}
+}
+```
 
 #### GRPC认证对接
 
