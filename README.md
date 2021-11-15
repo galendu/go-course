@@ -138,7 +138,7 @@
   * [登录认证](./day22/auth.md)
 
 ## Day23: 权限中心(二)
-  * [用户管理](./day23/user.md)
+  * [开发基础](./day23/user.md)
   * [权限判定](./day23/permission.md)
   * [K8s架构解读](./day22/k8s-arch.md)
   * [流水线服务框架开发](./day22/workflow-)
