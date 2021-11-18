@@ -140,8 +140,8 @@
 ## Day23: 权限中心(二)
   * [开发基础](./day23/user.md)
   * [权限判定](./day23/permission.md)
-  * [K8s架构解读](./day22/k8s-arch.md)
-  * [流水线服务框架开发](./day22/workflow-)
+  * [K8s架构与Etcd使用](./day23/k8s-arch.md)
+
 
 ## Day24: CI/CD系统(二)
 
