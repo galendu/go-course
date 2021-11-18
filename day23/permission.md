@@ -130,9 +130,124 @@ func (a *HTTPAuther) ValidatePermission(ctx context.Context, tk *token.Token, e 
 
 然后测试子用户和组织管理员 能否创建用户
 
+## 其他服务权限判定
+
+非keyauth本身的服务, 比如cmdb, 要判断用户是否有权限可以调用怎么办喃?
+
++ 基于用户类型来判断, 如果这时候新增了一种类型怎么办?
+
+ 这种适用于场景固定的服务, 因为我们只使用了一个用户属性做判断
 
 
-## RBAC
+### RBAC权限模型
+
+我们之前的基于用户属性的控制，更偏向于ACL, 而RBAC, 通过角色解绑了 用户直接和权限的关联:
+
+![](./images/rbac.png)
+
+
++ 权限由角色定义, 一个角色拥有多个功能的操作权限
++ 一个人可以有多个角色, 从而获取几个角色的一个功能集合
+
+![](./images/rbac_rs.jpeg)
+
+
+
+### 功能注册
+
+我们的Keyauth就是这样一套中心化的权限系统, 现在用户和角色 都可以在Keyauth定义, 但是怎么知道 服务的功能喃?
+
+这就需要服务把 功能注册到 权限中心
+
+cmdb 添加endpoint注册逻辑:
+```go
+// registryEndpoints 注册条目
+func (s *HTTPService) registryEndpoints() {
+	// 注册服务权限条目
+	s.l.Info("start registry endpoints ...")
+
+	req := endpoint.NewRegistryRequest(version.Short(), s.r.GetEndpoints().UniquePathEntry())
+	_, err := s.kc.Endpoint().RegistryEndpoint(context.Background(), req)
+	if err != nil {
+		s.l.Warnf("registry endpoints error, %s", err)
+	} else {
+		s.l.Debug("service endpoints registry success")
+	}
+}
+```
+
+![](./images/endpoint.png)
+
+注册的时候我们补充了Resource 和 Lables, 我们看看我们何时定义的:
+```go
+func (h *handler) Registry(r router.SubRouter) {
+	hr := r.ResourceRouter("host")
+	hr.Handle("GET", "/hosts", h.QueryHost).AddLabel(label.List)
+	hr.Handle("POST", "/hosts", h.CreateHost).AddLabel(label.Create)
+	hr.Handle("GET", "/hosts/:id", h.DescribeHost).AddLabel(label.Get)
+	hr.Handle("DELETE", "/hosts/:id", h.DeleteHost).AddLabel(label.Delete)
+	hr.Handle("PUT", "/hosts/:id", h.PutHost).AddLabel(label.Update)
+	hr.Handle("PATCH", "/hosts/:id", h.PatchHost).AddLabel(label.Update)
+}
+```
+
+我们特意添加了Label, 这样我们定义角色的时候，就不用和 具体的功能耦合, 不然功能一变，我们的角色就要重新定义
+
+基于我们注册的Endpoint，我们定义角色:
+```
+role:          A    
+resource:     [host]   
+match label:  action: [list, get, create],
+```
+
+### 定义角色
+
+创建一个cmdb-reader的角色, 允许访问cmdb所有资源的list和get方法
+
+调用 POST: /keyauth/api/v1/roles 
+```json
+{
+    "name": "cmdb-reader",
+    "description": "cmdb 接口只读权限",
+    "permissions": [
+        {
+            "effect": "allow",
+            "service_id": "c687sgma0brlmo1a1cag",
+            "resource_name": "*",
+            "label_key": "action",
+            "label_values": [
+                "list", "get"
+            ]
+        }
+    ]
+}
+```
+
+创建一个cmdb-admin的角色, 允许访问cmdb所有资源的所有标签
+
+调用 POST: /keyauth/api/v1/roles 
+```json
+{
+    "name": "cmdb-admin",
+    "description": "cmdb 管理员",
+    "permissions": [
+        {
+            "effect": "allow",
+            "service_id": "c687sgma0brlmo1a1cag",
+            "resource_name": "*",
+            "label_key": "*",
+            "label_values": [
+                "*"
+            ]
+        }
+    ]
+}
+```
+
+### 策略引擎
+
+
+
 
 
 ## Namespace
