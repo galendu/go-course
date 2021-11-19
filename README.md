@@ -140,6 +140,7 @@
 ## Day23: 权限中心(二)
   * [开发基础](./day23/user.md)
   * [权限判定](./day23/permission.md)
+  * [项目部署](./day23/deploy.md)
   * [K8s架构与Etcd使用](./day23/k8s-arch.md)
 
 
