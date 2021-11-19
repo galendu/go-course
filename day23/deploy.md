@@ -225,6 +225,10 @@ server {
     server_name  devcloud.nbtuan.vip;
     root         /usr/share/nginx/devcloud;
 
+    # 说明下vue-router的默认hash模式——使用URL的hash来模拟一个完整的URL，当URL改变时，页面不会重新加载
+    # history 模式 这种模式充分利用 history.pushState API 来完成 URL 跳转而无须重新加载页面
+    try_files $uri $uri/ /index.html;
+
     # Load configuration files for the default server block.
     include /etc/nginx/default.d/*.conf;
 
@@ -358,7 +362,27 @@ npm ERR! template <class _Tp> struct _LIBCPP_TEMPLATE_VIS remove_cv
 于是前往/Users/g7/.node-gyp/16.13.0/include/node/v8-internal.h，将492行的remove_cv_t改为remove_cv
 ```
 
+这我们前端的产物就是dist目录下放好了
 
+### 部署
+
+上传前端到我们服务器:
+```
+scp -r -P 4774  dist/* user@ip:~/devcloud
+```
+
+将dist下的产物配置到 服务器的一个静态站点上, 比如我们上面的配置
+```
+    listen       80;
+    server_name  devcloud.nbtuan.vip;
+    root         /usr/share/nginx/devcloud;
+
+    # 说明下vue-router的默认hash模式——使用URL的hash来模拟一个完整的URL，当URL改变时，页面不会重新加载
+    # history 模式 这种模式充分利用 history.pushState API 来完成 URL 跳转而无须重新加载页面
+    try_files $uri $uri/ /index.html;
+```
+
+这样我们的前端就部署完成了, 然后登录验证下
 
 ## cmdb部署
 
@@ -400,9 +424,6 @@ make linux
 
 ### 部署
 
-```
-```
-
 ```toml
 [app]
 name = "cmdb"
@@ -431,14 +452,6 @@ path = "logs"
 format = "text"
 to = "stdout"
 ```
-
-
-
-
-
-
-
-
 
 
 
