@@ -141,11 +141,9 @@
   * [开发基础](./day23/user.md)
   * [权限判定](./day23/permission.md)
   * [项目部署](./day23/deploy.md)
-  * [K8s架构与Etcd使用](./day23/k8s-arch.md)
-
 
 ## Day24: CI/CD系统(二)
-
+  * [K8s架构与Etcd使用](./day24/k8s-arch.md)
 
 
 ## Day25: CI/CD系统(三)
