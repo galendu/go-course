@@ -41,11 +41,15 @@ node: 当前没有-----各种操作----> 完成期望
 
 由于我们的测试使用，因此使用docker搭建单节点etcd:
 ```sh
+# windows上注意不要使用绝对路径: /usr/local/bin/etcd
+# --listen-client-urls, --advertise-client-urls 必须带上, 后面使用api是的时候需要, 不然client 访问不到
 docker run \
   -itd \
   -p 2379:2379 \
   -p 2380:2380 \
-  --name etcd quay.io/coreos/etcd:latest
+  --name etcd quay.io/coreos/etcd:latest etcd \
+  --listen-client-urls http://0.0.0.0:2379 \
+  --advertise-client-urls http://0.0.0.0:2379
 ```
 
 通过命令查看当前etcd的版本
@@ -53,6 +57,16 @@ docker run \
 $ docker exec -it etcd  etcdctl -version
 etcdctl version: 3.3.8
 API version: 2
+```
+
+查看当前实例
+```sh
+$ docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl member list -w table
++------------------+---------+---------+-----------------------+-----------------------+
+|        ID        | STATUS  |  NAME   |      PEER ADDRS       |     CLIENT ADDRS      |
++------------------+---------+---------+-----------------------+-----------------------+
+| 8e9e05c52164694d | started | default | http://localhost:2380 | http://localhost:2379 |
++------------------+---------+---------+-----------------------+-----------------------+
 ```
 
 注意: etcd容器没有shell, 你可以把他当做一个 二进制包来使用, 只是名字有点长而已
@@ -334,20 +348,347 @@ C:/Program Files/Git/registry/configs/default/lockkey/694d7d5f3050ef55
 
 etcd client的使用逻辑和cli基本一致
 
++ client: go.etcd.io/etcd/client/v3 
++ 版本要求: v3.5.1(最好大于3.5)
+
+### 初始化client
+
+```go
+package basic
+
+import (
+	"context"
+	"fmt"
+	"time"
+
+	clientv3 "go.etcd.io/etcd/client/v3"
+)
+
+func NewClient() {
+	client, err := clientv3.New(clientv3.Config{
+		Endpoints:   []string{"127.0.0.1:2379"},
+		DialTimeout: 5 * time.Second,
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
+	resp, err := client.MemberList(ctx)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(resp)
+}
+```
+
+正常的情况下, 我们可以打印出当前etcd的member节点信息
+```
+&{cluster_id:14841639068965178418 member_id:10276657743932975437 raft_term:2  [ID:10276657743932975437 name:"default" peerURLs:"http://localhost:2380" clientURLs:"http://0.0.0.0:2379" ] {} [] 0}
+```
+
 ### put
 
+```go
+// put
+key := "/registry/configs/default/cmdb"
+putResp, err := client.Put(ctx, key, "cmdb config v1")
+if err != nil {
+	panic(err)
+}
+fmt.Println(putResp)
+
+// get
+getResp, err := client.Get(ctx, key)
+if err != nil {
+	panic(err)
+}
+fmt.Println(getResp)
+```
 
 ### get
 
+```go
+// get with prefix
+getResp, err = client.Get(ctx, key, clientv3.WithPrefix())
+if err != nil {
+    panic(err)
+}
+fmt.Println(getResp.Kvs)
+```
 
+get 支持多个参数, 和命令行的含义一样, 只是这里使用编程的opt语法传入
 
 ### del
 
+```go
+// delete
+delResp, err := client.Delete(ctx, key, clientv3.WithPrevKV())
+if err != nil {
+    panic(err)
+}
+fmt.Println(delResp.PrevKvs)
+```
+注意 这里添加一个参数WithPrevKV, 默认情况下 delete是无法获取到被删除的值得, 通过添加该参数可以 获取当前被删除的值
+
+你也可以通过命令行确认结果
+```sh
+$ docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl get --prefix  /registry/configs
+```
 
 ### watch
 
+先编写一个用于测试的包
+```go
+package watch
+
+import (
+	"context"
+	"fmt"
+	"time"
+
+	clientv3 "go.etcd.io/etcd/client/v3"
+)
+
+var (
+	client *clientv3.Client
+	ctx, _ = context.WithTimeout(context.Background(), 5*time.Second)
+)
+
+func WatchConfig(key string) {
+	wc := client.Watch(context.Background(), key, clientv3.WithPrefix())
+	for v := range wc {
+		fmt.Println(v)
+	}
+}
+
+func UpdateConfig(data string) {
+	// put
+	key := "/registry/configs/default/cmdb"
+	putResp, err := client.Put(ctx, key, data)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(putResp)
+}
+
+func init() {
+	c, err := clientv3.New(clientv3.Config{
+		Endpoints:   []string{"127.0.0.1:2379"},
+		DialTimeout: 5 * time.Second,
+	})
+	if err != nil {
+		panic(err)
+	}
+	client = c
+}
+```
+
+api server 负责修改对象
+```go
+package main
+
+import "gitee.com/infraboard/go-course/day24/etcd/watch"
+
+func main() {
+	watch.UpdateConfig("cmdb v3")
+}
+```
+
+controller 负责watch 对象变化
+```go
+package main
+
+import "gitee.com/infraboard/go-course/day24/etcd/watch"
+
+func main() {
+	watch.WatchConfig("/registry/configs")
+}
+```
+
+然后我们测试修改
++ 添加
++ 修改
++ 删除
+
+```sh
+$ go run controler/main.go
+revision 12 PUT key:"/registry/configs/default/cmdb" create_revision:6 mod_revision:12 version:7 value:"cmdb v3" 
+revision 13 PUT key:"/registry/configs/default/cmdb" create_revision:6 mod_revision:13 version:8 value:"cmdb v3"
+revision 14 PUT key:"/registry/configs/default/cmdb" create_revision:6 mod_revision:14 version:9 value:"cmdb v3"
+revision 15 DELETE key:"/registry/configs/default/cmdb" mod_revision:15
+```
 
 ### lock
+
+之前 1000 goroutine 修改全局变量累加的例子:
+```go
+package main
+
+import (
+	"sync"
+)
+
+// 全局变量
+var counter int
+
+func main() {
+	var wg sync.WaitGroup
+	for i := 0; i < 1000; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			counter++
+		}()
+	}
+
+	wg.Wait()
+	println(counter)
+}
+```
+
+当在同一个进程的时候我们可以使用: 互斥锁，可以解决并行抢占的问题
+```go
+func main() {
+	var wg sync.WaitGroup
+	var lock sync.Mutex
+	for i := 0; i < 1000; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+
+			lock.Lock()
+			counter++
+			lock.Unlock()
+		}()
+	}
+
+	wg.Wait()
+	println(counter)
+}
+```
+
+如果我们不是在一个进程内部, 比如 你起了3个进程, 这3个进程 可能分布在不同的主机上, 这个时候进程锁 就无法满足需求了, 需要使用分布式锁
+
+可以实现分布式锁能力的服务主要有(主要看数据一致性模型)
++ 基于Redis的setnx, 不太推荐
++ 基于ZooKeeper, paxios算法保证
++ 基于etcd， raft算法保证
+
+当然我们选择使用etcd实现, etcd 提供的 concurrency 就是解决分布式并发问题的: 
+
+![](./images/etcd-lock.png)
+
+下面我们利用etcd 实现一个分布式互斥锁
+```go
+package etcd
+
+import (
+	"context"
+	"fmt"
+	"sync"
+
+	clientv3 "go.etcd.io/etcd/client/v3"
+	"go.etcd.io/etcd/client/v3/concurrency"
+)
+
+// 初始化sync.Locker对象.
+func NewEtcdMutex(ctx context.Context, client *clientv3.Client, pfx string) (sync.Locker, error) {
+	// 创建Session对象.
+	// 在调用concurrency.NewSession时,会设置ttl,默认为60秒
+	// Session对象会持有对应的LeaseID,并会调用KeepAlive来续期
+	// 使得锁在Unlock之前一直是有效的,其它想抢占分布式锁的程序只能是等待
+	sess, err := concurrency.NewSession(client)
+	if err != nil {
+		return nil, err
+	}
+
+	// 创建Mutex对象. 需要指定锁的名称, 和命令行使用lock一样，就是key的prefix
+	m := concurrency.NewMutex(sess, "/registry/locks")
+
+	return &EtcdMutex{
+		sess: sess,
+		m:    m,
+		pfx:  pfx,
+		ctx:  ctx,
+	}, nil
+
+}
+
+type EtcdMutex struct {
+	sess *concurrency.Session
+	m    *concurrency.Mutex
+	pfx  string
+	ctx  context.Context
+}
+
+// 申请锁.
+func (l *EtcdMutex) Lock() {
+	// 不是标准的sync.Locker接口,需要传入Context对象,在获取锁时可以设置超时时间,或主动取消请求.
+	err := l.m.Lock(l.ctx)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("获取锁")
+}
+
+// 释放锁.
+func (l *EtcdMutex) Unlock() {
+	err := l.m.Unlock(l.ctx)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("释放锁")
+}
+```
+
+写个node模拟多进程 获取互斥锁:
+```go
+package main
+
+import (
+	"context"
+	"time"
+
+	"gitee.com/infraboard/go-course/day24/etcd/lock/etcd"
+	clientv3 "go.etcd.io/etcd/client/v3"
+)
+
+var (
+	client *clientv3.Client
+)
+
+func main() {
+	lock, err := etcd.NewEtcdMutex(context.Background(), client, "/registry/locks")
+	if err != nil {
+		panic(err)
+	}
+	lock.Lock()
+	time.Sleep(10 * time.Second)
+	lock.Unlock()
+}
+
+func init() {
+	c, err := clientv3.New(clientv3.Config{
+		Endpoints:   []string{"127.0.0.1:2379"},
+		DialTimeout: 5 * time.Second,
+	})
+	if err != nil {
+		panic(err)
+	}
+	client = c
+}
+```
+
+测试2个锁 是否能循环
+
+如果你不想获取锁的时候阻塞, 比如当前有人持有锁，直接放弃抢占锁, 可以使用Trylock
+```go
+// TryLock locks the mutex if not already locked by another session.
+// If lock is held by another session, return immediately after attempting necessary cleanup
+// The ctx argument is used for the sending/receiving Txn RPC.
+func (m *Mutex) TryLock(ctx context.Context) error
+```
 
 
 ## 关于kv设计
@@ -359,7 +700,6 @@ etcd client的使用逻辑和cli基本一致
 /registry/configs/namesapce/resource_name
 ```
 
-
 ## 注意事项
 
 历史版本越多，存储空间越大，性能越差，直到etcd到达空间配额限制的时候，etcd的写入将会被禁止变为只读，影响线上服务，因此这些历史版本需要进行压缩
@@ -370,7 +710,13 @@ etcd client的使用逻辑和cli基本一致
 etcdctl compact 5
 ```
 
+## 总结
 
++ watch list 设计理念
++ etcd client基本操作
++ watch and lock
+
+基础准备好了后，我们接下来 开始workflow的 API Server的开发
 
 ## 参考
 
