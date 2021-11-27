@@ -317,3 +317,7 @@ message CreateStepRequest {
 	string namespace = 10;
 }
 ```
+
+## 总结
+
+我们介绍了Pipeline核心对象和流程, 接下里我们就进入API Server的开发, 将对象写入 etcd

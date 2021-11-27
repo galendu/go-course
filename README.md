@@ -145,7 +145,7 @@
 ## Day24: CI/CD系统(二)
   * [K8s架构与Etcd使用](./day24/k8s-arch.md)
   * [Workflow 项目介绍](./day24/workflow-summary.md)
-
+  * [API Server 开发](./day24/api-server.md)
 
 ## Day25: CI/CD系统(三)
 
