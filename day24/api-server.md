@@ -561,6 +561,148 @@ import (
 
 ## Pipeline app 开发
 
+这个是比较核心的模块了, 这个需要和整个系统联动, 整个系统围绕他的定义 进行协调, 我们把该对象存储到etcd中, 其他服务需要watch它, 进行联动
+
+### probuf定义
+
+核心接口定义：
+```protobuf
+syntax = "proto3";
+
+package infraboard.workflow.pipeline;
+option go_package = "github.com/infraboard/workflow/api/app/pipeline";
+
+import "github.com/infraboard/mcube/pb/page/page.proto";
+import "api/app/scm/pb/gitlab.proto";
+
+service Service {
+	// pipeline管理
+	rpc CreatePipeline(CreatePipelineRequest) returns(Pipeline);
+	rpc QueryPipeline(QueryPipelineRequest) returns(PipelineSet);
+	rpc DescribePipeline(DescribePipelineRequest) returns(Pipeline);
+	rpc WatchPipeline(stream WatchPipelineRequest) returns(stream WatchPipelineResponse);
+	rpc DeletePipeline(DeletePipelineRequest) returns(Pipeline);
+	// step管理
+	rpc CreateStep(CreateStepRequest) returns(Step);
+	rpc QueryStep(QueryStepRequest) returns(StepSet);
+	rpc DescribeStep(DescribeStepRequest) returns(Step);
+	rpc DeleteStep(DeleteStepRequest) returns(Step);
+	rpc CancelStep(CancelStepRequest) returns(Step);
+	rpc AuditStep(AuditStepRequest) returns(Step);
+}
+
+...
+```
+
+核心结构定义
+```protobuf
+// Pipeline todo
+message Pipeline {
+    // 唯一ID
+	// @gotags: bson:"_id" json:"id"
+    string id = 1;
+	// 资源版本
+	// @gotags: bson:"resource_version" json:"resource_version,omitempty"
+	int64 resource_version = 2;
+	// 所属域
+	// @gotags: bson:"domain" json:"domain"
+	string domain = 3;
+	// 所属空间
+	// @gotags: bson:"namespace" json:"namespace"
+	string namespace = 4;
+	// 创建时间
+	// @gotags: bson:"create_at" json:"create_at"
+	int64 create_at = 5;
+	// 创建人
+	// @gotags: bson:"create_by" json:"create_by"
+	string create_by = 6;
+	// 模版id
+	// @gotags: bson:"template_id" json:"template_id"
+	string template_id = 16;
+    // 名称
+	// @gotags: bson:"name" json:"name"
+    string name = 7;
+	// 全局参数, step执行时合并处理
+	// @gotags: bson:"with" json:"with"
+	map<string, string> with = 13;
+	// 需要挂载的文件
+	// @gotags: bson:"mount" json:"mount"
+	MountData mount = 14;
+	// 标签
+	// @gotags: bson:"tags" json:"tags"
+	map<string, string> tags = 8;
+	// 描述
+	// @gotags: bson:"description" json:"description"
+	string description = 9;
+	// 触发条件
+	// @gotags: bson:"on" json:"on"
+	Trigger on = 10;
+	// 触发事件
+	// @gotags: bson:"hook_event" json:"hook_event"
+	infraboard.workflow.pipeline.scm.WebHookEvent hook_event = 15;
+	// 当前状态
+	// @gotags: bson:"status" json:"status"
+	PipelineStatus status = 11;
+	// 具体编排阶段
+	// @gotags: bson:"stages" json:"stages"
+	repeated Stage stages = 12;
+}
+
+```
+
+### probuf编译
+
+直接编译就行了, 已经没有其他问题了
+
+```sh
+make gen
+```
+
+
+### 实现服务
+
+首先我们需要设计下 etcd kv结构
+
++ value: value 就是pipeline对象 这个没啥问题
++ key:  {etcd_perfix}/{service_name}/pipelines/{namespace}/{pipeline_id}
+
+比如
+```
+key: infraboard/workflow/pipelines/default/pp-0xxxxx
+```
+
+设计好了数据过后, 直接调用etcd client 把数据写入接口
+
+```go
+func (i *impl) CreatePipeline(ctx context.Context, req *pipeline.CreatePipelineRequest) (
+	*pipeline.Pipeline, error) {
+	p, err := pipeline.NewPipeline(req)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := i.validatePipeline(ctx, p); err != nil {
+		return nil, err
+	}
+
+	value, err := json.Marshal(p)
+	if err != nil {
+		return nil, err
+	}
+
+	objKey := p.EtcdObjectKey()
+	objValue := string(value)
+
+	if _, err := i.client.Put(context.Background(), objKey, objValue); err != nil {
+		return nil, fmt.Errorf("put pipeline with key: %s, error, %s", objKey, err.Error())
+	}
+	i.log.Debugf("create pipeline success, key: %s", objKey)
+	return p, nil
+}
+```
+
+
+
 
 ## 参考
 
