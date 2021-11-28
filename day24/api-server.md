@@ -556,7 +556,17 @@ import (
 ### 启动服务
 
 启动成功后 可以看到当前workflow 开发完成后的接口，已经注册到了keyauth
+
 ![](./images/workflow-registry.png)
+
+
+### 测试API
+
+我们可以测试下 action对应的http api, 但在测试之前，我们需要创建一个专门用于接口测试的凭证，该凭证不像用户名密码那种凭证，该凭证永不过期，专门用于编程使用
+
+登录devcloud项目对应前端, 注意是你workflow当前配置的那个 devcloud的keyauth服务
+
+![](./images/create-token.png)
 
 
 ## Pipeline app 开发
