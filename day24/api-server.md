@@ -33,7 +33,7 @@ db.createUser({user: "workflow", pwd: "workflow", roles: [{ role: "dbOwner", db:
 # 验证账号， 1为登录成功
 use workflow
 db.auth("workflow", "workflow")
-s
+
 # 退出shell
 quit()
 ```
