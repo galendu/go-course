@@ -111,6 +111,7 @@
   * [项目前端框架](./day17/devcloud-base.md)
   * [项目登录页面](./day17/devcloud-login.md)
   * [项目404页面](./day17/devcloud-404.md)
+  * [项目导航页面](./day17/devcloud-nav.md)
 
 ## Day18: 项目前端(二)
   * [新登录页面](./day18/devcloud-new-login.md)
