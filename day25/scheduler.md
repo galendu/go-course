@@ -384,6 +384,202 @@ func (i *Informer) Recorder() informer.Recorder {
 }
 ```
 
+
+#### 测试
+
+基于etcdcli可以测试我们Informer功能是否正常:
++ 测试Lister的逻辑
++ 测试Watcher的逻辑
++ 测试Recorder的逻辑
+
+## 服务注册
+
+既然需要调度, 因此我们的Node节点需要注册到中央来，我们才能知道如何调度
+
+### 服务接口
+
+我们先关注:
++ 服务的接口规范
++ 服务的数据结构
+
+我们把workflow的服务抽象成了接口:
+```go
+type Register interface {
+	Debug(logger.Logger)
+	Registe() error
+	UnRegiste() error
+}
+```
+
+定义workflow服务的类型:
+```go
+const (
+	// API 提供API访问的服务
+	APIType = Type("api")
+	// Worker 后台作业服务
+	NodeType = Type("node")
+	// Scheduler 调度器
+	SchedulerType = Type("scheduler")
+)
+```
+
+Node数据结构 用于泛指一个服务
+```go
+// Node todo
+type Node struct {
+	Region          string            `json:"region,omitempty"`
+	ResourceVersion int64             `json:"resourceVersion,omitempty"`
+	InstanceName    string            `json:"instance_name,omitempty"`
+	ServiceName     string            `json:"service_name,omitempty"`
+	Type            Type              `json:"type,omitempty"`
+	Address         string            `json:"address,omitempty"`
+	Version         string            `json:"version,omitempty"`
+	GitBranch       string            `json:"git_branch,omitempty"`
+	GitCommit       string            `json:"git_commit,omitempty"`
+	BuildEnv        string            `json:"build_env,omitempty"`
+	BuildAt         string            `json:"build_at,omitempty"`
+	Online          int64             `json:"online,omitempty"`
+	Tag             map[string]string `json:"tag,omitempty"`
+
+	Prefix   string        `json:"-"`
+	Interval time.Duration `json:"-"`
+	TTL      int64         `json:"-"`
+}
+```
+
+### 基于Etcd的注册中心
+
+我们通过etcd来实现注册器
+
+etcd有个租约的概念, 我们可以通过租约来控制一个key 的TTL, 我们基于此来实现注册的心跳功能
+
++ 往etcd里面写一个服务的key/value，并通过租约设置TTL
++ 每隔一个心跳周期，就KeepAliveOnce 把改租约 续约一次, 也就是心跳机制
++ 最好服务停止时，主动注销服务
+
+1. 初次注册
+
++ key结构: inforboard/workflow/service/scheduler/{name_name}
++ value: node结构体json数据
+
+```go
+func (e *etcd) addOnce() error {
+	// 获取leaseID
+	resp, err := e.client.Lease.Grant(context.TODO(), e.node.TTL)
+	if err != nil {
+		return fmt.Errorf("get etcd lease id error, %s", err)
+	}
+	e.leaseID = resp.ID
+
+	// 写入key
+	if _, err := e.client.Put(context.Background(), e.instanceKey, e.instanceValue, clientv3.WithLease(e.leaseID)); err != nil {
+		return fmt.Errorf("registe service '%s' with ttl to etcd3 failed: %s", e.instanceKey, err.Error())
+	}
+	e.instanceKey = e.instanceKey
+	return nil
+}
+```
+
+2. 续约
+
+```go
+func (e *etcd) keepAlive(ctx context.Context) {
+	// 不停的续约
+	interval := e.node.TTL / 5
+	e.Infof("keep alive lease interval is %d second", interval)
+	tk := time.NewTicker(time.Duration(interval) * time.Second)
+	defer tk.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			e.Infof("keepalive goroutine exit")
+			return
+		case <-tk.C:
+			Opctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+
+			_, err := e.client.Lease.KeepAliveOnce(Opctx, e.leaseID)
+			if err != nil {
+				if strings.Contains(err.Error(), "requested lease not found") {
+					// 避免程序卡顿造成leaseID失效(比如mac 电脑休眠))
+					if err := e.addOnce(); err != nil {
+						e.Errorf("refresh registry error, %s", err)
+					} else {
+						e.Warn("refresh registry success")
+					}
+				}
+				e.Errorf("lease keep alive error, %s", err)
+			} else {
+				e.Debugf("lease keep alive key: %s", e.instanceKey)
+			}
+		}
+	}
+}
+```
+
+3. 注销
+
++ 删除注册上去的服务实例信息
++ 删除租约
++ 停止KeepAlive续约Goroutine
+
+```go
+// UnRegiste delete nodeed service from etcd, if etcd is down
+// unnode while timeout.
+func (e *etcd) UnRegiste() error {
+	if e.isStopped {
+		return errors.New("the instance has unregisted")
+	}
+	// delete instance key
+	e.stopInstance <- struct{}{}
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	if resp, err := e.client.Delete(ctx, e.instanceKey); err != nil {
+		e.Warnf("unregiste '%s' failed: connect to etcd server timeout, %s", e.instanceKey, err.Error())
+	} else {
+		if resp.Deleted == 0 {
+			e.Infof("unregiste '%s' failed, the key not exist", e.instanceKey)
+		} else {
+			e.Infof("服务实例(%s)注销成功", e.instanceKey)
+		}
+	}
+	// revoke lease
+	_, err := e.client.Lease.Revoke(context.TODO(), e.leaseID)
+	if err != nil {
+		e.Warnf("revoke lease error, %s", err)
+		return err
+	}
+	e.isStopped = true
+	// 停止续约心态
+	e.keepAliveStop()
+	return nil
+}
+```
+
+### 服务启动时注册
+
+在服务启动时，调用etcd 注册器来将服务实例信息注册到 注册到etcd
+
+cmd/start.go
+```go
+// 注册服务
+r, err := etcd_register.NewEtcdRegister(svr.node)
+if err != nil {
+	svr.log.Warn(err)
+}
+r.Debug(zap.L().Named("Register"))
+defer r.UnRegiste()
+if err := r.Registe(); err != nil {
+	return err
+}
+```
+
+
+### 测试
+
++ 测试正常流程，使用etcdctl 查看 etcd里面改服务的实例是否存在
++ 测试TTL超时，不能完成续约的情况
+
 ## Pipeline Controller
 
 Pipeline Controller的核心逻辑:
@@ -523,6 +719,13 @@ func (p *pipelinePicker) Pick(step *pipeline.Pipeline) (*node.Node, error) {
 
 ### Controller
 
+controller 启动逻辑:
++ Watch:  在Controller启动之前， watcher已经启动
++ List: Controller 首先Sync一下，拉去当前所有Pipeline，判定是否有需要处理的，添加到工作队列(work queue)
++ Worker: 然后启动worker，处理工作队列里面的事件(worker queue)
++ Sgin: 等待Controller 结束
+
+
 ```go
 // PipelineTaskScheduler 调度器控制器
 type Controller struct {
@@ -546,12 +749,6 @@ type Controller struct {
 	schedulerName  string
 }
 ```
-
-controller 启动逻辑:
-+ Watch:  在Controller启动之前， watcher已经启动
-+ List: Controller 首先Sync一下，拉去当前所有Pipeline，判定是否有需要处理的，添加到工作队列(work queue)
-+ Worker: 然后启动worker，处理工作队列里面的事件(worker queue)
-+ Sgin: 等待Controller 结束
 
 下面是起点逻辑:
 ```go
