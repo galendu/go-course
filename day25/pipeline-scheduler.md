@@ -1,6 +1,6 @@
-# 调度器开发
+# Pipeline调度器开发
 
-调度器的核心逻辑:
+Pipeline调度器的核心逻辑:
 + Watch Pipeline对象, 监听变化事件
 + 当有新的Pipeline对象被创建时, 修改Pipeline对象的 Scheduler属性, 为其挑选一个可以Scheduler Node来处理Pipline
 
@@ -580,8 +580,7 @@ if err := r.Registe(); err != nil {
 + 测试正常流程，使用etcdctl 查看 etcd里面改服务的实例是否存在
 + 测试TTL超时，不能完成续约的情况
 
-
-## Node Controller
+## Scheduler节点注册
 
 当node节点注册后, 有专门的Node Controller复杂关注Node的变化
 
@@ -1653,6 +1652,16 @@ make run-sch
         ]
     }
 }
+```
+
+我们也可以通过etcd看到当前的2个step task
+```sh
+$ docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl get --prefix  inforboard
+
+inforboard/workflow/steps/c6br8ju1l0cvabpa7fdg.c6lepk93n7pjoq14b8c0.1.1
+{"key":"c6br8ju1l0cvabpa7fdg.c6lepk93n7pjoq14b8c0.1.1","create_type":"PIPELINE","namespace":"c6br8ju1l0cvabpa7fdg","pipeline_id":"c6lepk93n7pjoq14b8c0","create_at":1638591698036,"update_at":1638591698066,"deploy_id":"","resource_version":80,"id":1,"name":"step1.1","action":"go_build@v1","with":{"ENV1":"env1","ENV2":"env2"},"is_parallel":true,"ignore_failed":false,"with_audit":false,"audit_params":null,"with_notify":false,"notify_params":null,"webhooks":[{"url":"https://open.feishu.cn/open-apis/bot/v2/hook/83bde95c-00b2-4df1-91e4-705f66102479","header":null,"events":["SUCCEEDED"],"description":"","status":null}],"node_selector":null,"status":{"flow_number":1,"start_at":0,"end_at":1638591698066,"status":"SCHEDULE_FAILED","scheduled_node":"","audit_at":0,"audit_response":"UOD","audit_message":"","notify_at":0,"notify_error":"","message":"has no available node nodes","response":null}}
+inforboard/workflow/steps/c6br8ju1l0cvabpa7fdg.c6lepk93n7pjoq14b8c0.1.2
+{"key":"c6br8ju1l0cvabpa7fdg.c6lepk93n7pjoq14b8c0.1.2","create_type":"PIPELINE","namespace":"c6br8ju1l0cvabpa7fdg","pipeline_id":"c6lepk93n7pjoq14b8c0","create_at":1638591698036,"update_at":1638591698069,"deploy_id":"","resource_version":81,"id":2,"name":"step1.2","action":"go_build@v1","with":{"ENV1":"env1","ENV2":"env2"},"is_parallel":true,"ignore_failed":false,"with_audit":false,"audit_params":null,"with_notify":false,"notify_params":null,"webhooks":[{"url":"https://open.feishu.cn/open-apis/bot/v2/hook/83bde95c-00b2-4df1-91e4-705f66102479","header":null,"events":["SUCCEEDED"],"description":"","status":null}],"node_selector":null,"status":{"flow_number":1,"start_at":0,"end_at":1638591698068,"status":"SCHEDULE_FAILED","scheduled_node":"","audit_at":0,"audit_response":"UOD","audit_message":"","notify_at":0,"notify_error":"","message":"has no available node nodes","response":null}}
 ```
 
 到此Pipeline调度器可以正常运行了

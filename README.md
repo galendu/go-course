@@ -149,5 +149,6 @@
   * [API Server 开发](./day24/api-server.md)
 
 ## Day25: CI/CD系统(二)
-  * [Scheduler 开发](./day25/scheduler.md)
+  * [Pipeline Scheduler 开发](./day25/pipeline-scheduler.md)
+  * [Step Scheduler 开发](./day25/step-scheduler.md)
 
