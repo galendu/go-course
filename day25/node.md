@@ -538,3 +538,7 @@ func checkFileIsExist(filepath string) bool {
 	return exist
 }
 ```
+
+## 流水线与CI CD
+
+到此我们基于Pipeline 的 执行引擎就完成了，但是貌似和CI/CD 还没挂上, 接下来我们开发API Server, 让流水线更加SCM的事件来触发
