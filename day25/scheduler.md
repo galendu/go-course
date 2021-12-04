@@ -580,11 +580,82 @@ if err := r.Registe(); err != nil {
 + 测试正常流程，使用etcdctl 查看 etcd里面改服务的实例是否存在
 + 测试TTL超时，不能完成续约的情况
 
-## Pipeline Controller
 
-Pipeline Controller的核心逻辑:
+## Node Controller
+
+当node节点注册后, 有专门的Node Controller复杂关注Node的变化
+
+### Node加载
+
+这里只需要关注 注册后Node的的加载情况, 因为后面都需要 要访问当前集群有哪些Node都是通过访问Indexer获取的
+```go
+// controller/node/controller.go
+
+// Run will set up the event handlers for types we are interested in, as well
+// as syncing informer caches and starting workers. It will block until stopCh
+// is closed, at which point it will shutdown the workqueue and wait for
+// workers to finish processing their current work items.
+func (c *Controller) run(ctx context.Context, async bool) error {
+	// Start the informer factories to begin populating the informer caches
+	c.log.Infof("starting node control loop")
+
+	// 调用Lister 获得所有的cronjob 并添加cron
+	c.log.Info("starting sync(List) all nodes")
+	nodes, err := c.informer.Lister().ListAll(ctx)
+	if err != nil {
+		return err
+	}
+
+	// 更新node存储
+	for i := range nodes {
+		c.informer.GetStore().Add(nodes[i])
+		c.enqueueForAdd(nodes[i])
+	}
+	c.log.Infof("sync all(%d) nodes success", len(nodes))
+
+	// 启动worker 处理来自Informer的事件
+	for i := 0; i < c.workerNums; i++ {
+		go c.runWorker(fmt.Sprintf("worker-%d", i))
+	}
+
+	if async {
+		go c.waitDown(ctx)
+	} else {
+		c.waitDown(ctx)
+	}
+	return nil
+}
+```
+
+### 测试
+
+我们启动调度器
+```sh
+make run-sch
+
+...
+2021-12-04T12:00:38.628+0800    INFO    [Node]  node/controller.go:82   starting node control loop
+2021-12-04T12:00:38.629+0800    INFO    [Node]  node/controller.go:85   starting sync(List) all nodes
+2021-12-04T12:00:38.629+0800    INFO    [Node.Lister]   etcd/lister.go:30       list etcd node resource key: inforboard/workflow/service
+2021-12-04T12:00:38.631+0800    INFO    [Node.Lister]   etcd/lister.go:47       total nodes: 1
+...
+```
+
+确保 当前调度器节点已经注册成功, 并且已经加载到node store中
+```sh
+$ docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl get --prefix  inforboard
+
+inforboard/workflow/service/scheduler/DESKTOP-HOVMR7V
+{"instance_name":"DESKTOP-HOVMR7V","service_name":"workflow","type":"scheduler","address":"127.0.0.1","online":1638590438613}
+```
+
+
+## 调度算法
+
+调度算法的核心逻辑:
 + 挑选一个Node
 
+我们把如何调度抽象成一个Picker
 
 ### Picker接口
 
@@ -707,24 +778,40 @@ func (p *pipelinePicker) Pick(step *pipeline.Pipeline) (*node.Node, error) {
 		return nil, fmt.Errorf("has no available nodes")
 	}
 
-	n := nodes[p.next]
+	schs := []*node.Node{}
+	for i := range nodes {
+		n := nodes[i].(*node.Node)
+		if n.Type == node.SchedulerType {
+			schs = append(schs, n)
+		}
+	}
 
+	n := schs[p.next]
 	// 修改状态
-	p.next = (p.next + 1) % p.store.Len()
+	p.next = (p.next + 1) % len(schs)
 
-	return n.(*node.Node), nil
+	return n, nil
 }
 ```
 
 
-### Controller
+## Pipeline Controller
+
+已经准备好了:
++ Informer
++ Node Register
++ Picker
+
+现在Controller负责将他们串起来
+
+
+### 启动流程
 
 controller 启动逻辑:
-+ Watch:  在Controller启动之前， watcher已经启动
++ Watch: 在Controller启动之前， watcher已经启动, Controller通过Watch订阅Pipeline事件，把Watch到的事件添加到工作队列(work queue)
 + List: Controller 首先Sync一下，拉去当前所有Pipeline，判定是否有需要处理的，添加到工作队列(work queue)
 + Worker: 然后启动worker，处理工作队列里面的事件(worker queue)
 + Sgin: 等待Controller 结束
-
 
 ```go
 // PipelineTaskScheduler 调度器控制器
@@ -750,7 +837,7 @@ type Controller struct {
 }
 ```
 
-下面是起点逻辑:
+下面是运行逻辑:
 ```go
 // Run will set up the event handlers for types we are interested in, as well
 // as syncing informer caches and starting workers. It will block until stopCh
@@ -845,3 +932,727 @@ func (c *Controller) runWorker(name string) {
 	}
 }
 ```
+
+### Worker处理队列数据
+
+worker 启动后会从队列中消费数据, k8s的这个workqueue 在事件处理完成后需要调用Forget才能正在代表消费完了这条数据(和kafka 的commit机制一样)
+
+我们看下worker处理事件的流程:
++ 从队列里面取出一条数据(key)
++ 如果队列里面的数据不是一个string(key是string), 直接丢弃掉, 不处理
++ 然后我们把key传递给handler，后面有handler处理具体的业务
++ handler处理成功，则Forget该事件，该事件成功处理完成
++ handler处理失败, 事件标记为Down, 但是并不会Forget， 等待下次再次处理
+
+```go
+// processNextWorkItem will read a single work item off the workqueue and
+// attempt to process it, by calling the syncHandler.
+func (c *Controller) processNextWorkItem() bool {
+	obj, shutdown := c.workqueue.Get()
+	if shutdown {
+		return false
+	}
+	c.log.Debugf("get obj from queue: %s", obj)
+	// We wrap this block in a func so we can defer c.workqueue.Done.
+	err := func(obj interface{}) error {
+		// We call Done here so the workqueue knows we have finished
+		// processing this item. We also must remember to call Forget if we
+		// do not want this work item being re-queued. For example, we do
+		// not call Forget if a transient error occurs, instead the item is
+		// put back on the workqueue and attempted again after a back-off
+		// period.
+		defer c.workqueue.Done(obj)
+		var key string
+		var ok bool
+
+		// We expect strings to come off the workqueue. These are of the
+		// form namespace/name. We do this as the delayed nature of the
+		// workqueue means the items in the informer cache may actually be
+		// more up to date that when the item was initially put onto the
+		// workqueue.
+		if key, ok = obj.(string); !ok {
+			// As the item in the workqueue is actually invalid, we call
+			// Forget here else we'd go into a loop of attempting to
+			// process a work item that is invalid.
+			c.workqueue.Forget(obj)
+			c.log.Errorf("expected string in workqueue but got %#v", obj)
+			return nil
+		}
+		c.log.Debugf("wait sync: %s", key)
+
+		// Run the syncHandler, passing it the namespace/name string of the
+		// Network resource to be synced.
+		if err := c.syncHandler(key); err != nil {
+			return fmt.Errorf("error syncing '%s': %s", key, err.Error())
+		}
+		// Finally, if no error occurs we Forget this item so it does not
+		// get queued again until another change happens.
+		c.workqueue.Forget(obj)
+		c.log.Infof("successfully synced '%s'", key)
+		return nil
+	}(obj)
+	if err != nil {
+		c.log.Error(err)
+		return true
+	}
+	return true
+}
+```
+
+### Handler面向期望
+
+从worker queue接收到key后, 和 判断缓冲池(informer indexer):
++ 如果有 就 是期望 新增一个对象
+	+ 当新增一个对象的时候, 我们就需要调度器来运行这个Pipeline, 这里的运行指的也是调度，因为Pipeline定义的是task的编排, 具体的task不是由 Node节点负责运行的
+	+ 运行一个pipeline，流程如下
+		+ 判断是否已经完成, 已完不做处理
+		+ 判断是否需要调度, 未调度先调度
+		+ 判断是否已经运行, 未运行先标记为运行状态
+		+ 如果是运行状态, 判断pipline是否需要中断
+		+ 如果pipeline正常, 则开始运行定义的 Next Step
++ 如果没有 就是期望 删除一个对象
+	+ 删除一个对象, 暂时没啥好处理的
+
+```go
+// syncHandler compares the actual state with the desired, and attempts to
+// converge the two. It then updates the Status block of the Network resource
+// with the current status of the resource.
+func (c *Controller) syncHandler(key string) error {
+	obj, ok, err := c.informer.GetStore().GetByKey(key)
+	if err != nil {
+		return err
+	}
+
+	// 如果不存在, 这期望行为为删除 (DEL)
+	if !ok {
+		c.log.Debugf("remove pipeline: %s, skip", key)
+		return nil
+	}
+
+	ins, isOK := obj.(*pipeline.Pipeline)
+	if !isOK {
+		return errors.New("invalidate *pipeline.Pipeline obj")
+	}
+
+	// 运行pipeline
+	if err := c.runPipeline(ins); err != nil {
+		return err
+	}
+
+	return nil
+}
+```
+
+运行pipeline流程
+```go
+// 运行一个pipeline，流程如下
+// 1. 判断是否已经完成, 已完不做处理
+// 2. 判断是否需要调度, 未调度先调度
+// 3. 判断是否已经运行, 未运行先标记为运行状态
+// 4. 如果是运行状态, 判断pipline是否需要中断
+// 5. 如果pipeline正常, 则开始运行定义的 Next Step
+func (c *Controller) runPipeline(p *pipeline.Pipeline) error {
+	c.log.Debugf("receive add pipeline: %s status: %s", p.ShortDescribe(), p.Status.Status)
+	if err := p.Validate(); err != nil {
+		return fmt.Errorf("invalidate pipeline error, %s", err)
+	}
+
+	// 已经处理完成的无需处理
+	if p.IsComplete() {
+		return fmt.Errorf("skip run complete pipeline %s, status: %s", p.ShortDescribe(), p.Status.Status)
+	}
+
+	// TODO: 使用分布式锁trylock处理 多个实例竞争调度问题
+
+	// 未调度的选进行调度后, 再处理
+	if !p.IsScheduled() {
+		if err := c.schedulePipeline(p); err != nil {
+			return err
+		}
+		return nil
+	}
+
+	// 标记开始执行, 并更新保存
+	if !p.IsRunning() {
+		p.Run()
+		if err := c.informer.Recorder().Update(p); err != nil {
+			c.log.Errorf("update pipeline %s start status to store error, %s", p.ShortDescribe(), err)
+		} else {
+			c.log.Debugf("update pipeline %s start status to store success", p.ShortDescribe())
+		}
+		return nil
+	}
+
+	// 判断pipeline没有要执行的下一步, 则结束整个Pipeline
+	steps := c.nextStep(p)
+	c.log.Debugf("pipeline %s start run next steps: %s", p.ShortDescribe(), steps)
+	return c.runPipelineNextStep(steps)
+}
+```
+
+### 创建Step任务
+
+我们首先要挑选出 第一批需要运行的Step 任务来进行创建, 如何挑选喃?
+![](./images/pipeline-flow.png)
+
++ 如果是并行的任务需要一批同时运行, 我们把这个并行运行的概念定义为一个flow, 一个flow运行完后，才会运行下一个flow
++ 如何判断哪些step是一个flow喃?
+	+ flow 必须处于stage内部, 不能夸state出现flow
+	+ flow 连续的并行任务别标记为一个flow, 因此最大的并行情况就是 一个stage的任务都是并行的, 整个stage就是一个flow
+	+ 由此可见 stage一定是串联的, 这样才是流水线,整体逻辑是串行的, 但是stage内的任务 支持并行
+
+
+
+#### 挑选Flow steps
+
+我们看下挑选逻辑
+	+ pipeline 会一直
+```go
+func (c *Controller) nextStep(p *pipeline.Pipeline) []*pipeline.Step {
+	//pipeline 下次执行需要的step
+	steps, isComplete := p.NextStep()
+	if isComplete {
+		p.Complete()
+		if err := c.informer.Recorder().Update(p); err != nil {
+			c.log.Errorf("update pipeline %s end status to store error, %s", p.ShortDescribe(), err)
+		} else {
+			c.log.Debugf("pipeline is complete, update pipeline status to db success")
+		}
+		return nil
+	}
+	...
+}
+```
+
+下面是挑选下一批需要运行的steps步骤(flow概念在内部):
++ 判断当前Flow是否运行完成
+	+ 当前flow是否中断, flow中的某个任务执行失败
+	+ 判断flow中的任务是否全部完成(是否处于running中), 如果没有完成，需要等待都完成后，才进行下一个flow
++ 获取下个flow
+	+ 判断下一个flow 是否为nil, 从而判断pipeline是否完成，无其他step
+
+```go
+// 只有上一个flow执行完成后, 才会有下个fow
+// 注意: 多个并行的任务是不能跨stage同时执行的
+//      也就是说stage一定是串行的
+func (p *Pipeline) NextStep() (steps []*Step, isComplete bool) {
+	// 判断当前Flow是否运行完成
+	if f := p.GetCurrentFlow(); f != nil {
+		// 如果有flow中断, pipeline 提前结束
+		if f.IsBreak() {
+			isComplete = true
+			return
+		}
+
+		// 如果flow没有pass 说明还是在运行中, 不需要调度下以组step
+		if !f.IsPassed() {
+			return
+		}
+	}
+
+	f := p.GetNextFlow()
+
+	// 判断是不是最后一个Flow了
+	if f == nil {
+		isComplete = true
+		return
+	}
+
+	// 如果不是则获取flow中的step
+	steps = f.items
+	return
+}
+```
+
+#### 同步step状态到pipeline
+
+当 一个flow里面的step 只有一部分完成时，需要把step当前的状态同步到pipeline上 对象上做持久化
+
+```go
+func (c *Controller) nextStep(p *pipeline.Pipeline) []*pipeline.Step {
+	...
+
+	// 找出需要同步的step
+	needSync := []*pipeline.Step{}
+	for i := range steps {
+		ins := steps[i]
+
+		// 判断step是否已经运行, 如果已经运行则更新Pipeline状态
+		old, err := c.step.Lister().Get(context.Background(), ins.Key)
+		if err != nil {
+			c.log.Errorf("get step %s by key error, %s", ins.Key, err)
+			return nil
+		}
+
+		if old == nil {
+			c.log.Debugf("step %s not found in db", ins.Key)
+			continue
+		}
+
+		// 状态相等 则无需同步
+		if ins.Status.Status.Equal(old.Status.Status) {
+			c.log.Debugf("pipeline step status: %s, etcd step status: %s, has sync",
+				ins.Status.Status, old.Status.Status)
+			continue
+		}
+
+		needSync = append(needSync, old)
+	}
+
+	// 同步step到pipeline上
+	if len(needSync) > 0 {
+		for i := range needSync {
+			c.log.Debugf("sync step %s to pipeline ...", needSync[i].Key)
+			p.UpdateStep(needSync[i])
+		}
+		if err := c.informer.Recorder().Update(p); err != nil {
+			c.log.Errorf("update pipeline status error, %s", err)
+			return nil
+		}
+		c.log.Debugf("sync %d steps ok", len(needSync))
+		return nil
+	}
+
+	return steps
+}
+```
+
+#### 创建Flow的step task
+
+我们需要把挑选出来的step对象 写入etcd, 交给后面的 step调度器进行调度
+
+```go
+func (c *Controller) runPipelineNextStep(steps []*pipeline.Step) error {
+	// 将需要调度的任务, 交给step调度器调度
+	if c.step == nil {
+		return fmt.Errorf("step recorder is nil")
+	}
+
+	// 有step则进行执行
+	for i := range steps {
+		ins := steps[i]
+
+		c.log.Debugf("create pipeline step: %s", ins.Key)
+		if err := c.step.Recorder().Update(ins.Clone()); err != nil {
+			c.log.Errorf(err.Error())
+		}
+	}
+
+	return nil
+}
+```
+
+### 测试
+
+到此我们 Pipeline的 控制器就完成了, 可以测试下流程
+
+启动服务:
++ API Server
++ Schduler
+
+```sh
+make run-api
+make run-sch
+```
+
+
+
+我们使用API server创建一个pipeline: POST http://{{HOST}}/workflow/api/v1/pipelines/
++ stage1: 2个并行，一个串行
++ stage2: 2个串行
+
+```json
+{
+    "name": "pipeline01",
+    "stages": [
+        {
+            "name": "stage1",
+            "steps": [
+                {
+                    "name": "step1.1",
+                    "action": "go_build@v1",
+                    "with": {
+                        "ENV1": "env1",
+                        "ENV2": "env2"
+                    },
+                    "with_audit": false,
+                    "is_parallel": true,
+                    "webhooks": [
+                        {
+                            "url": "https://open.feishu.cn/open-apis/bot/v2/hook/83bde95c-00b2-4df1-91e4-705f66102479",
+                            "events": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "step1.2",
+                    "action": "go_build@v1",
+                    "with_audit": false,
+                    "is_parallel": true,
+                    "with": {
+                        "ENV1": "env1",
+                        "ENV2": "env2"
+                    },
+                    "webhooks": [
+                        {
+                            "url": "https://open.feishu.cn/open-apis/bot/v2/hook/83bde95c-00b2-4df1-91e4-705f66102479",
+                            "events": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "step1.3",
+                    "action": "go_build@v1",
+                    "with_audit": true,
+                    "with": {
+                        "ENV1": "env1",
+                        "ENV2": "env2"
+                    },
+                    "webhooks": [
+                        {
+                            "url": "https://open.feishu.cn/open-apis/bot/v2/hook/83bde95c-00b2-4df1-91e4-705f66102479",
+                            "events": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "stage2",
+            "steps": [
+                {
+                    "name": "step2.1",
+                    "action": "go_build@v1",
+                    "with": {
+                        "ENV1": "env3",
+                        "ENV2": "env4"
+                    },
+                    "webhooks": [
+                        {
+                            "url": "https://open.feishu.cn/open-apis/bot/v2/hook/83bde95c-00b2-4df1-91e4-705f66102479",
+                            "events": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "step2.2",
+                    "action": "go_build@v1",
+                    "with": {
+                        "ENV1": "env1",
+                        "ENV2": "env2"
+                    },
+                    "webhooks": [
+                        {
+                            "url": "https://open.feishu.cn/open-apis/bot/v2/hook/83bde95c-00b2-4df1-91e4-705f66102479",
+                            "events": [
+                                "SUCCEEDED"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
+```
+
+我们通过API查看当前结果:
++ Pipeline是否调度
++ Piptline step 是否创建(flow1 2个step)
++ Piptline step 是否调度(由于我们还没写node, 也没有node节点注册上来, 所以应该是调度报错)
+```json
+{
+    "code": 0,
+    "data": {
+        "total": 0,
+        "items": [
+            {
+                "id": "c6lepk93n7pjoq14b8c0",
+                "resource_version": 85,
+                "domain": "admin-domain",
+                "namespace": "c6br8ju1l0cvabpa7fdg",
+                "create_at": 1638591697979,
+                "create_by": "admin",
+                "template_id": "",
+                "name": "pipeline01",
+                "with": null,
+                "mount": null,
+                "tags": null,
+                "description": "",
+                "on": null,
+                "hook_event": null,
+                "status": {
+                    "current_flow": 1,
+                    "start_at": 1638591698020,
+                    "end_at": 0,
+                    "status": "EXECUTING",
+                    "scheduler_node": "DESKTOP-HOVMR7V",
+                    "message": ""
+                },
+                "stages": [
+                    {
+                        "id": 1,
+                        "name": "stage1",
+                        "needs": null,
+                        "steps": [
+                            {
+                                "key": "c6br8ju1l0cvabpa7fdg.c6lepk93n7pjoq14b8c0.1.1",
+                                "create_type": "PIPELINE",
+                                "namespace": "c6br8ju1l0cvabpa7fdg",
+                                "pipeline_id": "c6lepk93n7pjoq14b8c0",
+                                "create_at": 1638591698036,
+                                "update_at": 1638591698066,
+                                "deploy_id": "",
+                                "resource_version": 82,
+                                "id": 1,
+                                "name": "step1.1",
+                                "action": "go_build@v1",
+                                "with": {
+                                    "ENV1": "env1",
+                                    "ENV2": "env2"
+                                },
+                                "is_parallel": true,
+                                "ignore_failed": false,
+                                "with_audit": false,
+                                "audit_params": null,
+                                "with_notify": false,
+                                "notify_params": null,
+                                "webhooks": [
+                                    {
+                                        "url": "https://open.feishu.cn/open-apis/bot/v2/hook/83bde95c-00b2-4df1-91e4-705f66102479",
+                                        "header": null,
+                                        "events": [
+                                            "SUCCEEDED"
+                                        ],
+                                        "description": "",
+                                        "status": null
+                                    }
+                                ],
+                                "node_selector": null,
+                                "status": {
+                                    "flow_number": 1,
+                                    "start_at": 0,
+                                    "end_at": 1638591698066,
+                                    "status": "SCHEDULE_FAILED",
+                                    "scheduled_node": "",
+                                    "audit_at": 0,
+                                    "audit_response": "UOD",
+                                    "audit_message": "",
+                                    "notify_at": 0,
+                                    "notify_error": "",
+                                    "message": "has no available node nodes",
+                                    "response": null
+                                }
+                            },
+                            {
+                                "key": "c6br8ju1l0cvabpa7fdg.c6lepk93n7pjoq14b8c0.1.2",
+                                "create_type": "PIPELINE",
+                                "namespace": "c6br8ju1l0cvabpa7fdg",
+                                "pipeline_id": "c6lepk93n7pjoq14b8c0",
+                                "create_at": 1638591698036,
+                                "update_at": 1638591698069,
+                                "deploy_id": "",
+                                "resource_version": 83,
+                                "id": 2,
+                                "name": "step1.2",
+                                "action": "go_build@v1",
+                                "with": {
+                                    "ENV1": "env1",
+                                    "ENV2": "env2"
+                                },
+                                "is_parallel": true,
+                                "ignore_failed": false,
+                                "with_audit": false,
+                                "audit_params": null,
+                                "with_notify": false,
+                                "notify_params": null,
+                                "webhooks": [
+                                    {
+                                        "url": "https://open.feishu.cn/open-apis/bot/v2/hook/83bde95c-00b2-4df1-91e4-705f66102479",
+                                        "header": null,
+                                        "events": [
+                                            "SUCCEEDED"
+                                        ],
+                                        "description": "",
+                                        "status": null
+                                    }
+                                ],
+                                "node_selector": null,
+                                "status": {
+                                    "flow_number": 1,
+                                    "start_at": 0,
+                                    "end_at": 1638591698068,
+                                    "status": "SCHEDULE_FAILED",
+                                    "scheduled_node": "",
+                                    "audit_at": 0,
+                                    "audit_response": "UOD",
+                                    "audit_message": "",
+                                    "notify_at": 0,
+                                    "notify_error": "",
+                                    "message": "has no available node nodes",
+                                    "response": null
+                                }
+                            },
+                            {
+                                "create_type": "PIPELINE",
+                                "namespace": "",
+                                "create_at": 0,
+                                "update_at": 0,
+                                "deploy_id": "",
+                                "id": 3,
+                                "name": "step1.3",
+                                "action": "go_build@v1",
+                                "with": {
+                                    "ENV1": "env1",
+                                    "ENV2": "env2"
+                                },
+                                "is_parallel": false,
+                                "ignore_failed": false,
+                                "with_audit": true,
+                                "audit_params": null,
+                                "with_notify": false,
+                                "notify_params": null,
+                                "webhooks": [
+                                    {
+                                        "url": "https://open.feishu.cn/open-apis/bot/v2/hook/83bde95c-00b2-4df1-91e4-705f66102479",
+                                        "header": null,
+                                        "events": [
+                                            "SUCCEEDED"
+                                        ],
+                                        "description": "",
+                                        "status": null
+                                    }
+                                ],
+                                "node_selector": null,
+                                "status": {
+                                    "flow_number": 0,
+                                    "start_at": 0,
+                                    "end_at": 0,
+                                    "status": "PENDDING",
+                                    "scheduled_node": "",
+                                    "audit_at": 0,
+                                    "audit_response": "UOD",
+                                    "audit_message": "",
+                                    "notify_at": 0,
+                                    "notify_error": "",
+                                    "message": "",
+                                    "response": {}
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "id": 2,
+                        "name": "stage2",
+                        "needs": null,
+                        "steps": [
+                            {
+                                "create_type": "PIPELINE",
+                                "namespace": "",
+                                "create_at": 0,
+                                "update_at": 0,
+                                "deploy_id": "",
+                                "id": 1,
+                                "name": "step2.1",
+                                "action": "go_build@v1",
+                                "with": {
+                                    "ENV1": "env3",
+                                    "ENV2": "env4"
+                                },
+                                "is_parallel": false,
+                                "ignore_failed": false,
+                                "with_audit": false,
+                                "audit_params": null,
+                                "with_notify": false,
+                                "notify_params": null,
+                                "webhooks": [
+                                    {
+                                        "url": "https://open.feishu.cn/open-apis/bot/v2/hook/83bde95c-00b2-4df1-91e4-705f66102479",
+                                        "header": null,
+                                        "events": [
+                                            "SUCCEEDED"
+                                        ],
+                                        "description": "",
+                                        "status": null
+                                    }
+                                ],
+                                "node_selector": null,
+                                "status": {
+                                    "flow_number": 0,
+                                    "start_at": 0,
+                                    "end_at": 0,
+                                    "status": "PENDDING",
+                                    "scheduled_node": "",
+                                    "audit_at": 0,
+                                    "audit_response": "UOD",
+                                    "audit_message": "",
+                                    "notify_at": 0,
+                                    "notify_error": "",
+                                    "message": "",
+                                    "response": {}
+                                }
+                            },
+                            {
+                                "create_type": "PIPELINE",
+                                "namespace": "",
+                                "create_at": 0,
+                                "update_at": 0,
+                                "deploy_id": "",
+                                "id": 2,
+                                "name": "step2.2",
+                                "action": "go_build@v1",
+                                "with": {
+                                    "ENV1": "env1",
+                                    "ENV2": "env2"
+                                },
+                                "is_parallel": false,
+                                "ignore_failed": false,
+                                "with_audit": false,
+                                "audit_params": null,
+                                "with_notify": false,
+                                "notify_params": null,
+                                "webhooks": [
+                                    {
+                                        "url": "https://open.feishu.cn/open-apis/bot/v2/hook/83bde95c-00b2-4df1-91e4-705f66102479",
+                                        "header": null,
+                                        "events": [
+                                            "SUCCEEDED"
+                                        ],
+                                        "description": "",
+                                        "status": null
+                                    }
+                                ],
+                                "node_selector": null,
+                                "status": {
+                                    "flow_number": 0,
+                                    "start_at": 0,
+                                    "end_at": 0,
+                                    "status": "PENDDING",
+                                    "scheduled_node": "",
+                                    "audit_at": 0,
+                                    "audit_response": "UOD",
+                                    "audit_message": "",
+                                    "notify_at": 0,
+                                    "notify_error": "",
+                                    "message": "",
+                                    "response": {}
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+}
+```
+
+到此Pipeline调度器可以正常运行了
