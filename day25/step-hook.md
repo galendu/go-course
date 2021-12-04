@@ -330,11 +330,54 @@ func (r *request) Push() {
 
 ![](./images/feishu-msg.png)
 
+下面是我封装后得消息格式(具体看hook里面飞书模块, 代码比较多):
+```go
+func (r *request) NewFeishuMessage() *feishu.Message {
+	s := r.step
+	msg := &feishu.NotifyMessage{
+		Title:    s.ShowTitle(),
+		Content:  s.String(),
+		RobotURL: r.hook.Url,
+		Note:     []string{"💡 该消息由极乐研发云[研发交付系统]提供"},
+		Color:    feishu.COLOR_PURPLE,
+	}
+	return feishu.NewCardMessage(msg)
+}
+```
+
+编写测试用例:
+```go
+var (
+	feishuBotURL = "https://open.feishu.cn/open-apis/bot/v2/hook/461ead7b-d856-472c-babc-2d3d0ec9fabb"
+)
+
+func TestFeishuWebHook(t *testing.T) {
+	should := assert.New(t)
+
+	hooks := testPipelineWebHook(feishuBotURL)
+	sender := webhook.NewWebHook()
+	err := sender.Send(
+		context.Background(),
+		hooks,
+		testPipelineStep(),
+	)
+	should.NoError(err)
+
+	
+	t.Log(hooks[0])
+}
+```
 
 
 ### 测试飞书通知
 
+接下面我们添加一个飞书机器人:
 
+![](./images/feishu-robot.png)
+
+测试下发生通知:
+
+![](./images/feishu-test.png)
 
 
 ##  全链路测试
