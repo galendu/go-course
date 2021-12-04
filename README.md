@@ -151,4 +151,5 @@
 ## Day25: CI/CD系统(二)
   * [Pipeline Scheduler 开发](./day25/pipeline-scheduler.md)
   * [Step Scheduler 开发](./day25/step-scheduler.md)
+  * [Step Hook 开发](./day25/step-hook.md)
 

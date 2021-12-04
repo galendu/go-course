@@ -535,6 +535,8 @@ inforboard/workflow/service/scheduler/DESKTOP-HOVMR7V
 
 现在我们暂时不处理 调度失败的情况, 调度失败有 用户通过API 进行对Step进行手动重试
 
+### 新增Pipeline调试
+
 我们把之前的Pipeline删除后, 重新创建一个新的pipeline, 然后查看结果:
 + 我们看到调度逻辑是否正常
 ```json
@@ -833,6 +835,9 @@ Digest: sha256:52817dece4cfe26f581c834d27a8e1bcc82194f914afe6d50afad5a101234ef1
 Status: Downloaded newer image for busybox:latest
 docker.io/library/busybox:latest
 ```
+
+
+### 调试审核逻辑
 
 再次删除重建Pipeline, 然后流程会卡在 审核处等待, 最后我们调用 审核API 来通过审核: http://{{HOST}}/workflow/api/v1/steps/c6br8ju1l0cvabpa7fdg.c6lhm1h3n7pjoq14b8l0.1.3/audit
 
@@ -1187,3 +1192,9 @@ docker.io/library/busybox:latest
     }
 }
 ```
+
+最后查看飞书群，看看看看是否通知(信息还没格式化):
+
+![](./images/feishu_notify.jpg)
+
+我们在下个小节讲 Pipeline Hook机制
