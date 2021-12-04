@@ -152,4 +152,5 @@
   * [Pipeline Scheduler 开发](./day25/pipeline-scheduler.md)
   * [Step Scheduler 开发](./day25/step-scheduler.md)
   * [Step Hook 开发](./day25/step-hook.md)
+  * [Node 开发](./day25/node.md)
 

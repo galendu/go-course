@@ -363,7 +363,6 @@ func TestFeishuWebHook(t *testing.T) {
 	)
 	should.NoError(err)
 
-	
 	t.Log(hooks[0])
 }
 ```
@@ -380,6 +379,12 @@ func TestFeishuWebHook(t *testing.T) {
 ![](./images/feishu-test.png)
 
 是不是发现emoji字符不错，那么搜索喃: https://emojipedia.org/light-bulb/
+
+### 扩展
+
+之前同学问题，如何基于IM平台开发一款智能机器人, 当你的企业又很多文档时, 可以建立也给文档库, 有啥问题，直接问机器人
+
+[开发机器人应用](https://open.feishu.cn/document/uQjL04CN/uYTMuYTMuYTM)
 
 ##  全链路测试
 
