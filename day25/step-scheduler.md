@@ -1198,3 +1198,7 @@ docker.io/library/busybox:latest
 ![](./images/feishu_notify.jpg)
 
 我们在下个小节讲 Pipeline Hook机制
+
+## 总结
+
+不要纠结 Node是如何执行的, 我们先关注调度逻辑, Node如何执行，在Node开发部分会介绍
