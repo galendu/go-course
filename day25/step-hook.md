@@ -379,6 +379,7 @@ func TestFeishuWebHook(t *testing.T) {
 
 ![](./images/feishu-test.png)
 
+是不是发现emoji字符不错，那么搜索喃: https://emojipedia.org/light-bulb/
 
 ##  全链路测试
 
