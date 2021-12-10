@@ -155,3 +155,6 @@
   * [Node 开发](./day25/node.md)
   * [API Server 订阅SCM事件](./day25/ci.md)
 
+## Day26: 总结与回顾
+  * [课程回顾](./day26/summary.md)
+
