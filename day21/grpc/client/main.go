@@ -7,12 +7,17 @@ import (
 	"log"
 	"time"
 
+	"gitee.com/infraboard/go-course/day21/grpc/auther"
 	"gitee.com/infraboard/go-course/day21/grpc/service"
 	"google.golang.org/grpc"
 )
 
 func main() {
-	conn, err := grpc.Dial("localhost:1234", grpc.WithInsecure())
+	conn, err := grpc.Dial(
+		"localhost:1234",
+		grpc.WithInsecure(),
+		grpc.WithPerRPCCredentials(auther.NewClientAuthentication("admin", "123456")),
+	)
 	if err != nil {
 		log.Fatal(err)
 	}

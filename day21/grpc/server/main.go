@@ -6,7 +6,9 @@ import (
 	"log"
 	"net"
 
+	"gitee.com/infraboard/go-course/day21/grpc/auther"
 	"gitee.com/infraboard/go-course/day21/grpc/service"
+
 	"google.golang.org/grpc"
 )
 
@@ -44,7 +46,12 @@ func (p *HelloService) Channel(stream service.HelloService_ChannelServer) error 
 
 func main() {
 	// 首先是通过grpc.NewServer()构造一个gRPC服务对象
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(
+		// 添加认证中间件, 如果有多个中间件需要添加 使用ChainUnaryInterceptor
+		grpc.UnaryInterceptor(auther.GrpcAuthUnaryServerInterceptor()),
+		// 添加stream API的拦截器
+		grpc.StreamInterceptor(auther.GrpcAuthStreamServerInterceptor()),
+	)
 	// 然后通过gRPC插件生成的RegisterHelloServiceServer函数注册我们实现的HelloServiceImpl服务
 	service.RegisterHelloServiceServer(grpcServer, new(HelloService))
 
