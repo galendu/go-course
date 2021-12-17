@@ -42,7 +42,7 @@ func main() {
 	// 首先是向服务端发送数据
 	go func() {
 		for {
-			if err := stream.Send(&service.Request{Value: "hi"}); err != nil {
+			if err := stream.Send(&service.Request{Value: "bob"}); err != nil {
 				log.Fatal(err)
 			}
 			time.Sleep(time.Second)

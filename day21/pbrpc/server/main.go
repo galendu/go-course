@@ -51,6 +51,7 @@ func main() {
 
 		// 代码中最大的变化是用rpc.ServeCodec函数替代了rpc.ServeConn函数，
 		// 传入的参数是针对服务端的json编解码器
+		// req(byte) <----> obj(struct)
 		go rpc.ServeCodec(server.NewServerCodec(conn))
 	}
 }

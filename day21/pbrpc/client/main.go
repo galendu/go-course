@@ -45,7 +45,7 @@ func main() {
 	}
 
 	resp := &service.Response{}
-	err = client.Hello(&service.Request{Value: "hello"}, resp)
+	err = client.Hello(&service.Request{Value: "alice"}, resp)
 	if err != nil {
 		log.Fatal(err)
 	}

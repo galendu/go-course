@@ -166,5 +166,5 @@ var HelloService_ServiceDesc = grpc.ServiceDesc{
 			ClientStreams: true,
 		},
 	},
-	Metadata: "grpc/service/service.proto",
+	Metadata: "service/service.proto",
 }
