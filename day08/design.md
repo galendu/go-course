@@ -329,7 +329,7 @@ var (
 	vers         bool
 	ossProvider  string
 	aliAccessID  string
-	aliAccessKey string
+	aliSecretKey string
 )
 
 // RootCmd represents the base command when called without any subcommands
@@ -358,7 +358,7 @@ func Execute() {
 func init() {
 	RootCmd.PersistentFlags().StringVarP(&ossProvider, "oss_provider", "p", "aliyun", "the oss provider [aliyun/qcloud]")
 	RootCmd.PersistentFlags().StringVarP(&aliAccessID, "ali_access_id", "i", "", "the ali oss access id")
-	RootCmd.PersistentFlags().StringVarP(&aliAccessKey, "ali_access_key", "k", "", "the ali oss access key")
+	RootCmd.PersistentFlags().StringVarP(&aliSecretKey, "ali_secret_key", "k", "", "the ali oss access key")
 	RootCmd.PersistentFlags().BoolVarP(&vers, "version", "v", false, "the cloud-station-cli version")
 }
 ```
@@ -372,7 +372,7 @@ Usage:
 
 Flags:
   -i, --ali_access_id string    the ali oss access id
-  -k, --ali_access_key string   the ali oss access key
+  -k, --ali_secret_key string   the ali oss access key
   -h, --help                    help for cloud-station-cli
   -p, --oss_provider string     the oss provider [aliyun/qcloud] (default "aliyun")
   -v, --version                 the cloud-station-cli version
@@ -473,11 +473,11 @@ func getProvider() (p store.Uploader, err error) {
 		if aliAccessID == "" {
 			aliAccessID = defaultALIAK
 		}
-		if aliAccessKey == "" {
-			aliAccessKey = defaultALISK
+		if aliSecretKey == "" {
+			aliSecretKey = defaultALISK
 		}
 		fmt.Printf("上传用户: %s\n", aliAccessID)
-		p, err = aliyun.NewUploader(bucketEndpoint, aliAccessID, aliAccessKey)
+		p, err = aliyun.NewUploader(bucketEndpoint, aliAccessID, aliSecretKey)
 		return
 	case "qcloud":
 		return nil, fmt.Errorf("not impl")
@@ -510,7 +510,7 @@ Flags:
 
 Global Flags:
   -i, --ali_access_id string    the ali oss access id
-  -k, --ali_access_key string   the ali oss access key
+  -k, --ali_secret_key string   the ali oss access key
   -p, --oss_provider string     the oss provider [aliyun/qcloud] (default "aliyun")
   -v, --version                 the cloud-station-cli version
 ```
@@ -551,7 +551,7 @@ $ go run cmd/client/main.go upload -f go.mod  -k xxxx
 ```go
 func getAccessKeyFromInput() {
 	fmt.Printf("请输入access key: ")
-	fmt.Scanln(&aliAccessKey)
+	fmt.Scanln(&aliSecretKey)
 }
 ```
 
@@ -561,7 +561,7 @@ func getProvider() (p store.Uploader, err error) {
 	...
 	fmt.Printf("上传用户: %s\n", aliAccessID)
 	getAccessKeyFromInput()
-	p, err = aliyun.NewUploader(bucketEndpoint, aliAccessID, aliAccessKey)
+	p, err = aliyun.NewUploader(bucketEndpoint, aliAccessID, aliSecretKey)
 	...
 }
 ```
@@ -573,7 +573,7 @@ func getAccessKeyFromInputV2() {
 	prompt := &survey.Password{
 		Message: "请输入access key: ",
 	}
-	survey.AskOne(prompt, &aliAccessKey)
+	survey.AskOne(prompt, &aliSecretKey)
 }
 ```
 
