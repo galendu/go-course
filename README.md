@@ -90,14 +90,14 @@
 ## Day13
   * [HTTP 协议](./day13/http.md)
 
-## Day14
+## Day14: Web 入门
   * [JavaScript基础](./day14/javascript.md)
   * [Web入门基础-HTLM](./day14/html.md)
   * [Web入门基础-CSS](./day14/css.md)
   * [Web入门基础-浏览器](./day14/browser.md)
   * [作业](./day14/homework.md)
 
-## Day15
+## Day15: Vue 入门
   * [Vue入门基础](./day15/vue-base.md)
   * [Vue路由与状态管理](./day15/vue-all.md)
   * [作业](./day15/homework.md)
