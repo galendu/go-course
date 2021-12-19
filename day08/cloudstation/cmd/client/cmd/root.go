@@ -11,7 +11,7 @@ import (
 var (
 	vers         bool
 	ossProvider  string
-	aliAccessID  string
+	aliAccessKey string
 	aliSecretKey string
 )
 
@@ -40,6 +40,6 @@ func Execute() {
 
 func init() {
 	RootCmd.PersistentFlags().StringVarP(&ossProvider, "oss_provider", "p", "aliyun", "the oss provider [aliyun/qcloud/minio]")
-	RootCmd.PersistentFlags().StringVarP(&aliAccessID, "ali_access_id", "i", defaultALIAK, "the ali oss access id")
+	RootCmd.PersistentFlags().StringVarP(&aliAccessKey, "ali_access_id", "i", defaultALIAK, "the ali oss access id")
 	RootCmd.PersistentFlags().BoolVarP(&vers, "version", "v", false, "the cloud-station-cli version")
 }

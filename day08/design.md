@@ -106,10 +106,10 @@ FAIL	gitee.com/infraboard/go-course/day8/cloudstation/store/provider/aliyun	0.04
 
 ```go
 // 构造函数
-func NewUploader(endpoint, accessID, secretKey string) store.Uploader {
+func NewUploader(endpoint, accessKey, secretKey string) store.Uploader {
 	p := &aliyun{
 		Endpoint:  endpoint,
-		AccessID:  accessID,
+		AccessKey:  accessKey,
 		SecretKey: secretKey,
 	}
 
@@ -118,7 +118,7 @@ func NewUploader(endpoint, accessID, secretKey string) store.Uploader {
 
 type aliyun struct {
 	Endpoint  string 
-	AccessID  string 
+	AccessKey  string 
 	SecretKey string 
 }
 
@@ -147,7 +147,7 @@ func (p *aliyun) GetBucket(bucketName string) (*oss.Bucket, error) {
 	}
 
 	// New client
-	client, err := oss.New(p.Endpoint, p.AccessID, p.SecretKey)
+	client, err := oss.New(p.Endpoint, p.AccessKey, p.SecretKey)
 	if err != nil {
 		return nil, err
 	}
@@ -168,7 +168,7 @@ func (p *aliyun) GetBucket(bucketName string) (*oss.Bucket, error) {
 ```go
 type aliyun struct {
 	Endpoint  string `validate:"required"`
-	AccessID  string `validate:"required"`
+	AccessKey  string `validate:"required"`
 	SecretKey string `validate:"required"`
 }
 ```
@@ -188,10 +188,10 @@ func (p *aliyun) validate() error {
 最后再New构建实体的时候执行参数校验
 ```go
 // 构造函数
-func NewUploader(endpoint, accessID, secretKey string) (store.Uploader, error) {
+func NewUploader(endpoint, accessKey, secretKey string) (store.Uploader, error) {
 	p := &aliyun{
 		Endpoint:  endpoint,
-		AccessID:  accessID,
+		AccessKey:  accessKey,
 		SecretKey: secretKey,
 	}
 
@@ -223,7 +223,7 @@ func TestUploadFile(t *testing.T) {
         	Error Trace:	store_test.go:20
         	Error:      	Received unexpected error:
         	            	Key: 'aliyun.Endpoint' Error:Field validation for 'Endpoint' failed on the 'required' tag
-        	            	Key: 'aliyun.AccessID' Error:Field validation for 'AccessID' failed on the 'required' tag
+        	            	Key: 'aliyun.AccessKey' Error:Field validation for 'AccessKey' failed on the 'required' tag
         	            	Key: 'aliyun.SecretKey' Error:Field validation for 'SecretKey' failed on the 'required' tag
         	Test:       	TestUploadFile
 --- FAIL: TestUploadFile (0.00s)
@@ -235,7 +235,7 @@ FAIL	gitee.com/infraboard/go-course/day8/cloudstation/store/provider/aliyun	0.25
 ```go
 type aliyun struct {
 	Endpoint  string `validate:"required,url"`
-	AccessID  string `validate:"required"`
+	AccessKey  string `validate:"required"`
 	SecretKey string `validate:"required"`
 }
 ```
@@ -328,7 +328,7 @@ import (
 var (
 	vers         bool
 	ossProvider  string
-	aliAccessID  string
+	aliAccessKey  string
 	aliSecretKey string
 )
 
@@ -357,7 +357,7 @@ func Execute() {
 
 func init() {
 	RootCmd.PersistentFlags().StringVarP(&ossProvider, "oss_provider", "p", "aliyun", "the oss provider [aliyun/qcloud]")
-	RootCmd.PersistentFlags().StringVarP(&aliAccessID, "ali_access_id", "i", "", "the ali oss access id")
+	RootCmd.PersistentFlags().StringVarP(&aliAccessKey, "ali_access_id", "i", "", "the ali oss access id")
 	RootCmd.PersistentFlags().StringVarP(&aliSecretKey, "ali_secret_key", "k", "", "the ali oss access key")
 	RootCmd.PersistentFlags().BoolVarP(&vers, "version", "v", false, "the cloud-station-cli version")
 }
@@ -470,14 +470,14 @@ func getProvider() (p store.Uploader, err error) {
 	switch ossProvider {
 	case "aliyun":
 		fmt.Printf("上传云商: 阿里云[%s]\n", defaultEndpoint)
-		if aliAccessID == "" {
-			aliAccessID = defaultALIAK
+		if aliAccessKey == "" {
+			aliAccessKey = defaultALIAK
 		}
 		if aliSecretKey == "" {
 			aliSecretKey = defaultALISK
 		}
-		fmt.Printf("上传用户: %s\n", aliAccessID)
-		p, err = aliyun.NewUploader(bucketEndpoint, aliAccessID, aliSecretKey)
+		fmt.Printf("上传用户: %s\n", aliAccessKey)
+		p, err = aliyun.NewUploader(bucketEndpoint, aliAccessKey, aliSecretKey)
 		return
 	case "qcloud":
 		return nil, fmt.Errorf("not impl")
@@ -559,9 +559,9 @@ func getSecretKeyFromInput() {
 ```go
 func getProvider() (p store.Uploader, err error) {
 	...
-	fmt.Printf("上传用户: %s\n", aliAccessID)
+	fmt.Printf("上传用户: %s\n", aliAccessKey)
 	getSecretKeyFromInput()
-	p, err = aliyun.NewUploader(bucketEndpoint, aliAccessID, aliSecretKey)
+	p, err = aliyun.NewUploader(bucketEndpoint, aliAccessKey, aliSecretKey)
 	...
 }
 ```
@@ -660,7 +660,7 @@ func (p *OssProgressListener) ProgressChanged(event *oss.ProgressEvent) {
 然后我们把listner作为uploader的一个实例属性, 实例初始化时直接生成, 在上传的时候传递过去
 ```go
 // 构造函数
-func NewUploader(endpoint, accessID, secretKey string) (store.Uploader, error) {
+func NewUploader(endpoint, accessKey, secretKey string) (store.Uploader, error) {
 	p := &aliyun{
 		...
 		listner: NewOssProgressListener(),

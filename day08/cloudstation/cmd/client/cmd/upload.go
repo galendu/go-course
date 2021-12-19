@@ -57,7 +57,7 @@ func getUploader() (store.Uploader, error) {
 			Message: "请输入阿里云SK: ",
 		}
 		survey.AskOne(prompt, &aliSecretKey)
-		return aliyun.NewUploader(bucketEndpoint, aliAccessID, aliSecretKey)
+		return aliyun.NewUploader(bucketEndpoint, aliAccessKey, aliSecretKey)
 	case "qcloud":
 		return nil, fmt.Errorf("not impl")
 	case "minio":
