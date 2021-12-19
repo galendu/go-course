@@ -68,6 +68,53 @@ func (p *aliyun) UploadFile(bucketName, objectKey, localFilePath string) error {
 这样我们就实现了一个阿里云的uploader实例, 但是这个实例能不能正常工作喃? 对我们需要写测试用例,
 也就是我们常说的DDD的开发流程
 
+
+#### 配置测试用例运行环境
+
+为了能不把我们测试用例使用的参数硬编码到代码里，可以有2个选择:
++ 单独加载测试用例使用的配置文件
++ 测试用例的配置通过环境变量配置
+
+通常我们选用第二种, 因为简单直接, 那如何配置我们的vscode 在点击run测试用户的时候加载配置喃?
+
+方法: 就是vsocde的Go 插件 在运行 go test的时候 支持环境变量注入? 
+
+![](./images/go_test_env_file.png)
+
+注意你配置文件的格式: 必须是 key=value, 比如
+```
+ALI_AK=xxx
+ALI_SK=xxx
+ALI_OSS_ENDPOINT=xxx
+ALI_BUCKET_NAME=xxx
+```
+
+当然你也可以通过直接通过本项目的配置文件进行配置，在本项目的.vscode 下是本项目的vsocde配置, 其中 settings.json就是用配置的文件:
+![](./images/setting_enfile.png)
+
+这样配置后, 当你点击 test或者 debug test的时候，测试用例就可以从你配置的文件中读取环境变量, 你们可以自行测试下
+
+测试用例配置的问题解决完了，还有一个另外一个问题, 那就是默认情况下 我们在测试用例中使用print的时候 控制台是不打印 这些测试用例的中间环节信息的, 如果我们需要打印 就需要进行配置, 如何配置?
+
+vscode 的 go插件在 执行测试用例的时候 是调用 go test 来执行的, 但是他没有加上 -v 参数, 因此我们通过vscode配置上该参数就可以了
+
+注意这里配置的是vscode全局参数, 因此只需要配置一次，后面所有项目都可以生效
+
+![](./images/go_test_v.png)
+
+然后添加如下参数即可
+
+![](./images/vscode_test_flag_setting.png)
+
+然后可以进行简单的测试, 验证是否可以生效
+
+```go
+// TDD: 测试驱动开发
+func TestUpload(t *testing.T) {
+	fmt.Println("hello test detail log")
+}
+```
+
 #### 为插件编写测试用例
 
 编写实例的测试用例: provider/aliyun/store_test.go
