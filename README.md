@@ -91,31 +91,31 @@
   * [HTTP 协议](./day13/http.md)
 
 ## Day14
-  * [Demo后端开发](./day14/demo-api.md)
-  * [Demo前端开发](./day14/demo-ui.md)
+  * [JavaScript基础](./day14/javascript.md)
+  * [Web入门基础-HTLM](./day14/html.md)
+  * [Web入门基础-CSS](./day14/css.md)
+  * [Web入门基础-浏览器](./day14/browser.md)
   * [作业](./day14/homework.md)
 
 ## Day15
-  * [JavaScript基础](./day15/javascript.md)
-  * [Web入门基础-HTLM](./day15/html.md)
-  * [Web入门基础-CSS](./day15/css.md)
-  * [Web入门基础-浏览器](./day15/browser.md)
+  * [Vue入门基础](./day15/vue-base.md)
+  * [Vue路由与状态管理](./day15/vue-all.md)
   * [作业](./day15/homework.md)
 
-## Day16
-  * [Vue入门基础](./day16/vue-base.md)
-  * [Vue路由与状态管理](./day16/vue-all.md)
-  * [作业](./day16/homework.md)
+## Day16: 项目前端(一)
+  * [项目前端框架](./day16/devcloud-base.md)
+  * [项目登录页面](./day16/devcloud-login.md)
+  * [项目404页面](./day16/devcloud-404.md)
+  * [项目导航页面](./day16/devcloud-nav.md)
 
-## Day17: 项目前端(一)
-  * [项目前端框架](./day17/devcloud-base.md)
-  * [项目登录页面](./day17/devcloud-login.md)
-  * [项目404页面](./day17/devcloud-404.md)
-  * [项目导航页面](./day17/devcloud-nav.md)
+## Day17: 项目前端(二)
+  * [新登录页面](./day17/devcloud-new-login.md)
+  * [主机列表页面](./day17/cmdb-host.md)
 
-## Day18: 项目前端(二)
-  * [新登录页面](./day18/devcloud-new-login.md)
-  * [主机列表页面](./day18/cmdb-host.md)
+## Day18: CURD Demo
+  * [Demo后端开发](./day18/demo-api.md)
+  * [Demo前端开发](./day18/demo-ui.md)
+  * [作业](./day18/homework.md)
 
 ## Day19: CMDB(一)
   * [云资源Provider](./day19/cmdb-provider.md)
