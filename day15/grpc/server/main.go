@@ -6,8 +6,8 @@ import (
 	"log"
 	"net"
 
-	"gitee.com/infraboard/go-course/day21/grpc/auther"
-	"gitee.com/infraboard/go-course/day21/grpc/service"
+	"gitee.com/infraboard/go-course/day15/grpc/auther"
+	"gitee.com/infraboard/go-course/day15/grpc/service"
 
 	"google.golang.org/grpc"
 )

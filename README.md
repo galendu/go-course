@@ -90,58 +90,58 @@
 ## Day13
   * [HTTP 协议](./day13/http.md)
 
-## Day14: Web 入门
-  * [JavaScript基础](./day14/javascript.md)
-  * [Web入门基础-HTLM](./day14/html.md)
-  * [Web入门基础-CSS](./day14/css.md)
-  * [Web入门基础-浏览器](./day14/browser.md)
+## Day14: CURD Demo
+  * [Demo后端开发](./day14/demo-api.md)
+  * [Demo前端开发](./day14/demo-ui.md)
   * [作业](./day14/homework.md)
 
-## Day15: Vue 入门
-  * [Vue入门基础](./day15/vue-base.md)
-  * [Vue路由与状态管理](./day15/vue-all.md)
-  * [作业](./day15/homework.md)
+## Day15: 从RPC到GRPC
+  * [RPC入门](./day15/rpc.md)
+  * [Protobuf编解码](./day15/protobuf.md)
+  * [proto3语法入门](./day15/proto3_synx.md)
+  * [GRPC入门](./day15/grpc.md)
+  * [框架介绍](./day15/framework.md)
 
-## Day16: 项目前端(一)
-  * [项目前端框架](./day16/devcloud-base.md)
-  * [项目登录页面](./day16/devcloud-login.md)
-  * [项目404页面](./day16/devcloud-404.md)
-  * [项目导航页面](./day16/devcloud-nav.md)
+## Day16: CMDB API
+  * [云资源Provider](./day16/cmdb-provider.md)
+  * [云凭证管理](./day16/cmdb-secret.md)
+  * [云资源同步API](./day16/cmdb-sync.md)
+  * [CMDB改造](./day16/cmdb-grpc.md)
 
-## Day17: 项目前端(二)
-  * [新登录页面](./day17/devcloud-new-login.md)
-  * [主机列表页面](./day17/cmdb-host.md)
+## Day17: 权限中心之认证
+  * [开发基础](./day17/user.md)
+  * [登录认证](./day17/auth.md)
 
-## Day18: CURD Demo
-  * [Demo后端开发](./day18/demo-api.md)
-  * [Demo前端开发](./day18/demo-ui.md)
-  * [作业](./day18/homework.md)
+## Day18: 权限中心之鉴权
+  * [权限判定](./day18/permission.md)
+  * [项目部署](./day18/deploy.md)
 
-## Day19: CMDB(一)
-  * [云资源Provider](./day19/cmdb-provider.md)
-  * [云凭证管理](./day19/cmdb-secret.md)
-  * [云资源同步API](./day19/cmdb-sync.md)
+## Day19: Web 入门
+  * [JavaScript基础](./day19/javascript.md)
+  * [Web入门基础-HTLM](./day19/html.md)
+  * [Web入门基础-CSS](./day19/css.md)
+  * [Web入门基础-浏览器](./day19/browser.md)
+  * [作业](./day19/homework.md)
 
-## Day20 CMDB(二)
-  * [CMDB主机页面](./day20/cmdb-host.md)
-  * [CMDB搜索页面](./day20/cmdb-search.md)
-  * [CMDB同步页面](./day20/cmdb-sync.md)
+## Day20: Vue 入门
+  * [Vue入门基础](./day20/vue-base.md)
+  * [Vue路由与状态管理](./day20/vue-all.md)
+  * [作业](./day20/homework.md)
 
-## Day21: 从RPC到GRPC
-  * [RPC入门](./day21/rpc.md)
-  * [Protobuf编解码](./day21/protobuf.md)
-  * [proto3语法入门](./day21/proto3_synx.md)
-  * [GRPC入门](./day21/grpc.md)
-  * [CMDB改造](./day21/cmdb-grpc.md)
+## Day21: 项目前端(一)
+  * [项目前端框架](./day21/devcloud-base.md)
+  * [项目登录页面](./day21/devcloud-login.md)
+  * [项目404页面](./day21/devcloud-404.md)
+  * [项目导航页面](./day21/devcloud-nav.md)
 
-## Day22: 权限中心(一)
-  * [框架介绍](./day22/framework.md)
-  * [登录认证](./day22/auth.md)
+## Day22: 项目前端(二)
+  * [新登录页面](./day22/devcloud-new-login.md)
+  * [主机列表页面](./day22/cmdb-host.md)
 
-## Day23: 权限中心(二)
-  * [开发基础](./day23/user.md)
-  * [权限判定](./day23/permission.md)
-  * [项目部署](./day23/deploy.md)
+## Day23 CMDB 前端
+  * [CMDB主机页面](./day23/cmdb-host.md)
+  * [CMDB搜索页面](./day23/cmdb-search.md)
+  * [CMDB同步页面](./day23/cmdb-sync.md)
 
 ## Day24: CI/CD系统(一)
   * [K8s架构与Etcd使用](./day24/k8s-arch.md)
