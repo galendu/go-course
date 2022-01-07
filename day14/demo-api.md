@@ -8,6 +8,8 @@
 + 第三方路由库: [httprouter](https://github.com/julienschmidt/httprouter)
 + go 操作mysql
 
+改项目相关源码位置: [RESTful Demo源码](https://gitee.com/go-course/restful-api-demo)
+
 ## 业务描述
 
 我们开发的是一个前后端分离的Web service demo:
