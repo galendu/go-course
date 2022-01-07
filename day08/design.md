@@ -68,6 +68,53 @@ func (p *aliyun) UploadFile(bucketName, objectKey, localFilePath string) error {
 这样我们就实现了一个阿里云的uploader实例, 但是这个实例能不能正常工作喃? 对我们需要写测试用例,
 也就是我们常说的DDD的开发流程
 
+
+#### 配置测试用例运行环境
+
+为了能不把我们测试用例使用的参数硬编码到代码里，可以有2个选择:
++ 单独加载测试用例使用的配置文件
++ 测试用例的配置通过环境变量配置
+
+通常我们选用第二种, 因为简单直接, 那如何配置我们的vscode 在点击run测试用户的时候加载配置喃?
+
+方法: 就是vsocde的Go 插件 在运行 go test的时候 支持环境变量注入? 
+
+![](./images/go_test_env_file.png)
+
+注意你配置文件的格式: 必须是 key=value, 比如
+```
+ALI_AK=xxx
+ALI_SK=xxx
+ALI_OSS_ENDPOINT=xxx
+ALI_BUCKET_NAME=xxx
+```
+
+当然你也可以通过直接通过本项目的配置文件进行配置，在本项目的.vscode 下是本项目的vsocde配置, 其中 settings.json就是用配置的文件:
+![](./images/setting_enfile.png)
+
+这样配置后, 当你点击 test或者 debug test的时候，测试用例就可以从你配置的文件中读取环境变量, 你们可以自行测试下
+
+测试用例配置的问题解决完了，还有一个另外一个问题, 那就是默认情况下 我们在测试用例中使用print的时候 控制台是不打印 这些测试用例的中间环节信息的, 如果我们需要打印 就需要进行配置, 如何配置?
+
+vscode 的 go插件在 执行测试用例的时候 是调用 go test 来执行的, 但是他没有加上 -v 参数, 因此我们通过vscode配置上该参数就可以了
+
+注意这里配置的是vscode全局参数, 因此只需要配置一次，后面所有项目都可以生效
+
+![](./images/go_test_v.png)
+
+然后添加如下参数即可
+
+![](./images/vscode_test_flag_setting.png)
+
+然后可以进行简单的测试, 验证是否可以生效
+
+```go
+// TDD: 测试驱动开发
+func TestUpload(t *testing.T) {
+	fmt.Println("hello test detail log")
+}
+```
+
 #### 为插件编写测试用例
 
 编写实例的测试用例: provider/aliyun/store_test.go
@@ -106,11 +153,11 @@ FAIL	gitee.com/infraboard/go-course/day8/cloudstation/store/provider/aliyun	0.04
 
 ```go
 // 构造函数
-func NewUploader(endpoint, accessID, accessKey string) store.Uploader {
+func NewUploader(endpoint, accessKey, secretKey string) store.Uploader {
 	p := &aliyun{
 		Endpoint:  endpoint,
-		AccessID:  accessID,
-		AccessKey: accessKey,
+		AccessKey:  accessKey,
+		SecretKey: secretKey,
 	}
 
 	return p
@@ -118,8 +165,8 @@ func NewUploader(endpoint, accessID, accessKey string) store.Uploader {
 
 type aliyun struct {
 	Endpoint  string 
-	AccessID  string 
-	AccessKey string 
+	AccessKey  string 
+	SecretKey string 
 }
 
 func (p *aliyun) UploadFile(bucketName, objectKey, localFilePath string) error {
@@ -147,7 +194,7 @@ func (p *aliyun) GetBucket(bucketName string) (*oss.Bucket, error) {
 	}
 
 	// New client
-	client, err := oss.New(p.Endpoint, p.AccessID, p.AccessKey)
+	client, err := oss.New(p.Endpoint, p.AccessKey, p.SecretKey)
 	if err != nil {
 		return nil, err
 	}
@@ -168,8 +215,8 @@ func (p *aliyun) GetBucket(bucketName string) (*oss.Bucket, error) {
 ```go
 type aliyun struct {
 	Endpoint  string `validate:"required"`
-	AccessID  string `validate:"required"`
-	AccessKey string `validate:"required"`
+	AccessKey  string `validate:"required"`
+	SecretKey string `validate:"required"`
 }
 ```
 
@@ -188,11 +235,11 @@ func (p *aliyun) validate() error {
 最后再New构建实体的时候执行参数校验
 ```go
 // 构造函数
-func NewUploader(endpoint, accessID, accessKey string) (store.Uploader, error) {
+func NewUploader(endpoint, accessKey, secretKey string) (store.Uploader, error) {
 	p := &aliyun{
 		Endpoint:  endpoint,
-		AccessID:  accessID,
-		AccessKey: accessKey,
+		AccessKey:  accessKey,
+		SecretKey: secretKey,
 	}
 
 	if err := p.validate(); err != nil {
@@ -223,8 +270,8 @@ func TestUploadFile(t *testing.T) {
         	Error Trace:	store_test.go:20
         	Error:      	Received unexpected error:
         	            	Key: 'aliyun.Endpoint' Error:Field validation for 'Endpoint' failed on the 'required' tag
-        	            	Key: 'aliyun.AccessID' Error:Field validation for 'AccessID' failed on the 'required' tag
         	            	Key: 'aliyun.AccessKey' Error:Field validation for 'AccessKey' failed on the 'required' tag
+        	            	Key: 'aliyun.SecretKey' Error:Field validation for 'SecretKey' failed on the 'required' tag
         	Test:       	TestUploadFile
 --- FAIL: TestUploadFile (0.00s)
 FAIL
@@ -235,8 +282,8 @@ FAIL	gitee.com/infraboard/go-course/day8/cloudstation/store/provider/aliyun	0.25
 ```go
 type aliyun struct {
 	Endpoint  string `validate:"required,url"`
-	AccessID  string `validate:"required"`
-	AccessKey string `validate:"required"`
+	AccessKey  string `validate:"required"`
+	SecretKey string `validate:"required"`
 }
 ```
 
@@ -328,8 +375,8 @@ import (
 var (
 	vers         bool
 	ossProvider  string
-	aliAccessID  string
-	aliAccessKey string
+	aliAccessKey  string
+	aliSecretKey string
 )
 
 // RootCmd represents the base command when called without any subcommands
@@ -357,8 +404,8 @@ func Execute() {
 
 func init() {
 	RootCmd.PersistentFlags().StringVarP(&ossProvider, "oss_provider", "p", "aliyun", "the oss provider [aliyun/qcloud]")
-	RootCmd.PersistentFlags().StringVarP(&aliAccessID, "ali_access_id", "i", "", "the ali oss access id")
-	RootCmd.PersistentFlags().StringVarP(&aliAccessKey, "ali_access_key", "k", "", "the ali oss access key")
+	RootCmd.PersistentFlags().StringVarP(&aliAccessKey, "ali_access_id", "i", "", "the ali oss access id")
+	RootCmd.PersistentFlags().StringVarP(&aliSecretKey, "ali_secret_key", "k", "", "the ali oss access key")
 	RootCmd.PersistentFlags().BoolVarP(&vers, "version", "v", false, "the cloud-station-cli version")
 }
 ```
@@ -372,7 +419,7 @@ Usage:
 
 Flags:
   -i, --ali_access_id string    the ali oss access id
-  -k, --ali_access_key string   the ali oss access key
+  -k, --ali_secret_key string   the ali oss access key
   -h, --help                    help for cloud-station-cli
   -p, --oss_provider string     the oss provider [aliyun/qcloud] (default "aliyun")
   -v, --version                 the cloud-station-cli version
@@ -424,9 +471,25 @@ var uploadCmd = &cobra.Command{
 		if uploadFilePath == "" {
 			return fmt.Errorf("upload file path is missing")
 		}
+
+		// 为了防止文件都堆在一个文件夹里面 无法查看
+		// 我们采用日期进行编码
 		day := time.Now().Format("20060102")
+
+		// 为了防止不同用户同一时间上传相同的文件
+		// 我们采用用户的主机名作为前置
+		hn, err := os.Hostname()
+		if err != nil {
+			ipAddr := getOutBindIp()
+			if ipAddr == "" {
+				hn = "unknown"
+			} else {
+				hn = ipAddr
+			}
+		}
+
 		fn := path.Base(uploadFilePath)
-		ok := fmt.Sprintf("%s/%s", day, fn)
+		ok := fmt.Sprintf("%s/%s/%s", day, hn, fn)
 		err = p.UploadFile(buckName, ok, uploadFilePath)
 		if err != nil {
 			return err
@@ -435,18 +498,33 @@ var uploadCmd = &cobra.Command{
 	},
 }
 
+func getOutBindIp() string {
+	conn, err := net.Dial("udp", "baidu.com:80")
+	if err != nil {
+		return ""
+	}
+	defer conn.Close()
+
+	addr := strings.Split(conn.LocalAddr().String(), ":")
+	if len(addr) == 0 {
+		return ""
+	}
+
+	return addr[0]
+}
+
 func getProvider() (p store.Uploader, err error) {
 	switch ossProvider {
 	case "aliyun":
 		fmt.Printf("上传云商: 阿里云[%s]\n", defaultEndpoint)
-		if aliAccessID == "" {
-			aliAccessID = defaultALIAK
-		}
 		if aliAccessKey == "" {
-			aliAccessKey = defaultALISK
+			aliAccessKey = defaultALIAK
 		}
-		fmt.Printf("上传用户: %s\n", aliAccessID)
-		p, err = aliyun.NewUploader(bucketEndpoint, aliAccessID, aliAccessKey)
+		if aliSecretKey == "" {
+			aliSecretKey = defaultALISK
+		}
+		fmt.Printf("上传用户: %s\n", aliAccessKey)
+		p, err = aliyun.NewUploader(bucketEndpoint, aliAccessKey, aliSecretKey)
 		return
 	case "qcloud":
 		return nil, fmt.Errorf("not impl")
@@ -479,7 +557,7 @@ Flags:
 
 Global Flags:
   -i, --ali_access_id string    the ali oss access id
-  -k, --ali_access_key string   the ali oss access key
+  -k, --ali_secret_key string   the ali oss access key
   -p, --oss_provider string     the oss provider [aliyun/qcloud] (default "aliyun")
   -v, --version                 the cloud-station-cli version
 ```
@@ -502,7 +580,7 @@ const (
 $ go run cmd/client/main.go upload -f go.mod  -k xxxx
 上传云商: 阿里云[http://oss-cn-chengdu.aliyuncs.com]
 上传用户: LTAI5tMvG5NA51eiH3ENZDaa
-下载链接: http://cloud-station.oss-cn-chengdu.aliyuncs.com/20210724%2Fgo.mod?Expires=1627207783&OSSAccessKeyId=LTAI5tMvG5NA51eiH3ENZDaa&Signature=wq%2F%2BWKalz11w3RCWfR1Q6A6p40k%3D
+下载链接: http://cloud-station.oss-cn-chengdu.aliyuncs.com/20210724%2Fgo.mod?Expires=1627207783&OSSSecretKeyId=LTAI5tMvG5NA51eiH3ENZDaa&Signature=wq%2F%2BWKalz11w3RCWfR1Q6A6p40k%3D
 
 注意: 文件下载有效期为1天, 中转站保存时间为3天, 请及时下载
 ```
@@ -518,9 +596,9 @@ $ go run cmd/client/main.go upload -f go.mod  -k xxxx
 
 简单的做法是直接使用fmt的scan函数从标准输出获取用户输入:
 ```go
-func getAccessKeyFromInput() {
+func getSecretKeyFromInput() {
 	fmt.Printf("请输入access key: ")
-	fmt.Scanln(&aliAccessKey)
+	fmt.Scanln(&aliSecretKey)
 }
 ```
 
@@ -528,9 +606,9 @@ func getAccessKeyFromInput() {
 ```go
 func getProvider() (p store.Uploader, err error) {
 	...
-	fmt.Printf("上传用户: %s\n", aliAccessID)
-	getAccessKeyFromInput()
-	p, err = aliyun.NewUploader(bucketEndpoint, aliAccessID, aliAccessKey)
+	fmt.Printf("上传用户: %s\n", aliAccessKey)
+	getSecretKeyFromInput()
+	p, err = aliyun.NewUploader(bucketEndpoint, aliAccessKey, aliSecretKey)
 	...
 }
 ```
@@ -538,11 +616,11 @@ func getProvider() (p store.Uploader, err error) {
 我了防止密码被别人窥见到, 我们可以使用一个第三方库来加密我们的输入: https://github.com/AlecAivazis/survey
 
 ```go
-func getAccessKeyFromInputV2() {
+func getSecretKeyFromInputV2() {
 	prompt := &survey.Password{
 		Message: "请输入access key: ",
 	}
-	survey.AskOne(prompt, &aliAccessKey)
+	survey.AskOne(prompt, &aliSecretKey)
 }
 ```
 
@@ -629,7 +707,7 @@ func (p *OssProgressListener) ProgressChanged(event *oss.ProgressEvent) {
 然后我们把listner作为uploader的一个实例属性, 实例初始化时直接生成, 在上传的时候传递过去
 ```go
 // 构造函数
-func NewUploader(endpoint, accessID, accessKey string) (store.Uploader, error) {
+func NewUploader(endpoint, accessKey, secretKey string) (store.Uploader, error) {
 	p := &aliyun{
 		...
 		listner: NewOssProgressListener(),

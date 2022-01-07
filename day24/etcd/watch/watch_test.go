@@ -7,9 +7,11 @@ import (
 )
 
 func TestCreate(t *testing.T) {
-	watch.UpdateConfig("cmdb v3")
+	watch.UpdateConfig("cmdb v4")
+
 }
 
 func TestDelete(t *testing.T) {
 	watch.DeleteConfig()
+
 }

@@ -6,6 +6,8 @@ require (
 	fyne.io/fyne/v2 v2.0.4
 	github.com/BurntSushi/toml v0.3.1
 	github.com/aliyun/alibaba-cloud-sdk-go v1.61.1290
+	github.com/aliyun/aliyun-oss-go-sdk v2.2.0+incompatible
+	github.com/baiyubin/aliyun-sts-go-sdk v0.0.0-20180326062324-cfa1a18b161f // indirect
 	github.com/caarlos0/env/v6 v6.6.2
 	github.com/go-playground/validator/v10 v10.9.0
 	github.com/go-sql-driver/mysql v1.5.0

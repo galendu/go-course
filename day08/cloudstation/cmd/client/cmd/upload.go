@@ -16,8 +16,7 @@ var (
 	// BuckName todo
 	defaultBuckName = "cloud-station"
 	defaultEndpoint = "http://oss-cn-chengdu.aliyuncs.com"
-	defaultALIAK    = "LTAI5tMvG5NA51eiH3ENZDaa"
-	defaultALISK    = ""
+	defaultALIAK    = ""
 )
 
 var (
@@ -57,8 +56,8 @@ func getUploader() (store.Uploader, error) {
 		prompt := &survey.Password{
 			Message: "请输入阿里云SK: ",
 		}
-		survey.AskOne(prompt, &aliAccessKey)
-		return aliyun.NewUploader(bucketEndpoint, aliAccessID, aliAccessKey)
+		survey.AskOne(prompt, &aliSecretKey)
+		return aliyun.NewUploader(bucketEndpoint, aliAccessKey, aliSecretKey)
 	case "qcloud":
 		return nil, fmt.Errorf("not impl")
 	case "minio":

@@ -39,7 +39,7 @@ func NewClient() {
 	}
 	fmt.Println(getResp.Kvs)
 
-	// get with prefix
+	// get with prefix --prefix
 	getResp, err = client.Get(ctx, key, clientv3.WithPrefix())
 	if err != nil {
 		panic(err)

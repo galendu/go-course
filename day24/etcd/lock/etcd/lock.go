@@ -32,6 +32,7 @@ func NewEtcdMutex(ctx context.Context, client *clientv3.Client, pfx string) (syn
 
 }
 
+// 面向对象封装
 type EtcdMutex struct {
 	sess *concurrency.Session
 	m    *concurrency.Mutex

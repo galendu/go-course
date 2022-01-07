@@ -8,6 +8,41 @@
 + 第三方路由库: [httprouter](https://github.com/julienschmidt/httprouter)
 + go 操作mysql
 
+## 业务描述
+
+我们开发的是一个前后端分离的Web service demo:
+
+![](./images/web-service.png)
+
+demo只有基础功能就是对主机(Host) 这种资源提供增删查改的基础操作(CRUD), 我们基于Restful 来架设我们的API server
+
+![](./images/restful-api.png)
+
+## RESTFUL 简介
+
+REST，表示性状态转移（representation state transfer）。简单来说，就是用URI表示资源，用HTTP方法(GET, POST, PUT, DELETE)表征对这些资源的操作
+
++ 资源。首先要明确资源就是网络上的一个实体，可以是文本、图片、音频、视频。资源总是以一定的格式来表现自己
+
++ URI。统一资源标识符
+
++ 状态变化
+  + 幂等性: 无论一个操作被执行一次还是多次，执行后的效果都相同, GET
+  + POST, DELETE, PUT, PATCH 都对应资源的各种状态变化
+
+比如下面就是一组Restflu风格的API设计
+
+![](./images/restful-exm.png)
+
+## API 设计
+
++ GET:   /hosts/     查看主机列表
++ GET:   /hosts/:id/ 查询主机详情
++ POST： /hosts/      新增主机
++ PUT:   /hosts/:id   修改主机(全量)
++ PATCH: /hosts/:id   修改主机(部分)  
++ DELETE: /hosts/:id  删除主机
+
 
 ## 项目骨架介绍
 
