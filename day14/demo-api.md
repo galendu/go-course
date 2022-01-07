@@ -187,7 +187,7 @@ database = "go_course"
 
 [log]
 level = "debug"
-path = "logs"
+dir = "logs"
 format = "text"
 to = "stdout"
 ``` 
@@ -529,13 +529,15 @@ const (
 	insertResourceSQL = `INSERT INTO resource (
 		id,vendor,region,zone,create_at,expire_at,category,type,instance_id,
 		name,description,status,update_at,sync_at,sync_accout,public_ip,
-		private_ip,pay_type
-	) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);`
-	insertHostSQL = `INSERT INTO host (
+		private_ip,pay_type,resource_hash,describe_hash
+	) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);`
+
+	insertDescribeSQL = `INSERT INTO host (
 		resource_id,cpu,memory,gpu_amount,gpu_spec,os_type,os_name,
 		serial_number,image_id,internet_max_bandwidth_out,
 		internet_max_bandwidth_in,key_pair_name,security_groups
-	) VALUES (?,?,?,?,?,?,?,?,?,?,?,?);`
+	) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?);`
+
 	queryHostSQL = `SELECT * FROM resource as r LEFT JOIN host h ON r.id=h.resource_id`
 )
 ```
@@ -546,88 +548,143 @@ const (
 + 查询时需要使用sqlbuilder(自己简单实现)
 
 ```go
-func (s *service) SaveHost(ctx context.Context, h *host.Host) (*host.Host, error) {
-	h.Id = xid.New().String()
-	h.ResourceId = h.Id
+func (i *impl) CreateHost(ctx context.Context, ins *host.Host) (
+	*host.Host, error) {
 
-	// 避免SQL注入, 请使用Prepare
-	stmt, err := s.db.Prepare(insertResourceSQL)
+	// 校验数据合法性
+	if err := ins.Validate(); err != nil {
+		return nil, err
+	}
+
+	ins.Id = xid.New().String()
+	if ins.CreateAt == 0 {
+		ins.CreateAt = ftime.Now().Timestamp()
+	}
+
+	// 把数据入库到 resource表和host表
+	// 一次需要往2个表录入数据, 我们需要2个操作 要么都成功，要么都失败, 事务的逻辑
+
+	// 全局异常
+	var (
+		resStmt  *sql.Stmt
+		descStmt *sql.Stmt
+		err      error
+	)
+
+	// 初始化一个事务, 所有的操作都使用这个事务来进行提交
+	tx, err := i.db.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
-	defer stmt.Close()
 
-	_, err = stmt.Exec(
-		h.Id, h.Vendor, h.Region, h.Zone, h.CreateAt, h.ExpireAt, h.Category, h.Type, h.InstanceId,
-		h.Name, h.Description, h.Status, h.UpdateAt, h.SyncAt, h.SyncAccount, h.PublicIP,
-		h.PrivateIP, h.PayType,
+	// 函数执行完成后, 专门判断事务是否正常
+	defer func() {
+		// 事务执行有异常
+		if err != nil {
+			err := tx.Rollback()
+			if err != nil {
+				i.log.Debugf("tx rollback error, %s", err)
+			}
+		} else {
+			err := tx.Commit()
+			if err != nil {
+				i.log.Debugf("tx commit error, %s", err)
+			}
+		}
+	}()
+
+	// 需要判断事务执行过程当中是否有异常
+	// 有异常 就回滚事务, 无异常就提交事务
+
+	// 在这个事务里面执行 Insert SQL, 先执行Prepare, 防止SQL注入攻击
+	resStmt, err = tx.Prepare(insertResourceSQL)
+	if err != nil {
+		return nil, fmt.Errorf("prepare resource sql error, %s", err)
+	}
+	defer resStmt.Close()
+
+	// 注意: Prepare语句 会占用MySQL资源, 如果你使用后不关闭会导致Prepare溢出
+	_, err = resStmt.Exec(
+		ins.Id, ins.Vendor, ins.Region, ins.Zone, ins.CreateAt, ins.ExpireAt, ins.Category, ins.Type, ins.InstanceId,
+		ins.Name, ins.Description, ins.Status, ins.UpdateAt, ins.SyncAt, ins.SyncAccount, ins.PublicIP,
+		ins.PrivateIP, ins.PayType, ins.ResourceHash, ins.DescribeHash,
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("insert resource error, %s", err)
 	}
 
-	// 避免SQL注入, 请使用Prepare
-	stmt, err = s.db.Prepare(insertHostSQL)
+	// 同样的逻辑,  我们也需要Host的数据存入
+	descStmt, err = tx.Prepare(insertDescribeSQL)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("prepare describe sql error, %s", err)
 	}
-	defer stmt.Close()
+	defer descStmt.Close()
 
-	_, err = stmt.Exec(
-		h.ResourceId, h.CPU, h.Memory, h.GPUAmount, h.GPUSpec, h.OSType, h.OSName,
-		h.SerialNumber, h.ImageID, h.InternetMaxBandwidthOut,
-		h.InternetMaxBandwidthIn, h.KeyPairName, h.SecurityGroups,
+	_, err = descStmt.Exec(
+		ins.Id, ins.CPU, ins.Memory, ins.GPUAmount, ins.GPUSpec, ins.OSType, ins.OSName,
+		ins.SerialNumber, ins.ImageID, ins.InternetMaxBandwidthOut,
+		ins.InternetMaxBandwidthIn, ins.KeyPairName, ins.SecurityGroups,
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("insert describe error, %s", err)
 	}
 
-	return h, nil
+	return ins, nil
 }
 
-func (s *service) QueryHost(ctx context.Context, req *host.QueryHostRequest) (*host.HostSet, error) {
-	query := sqlbuilder.NewQuery(queryHostSQL)
-	querySQL, args := query.Order("create_at").Desc().Limit(req.OffSet(), uint(req.PageSize)).BuildQuery()
-	queryStmt, err := s.db.Prepare(querySQL)
-	if err != nil {
-		return nil, exception.NewInternalServerError("prepare query job task error, %s", err.Error())
-	}
-	defer queryStmt.Close()
+func (i *impl) QueryHost(ctx context.Context, req *host.QueryHostRequest) (
+	*host.Set, error) {
+	query := sqlbuilder.NewQuery(queryHostSQL).Order("create_at").Desc().Limit(int64(req.Offset()), uint(req.PageSize))
 
-	rows, err := queryStmt.Query(args...)
-	if err != nil {
-		return nil, exception.NewInternalServerError(err.Error())
-	}
-	defer rows.Close()
+	// build 查询语句
+	sqlStr, args := query.BuildQuery()
+	i.log.Debugf("sql: %s, args: %v", sqlStr, args)
 
-	set := host.NewHostSet()
+	// Prepare
+	stmt, err := i.db.Prepare(sqlStr)
+	if err != nil {
+		return nil, fmt.Errorf("prepare query host sql error, %s", err)
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.Query(args...)
+	if err != nil {
+		return nil, fmt.Errorf("stmt query error, %s", err)
+	}
+
+	// 初始化需要返回的对象
+	set := host.NewSet()
+
+	// 迭代查询表里的数据
 	for rows.Next() {
 		ins := host.NewDefaultHost()
-		err := rows.Scan(
+		if err := rows.Scan(
 			&ins.Id, &ins.Vendor, &ins.Region, &ins.Zone, &ins.CreateAt, &ins.ExpireAt,
-			&ins.Category, &ins.Category, &ins.Type, &ins.InstanceId, &ins.Name,
+			&ins.Category, &ins.Type, &ins.InstanceId, &ins.Name,
 			&ins.Description, &ins.Status, &ins.UpdateAt, &ins.SyncAt, &ins.SyncAccount,
-			&ins.PublicIP, &ins.PrivateIP, &ins.PayType, &ins.ResourceId, &ins.CPU,
+			&ins.PublicIP, &ins.PrivateIP, &ins.PayType, &ins.ResourceHash, &ins.DescribeHash,
+			&ins.Id, &ins.CPU,
 			&ins.Memory, &ins.GPUAmount, &ins.GPUSpec, &ins.OSType, &ins.OSName,
 			&ins.SerialNumber, &ins.ImageID, &ins.InternetMaxBandwidthOut, &ins.InternetMaxBandwidthIn,
 			&ins.KeyPairName, &ins.SecurityGroups,
-		)
-		if err != nil {
-			return nil, exception.NewInternalServerError("query job task error, %s", err.Error())
+		); err != nil {
+			return nil, err
 		}
+
 		set.Add(ins)
 	}
 
-	// 获取total
-	countSQL, args := query.BuildCount()
-	countStmt, err := s.db.Prepare(countSQL)
+	// Count 获取总数量
+	// build 一个count语句
+	countStr, countArgs := query.BuildCount()
+	countStmt, err := i.db.Prepare(countStr)
 	if err != nil {
-		return nil, exception.NewInternalServerError(err.Error())
+		return nil, fmt.Errorf("prepare count stmt error, %s", err)
 	}
 	defer countStmt.Close()
-	err = countStmt.QueryRow(args...).Scan(&set.Total)
-	if err != nil {
-		return nil, exception.NewInternalServerError(err.Error())
+
+	if err := countStmt.QueryRow(countArgs...).Scan(&set.Total); err != nil {
+		return nil, fmt.Errorf("count stmt query error, %s", err)
 	}
 
 	return set, nil
@@ -715,31 +772,97 @@ func RegistAPI(r *httprouter.Router) {
 我们请求和响应 使用JSON, 为了标准化接口数据结构, 封装了轻量级的request和response工具库
 
 ```go
-func (h *handler) QueryHost(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	query := host.NewQueryHostRequest()
-	set, err := h.service.QueryHost(r.Context(), query)
-	if err != nil {
-		response.Failed(w, err)
-		return
-	}
-	response.Success(w, set)
-}
-
-func (h *handler) SaveHost(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	ins := host.NewDefaultHost()
-
-	if err := request.GetDataFromRequest(r, ins); err != nil {
+// 创建Host
+func (h *handler) CreateHost(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	req := host.NewDefaultHost()
+	if err := request.GetDataFromRequest(r, req); err != nil {
 		response.Failed(w, err)
 		return
 	}
 
-	ins, err := h.service.SaveHost(r.Context(), ins)
+	ins, err := h.host.CreateHost(r.Context(), req)
 	if err != nil {
 		response.Failed(w, err)
 		return
 	}
 
 	response.Success(w, ins)
+}
+
+// 查询主机列表, 分页查询
+func (h *handler) QueryHost(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	// query string
+	qs := r.URL.Query()
+
+	// 设置分页的默认值
+	var (
+		pageSize   = 20
+		pageNumber = 1
+	)
+
+	// 从query string读取分页参数
+	psStr := qs.Get("page_size")
+	if psStr != "" {
+		pageSize, _ = strconv.Atoi(psStr)
+	}
+	pnStr := qs.Get("page_number")
+	if pnStr != "" {
+		pageNumber, _ = strconv.Atoi(pnStr)
+	}
+
+	req := &host.QueryHostRequest{
+		PageSize:   pageSize,
+		PageNumber: pageNumber,
+	}
+
+	set, err := h.host.QueryHost(r.Context(), req)
+	if err != nil {
+		response.Failed(w, err)
+		return
+	}
+
+	// 传递的是一个对象
+	// success, 会把你这个对象序列化成一个JSON
+	// 补充返回的数据
+	response.Success(w, set)
+}
+```
+
+### 添加关键字搜索
+
+后端支持关键字搜索, 添加keyworkds查询参数:
+
+```go
+type QueryHostRequest struct {
+	PageSize   uint64 `json:"page_size,omitempty"`
+	PageNumber uint64 `json:"page_number,omitempty"`
+	Keywords   string `json:"keywords"`
+}
+```
+
+添加过滤逻辑
+```go
+func (s *service) QueryHost(ctx context.Context, req *host.QueryHostRequest) (*host.HostSet, error) {
+	query := sqlbuilder.NewQuery(queryHostSQL)
+	if req.Keywords != "" {
+		query.Where("r.name LIKE ?", "%"+req.Keywords+"%")
+	}
+  ...
+}
+```
+
+http 协议处理处, 接收该参数
+```go
+func NewQueryHostRequestFromHTTP(r *http.Request) *QueryHostRequest {
+	qs := r.URL.Query()
+
+  ...
+
+	return &QueryHostRequest{
+		PageSize:   psUint64,
+		PageNumber: pnUint64,
+		Keywords:   qs.Get("keywords"),
+	}
 }
 ```
 
@@ -931,6 +1054,14 @@ func (s *HTTPService) Stop() error {
 }
 ```
 
+
+
+
+## 启动服务并验证
+
+
+### 启动服务
+
 最后我们就可以启动服务了
 
 ```sh
@@ -938,6 +1069,13 @@ $ go run main.go -f etc/demo-api.toml start
 2021-09-01T21:04:34.939+0800    INFO    [INIT]  cmd/start.go:139        log level: debug
 2021-09-01T21:04:35.129+0800    INFO    [API]   protocol/http.go:53     HTTP服务启动成功, 监听地址: 0.0.0.0:8050
 ```
+
+### 验证服务
+
+使用Postman 验证
++ 主机录入
++ 主机分页查询
++ 主机关键字搜索
 
 ### 编译优化
 

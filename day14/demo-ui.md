@@ -414,44 +414,6 @@ export default {
   },
 ```
 
-## 后端添加关键字搜索
-
-后端支持关键字搜索, 添加keyworkds查询参数:
-
-```go
-type QueryHostRequest struct {
-	PageSize   uint64 `json:"page_size,omitempty"`
-	PageNumber uint64 `json:"page_number,omitempty"`
-	Keywords   string `json:"keywords"`
-}
-```
-
-添加过滤逻辑
-```go
-func (s *service) QueryHost(ctx context.Context, req *host.QueryHostRequest) (*host.HostSet, error) {
-	query := sqlbuilder.NewQuery(queryHostSQL)
-	if req.Keywords != "" {
-		query.Where("r.name LIKE ?", "%"+req.Keywords+"%")
-	}
-  ...
-}
-```
-
-http 协议处理处, 接收该参数
-```go
-func NewQueryHostRequestFromHTTP(r *http.Request) *QueryHostRequest {
-	qs := r.URL.Query()
-
-  ...
-
-	return &QueryHostRequest{
-		PageSize:   psUint64,
-		PageNumber: pnUint64,
-		Keywords:   qs.Get("keywords"),
-	}
-}
-```
-
 ![](./images/keywords-query.jpg)
 
 ## 前端添加关键字搜索框
