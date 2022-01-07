@@ -771,6 +771,9 @@ func RegistAPI(r *httprouter.Router) {
 
 我们请求和响应 使用JSON, 为了标准化接口数据结构, 封装了轻量级的request和response工具库
 
+
+#### 主机添加接口
+
 ```go
 // 创建Host
 func (h *handler) CreateHost(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
@@ -788,7 +791,11 @@ func (h *handler) CreateHost(w http.ResponseWriter, r *http.Request, _ httproute
 
 	response.Success(w, ins)
 }
+```
 
+#### 主机列表查询接口
+
+```go
 // 查询主机列表, 分页查询
 func (h *handler) QueryHost(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	// query string
@@ -828,7 +835,7 @@ func (h *handler) QueryHost(w http.ResponseWriter, r *http.Request, _ httprouter
 }
 ```
 
-### 添加关键字搜索
+#### 支持关键字搜索
 
 后端支持关键字搜索, 添加keyworkds查询参数:
 
@@ -865,6 +872,23 @@ func NewQueryHostRequestFromHTTP(r *http.Request) *QueryHostRequest {
 	}
 }
 ```
+
+#### 主机详情查询接口
+
+
+
+
+
+#### 主机修改接口
+
+
+
+
+
+#### 主机删除接口
+
+
+
 
 ## 组装功能, 实现启动入口
 
