@@ -558,7 +558,10 @@ CREATE TABLE `host` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 ```
 
-### 实现存储和查询接口
+### 实现接口
+
+
+#### 主机添加
 
 定义Insert和Select语句
 ```go
@@ -668,7 +671,15 @@ func (i *impl) CreateHost(ctx context.Context, ins *host.Host) (
 
 	return ins, nil
 }
+```
 
+#### 主机列表查询
+
+```go
+queryHostSQL = `SELECT * FROM resource as r LEFT JOIN host h ON r.id=h.resource_id`
+```
+
+```go
 func (i *impl) QueryHost(ctx context.Context, req *host.QueryHostRequest) (
 	*host.Set, error) {
 	query := sqlbuilder.NewQuery(queryHostSQL).Order("create_at").Desc().Limit(int64(req.Offset()), uint(req.PageSize))
@@ -726,7 +737,15 @@ func (i *impl) QueryHost(ctx context.Context, req *host.QueryHostRequest) (
 
 	return set, nil
 }
+```
 
+#### 主机详情查询
+
+```go
+queryHostSQL = `SELECT * FROM resource as r LEFT JOIN host h ON r.id=h.resource_id`
+```
+
+```go
 func (i *impl) DesribeHost(ctx context.Context, req *host.DesribeHostRequest) (
 	*host.Host, error) {
 	query := sqlbuilder.NewQuery(queryHostSQL).Where("r.id = ?", req.Id)
@@ -762,7 +781,17 @@ func (i *impl) DesribeHost(ctx context.Context, req *host.DesribeHostRequest) (
 
 	return ins, nil
 }
+```
 
+#### 主机更新
+
+```go
+updateResourceSQL = `UPDATE resource SET vendor=?,region=?,zone=?,expire_at=?,name=?,description=? WHERE id = ?`
+
+updateHostSQL = `UPDATE host SET cpu=?,memory=? WHERE resource_id = ?`
+```
+
+```go
 // 自己模仿 Insert,使用事务一次完成2个SQL操作
 func (i *impl) UpdateHost(ctx context.Context, req *host.UpdateHostRequest) (
 	*host.Host, error) {
@@ -806,7 +835,17 @@ func (i *impl) UpdateHost(ctx context.Context, req *host.UpdateHostRequest) (
 
 	return ins, nil
 }
+```
 
+#### 主机删除
+
+```go
+deleteResourceSQL = `DELETE FROM resource WHERE id = ?`
+
+deleleHostSQL = `DELETE FROM host WHERE resource_id = ?`
+```
+
+```go
 // 自己模仿 Insert,使用事务一次完成2个SQL操作
 func (i *impl) DeleteHost(ctx context.Context, req *host.DeleteHostRequest) (
 	*host.Host, error) {
