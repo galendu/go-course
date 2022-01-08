@@ -726,6 +726,151 @@ func (i *impl) QueryHost(ctx context.Context, req *host.QueryHostRequest) (
 
 	return set, nil
 }
+
+func (i *impl) DesribeHost(ctx context.Context, req *host.DesribeHostRequest) (
+	*host.Host, error) {
+	query := sqlbuilder.NewQuery(queryHostSQL).Where("r.id = ?", req.Id)
+
+	// build 查询语句
+	sqlStr, args := query.BuildQuery()
+	i.log.Debugf("sql: %s, args: %v", sqlStr, args)
+
+	// Prepare
+	stmt, err := i.db.Prepare(sqlStr)
+	if err != nil {
+		return nil, fmt.Errorf("prepare query host sql error, %s", err)
+	}
+	defer stmt.Close()
+
+	ins := host.NewDefaultHost()
+	err = stmt.QueryRow(args...).Scan(
+		&ins.Id, &ins.Vendor, &ins.Region, &ins.Zone, &ins.CreateAt, &ins.ExpireAt,
+		&ins.Category, &ins.Type, &ins.InstanceId, &ins.Name,
+		&ins.Description, &ins.Status, &ins.UpdateAt, &ins.SyncAt, &ins.SyncAccount,
+		&ins.PublicIP, &ins.PrivateIP, &ins.PayType, &ins.ResourceHash, &ins.DescribeHash,
+		&ins.Id, &ins.CPU,
+		&ins.Memory, &ins.GPUAmount, &ins.GPUSpec, &ins.OSType, &ins.OSName,
+		&ins.SerialNumber, &ins.ImageID, &ins.InternetMaxBandwidthOut, &ins.InternetMaxBandwidthIn,
+		&ins.KeyPairName, &ins.SecurityGroups,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, exception.NewNotFound("host %s not found", req.Id)
+		}
+		return nil, fmt.Errorf("stmt query error, %s", err)
+	}
+
+	return ins, nil
+}
+
+// 自己模仿 Insert,使用事务一次完成2个SQL操作
+func (i *impl) UpdateHost(ctx context.Context, req *host.UpdateHostRequest) (
+	*host.Host, error) {
+
+	// 重新查询出来
+	ins, err := i.DesribeHost(ctx, host.NewDesribeHostRequestWithID(req.Id))
+	if err != nil {
+		return nil, err
+	}
+
+	// 对象更新(PATCH/PUT)
+	switch req.UpdateMode {
+	case host.PUT:
+		// 对象更新(全量更新)
+		ins.Update(req.Resource, req.Describe)
+	case host.PATCH:
+		// 对象打补丁(部分更新)
+		err := ins.Patch(req.Resource, req.Describe)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// 校验更新后的数据是否合法
+	if err := ins.Validate(); err != nil {
+		return nil, err
+	}
+
+	stmt, err := i.db.Prepare(updateResourceSQL)
+	if err != nil {
+		return nil, err
+	}
+	defer stmt.Close()
+
+	// DML
+	// vendor=?,region=?,zone=?,expire_at=?,name=?,description=? WHERE id = ?
+	_, err = stmt.Exec(ins.Vendor, ins.Region, ins.Zone, ins.ExpireAt, ins.Name, ins.Description, ins.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	return ins, nil
+}
+
+// 自己模仿 Insert,使用事务一次完成2个SQL操作
+func (i *impl) DeleteHost(ctx context.Context, req *host.DeleteHostRequest) (
+	*host.Host, error) {
+
+	// 全局异常
+	var (
+		resStmt  *sql.Stmt
+		descStmt *sql.Stmt
+		err      error
+	)
+
+	// 重新查询出来
+	ins, err := i.DesribeHost(ctx, host.NewDesribeHostRequestWithID(req.Id))
+	if err != nil {
+		return nil, err
+	}
+
+	// 初始化一个事务, 所有的操作都使用这个事务来进行提交
+	// 比如 用户http 请求取消了, 但是操作数据的逻辑 并不知道
+	tx, err := i.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	// 函数执行完成后, 专门判断事务是否正常
+	defer func() {
+		// 事务执行有异常
+		if err != nil {
+			err := tx.Rollback()
+			if err != nil {
+				i.log.Debugf("tx rollback error, %s", err)
+			}
+		} else {
+			err := tx.Commit()
+			if err != nil {
+				i.log.Debugf("tx commit error, %s", err)
+			}
+		}
+	}()
+
+	resStmt, err = tx.Prepare(deleteResourceSQL)
+	if err != nil {
+		return nil, err
+	}
+	defer resStmt.Close()
+
+	_, err = resStmt.Exec(req.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	descStmt, err = tx.Prepare(deleleHostSQL)
+	if err != nil {
+		return nil, err
+	}
+	defer descStmt.Close()
+
+	_, err = resStmt.Exec(req.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	return ins, nil
+}
 ```
 
 到此我们实现了数据的存储与分页查询
@@ -912,19 +1057,105 @@ func NewQueryHostRequestFromHTTP(r *http.Request) *QueryHostRequest {
 
 #### 主机详情查询接口
 
+```go
+// 查询主机列表, 分页查询
+// httprouter params 保存这 路径参数
+func (h *handler) DescribeHost(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	req := &host.DesribeHostRequest{
+		Id: ps.ByName("id"),
+	}
+
+	set, err := h.host.DesribeHost(r.Context(), req)
+	if err != nil {
+		response.Failed(w, err)
+		return
+	}
+
+	// 传递的是一个对象
+	// success, 会把你这个对象序列化成一个JSON
+	// 补充返回的数据
+	response.Success(w, set)
+}
+```
 
 
 
 
 #### 主机修改接口
 
+```go
+// httprouter params 保存这 路径参数
+func (h *handler) UpdateHost(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
+	req := host.NewPutUpdateHostRequest()
+	// 解析HTTP协议, 通过Json反序列化, JSON --> Request
+	if err := request.GetDataFromRequest(r, req); err != nil {
+		response.Failed(w, err)
+		return
+	}
+
+	req.Id = ps.ByName("id")
+
+	set, err := h.host.UpdateHost(r.Context(), req)
+	if err != nil {
+		response.Failed(w, err)
+		return
+	}
+
+	// 传递的是一个对象
+	// success, 会把你这个对象序列化成一个JSON
+	// 补充返回的数据
+	response.Success(w, set)
+}
+
+// httprouter params 保存这 路径参数
+func (h *handler) PatchHost(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	req := host.NewPatchUpdateHostRequest()
+	// 解析HTTP协议, 通过Json反序列化, JSON --> Request
+	if err := request.GetDataFromRequest(r, req); err != nil {
+		response.Failed(w, err)
+		return
+	}
+
+	req.Id = ps.ByName("id")
+
+	set, err := h.host.UpdateHost(r.Context(), req)
+	if err != nil {
+		response.Failed(w, err)
+		return
+	}
+
+	// 传递的是一个对象
+	// success, 会把你这个对象序列化成一个JSON
+	// 补充返回的数据
+	response.Success(w, set)
+}
+```
 
 
 
 #### 主机删除接口
 
+```go
+// 删除主机
+// httprouter params 保存这 路径参数
+func (h *handler) DeleteHost(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	req := &host.DeleteHostRequest{
+		Id: ps.ByName("id"),
+	}
 
+	set, err := h.host.DeleteHost(r.Context(), req)
+	if err != nil {
+		response.Failed(w, err)
+		return
+	}
+
+	// 传递的是一个对象
+	// success, 会把你这个对象序列化成一个JSON
+	// 补充返回的数据
+	response.Success(w, set)
+}
+```
 
 
 ## 组装功能, 实现启动入口
