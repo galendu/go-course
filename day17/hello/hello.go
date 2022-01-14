@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"gitee.com/infraboard/go-course/day22/middleware"
+	"gitee.com/infraboard/go-course/day17/middleware"
 )
 
 func hello(wr http.ResponseWriter, r *http.Request) {

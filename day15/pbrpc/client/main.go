@@ -6,8 +6,8 @@ import (
 	"net"
 	"net/rpc"
 
-	"gitee.com/infraboard/go-course/day21/pbrpc/codec/client"
-	"gitee.com/infraboard/go-course/day21/pbrpc/service"
+	"gitee.com/infraboard/go-course/day15/pbrpc/codec/client"
+	"gitee.com/infraboard/go-course/day15/pbrpc/service"
 )
 
 // 约束客户端

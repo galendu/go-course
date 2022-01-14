@@ -375,6 +375,337 @@ func main() {
 }
 ```
 
+## gRPC认证
+
+前面我们的grpc服务 在无任何保护机制下 都可以被任何人调用, 这是很危险的, 因此我们需要为grpc 添加认证的功能
+
+我们在上面的流程中可以得知Grpc有2种模式:
++ Request Response模式
++ Stream 模式
+
+在grpc的认证体系中, 着2种认证是独立开的，大家可以思考下为什么?
+
+### Request Response认证
+
+我们先来看看 grpc框架给我们预留的 拦截器钩子:
+
+![](./images/grpc-unary.png)
+
+#### 原理
+
+我们可以来详细看看, 这个拦截器给我们提供哪些信息
+
+![](./images/grpc-server-inter.png)
+
+
++ ctx 请求上下文
++ req rpc请求数据
++ info 服务端相关数据, 不用理解这个
++ handler 处理请求的handler, 相对于next()
++ resp rpc响应
++ err rpc 错误
+
+gprc 基于HTTP2通讯, grpc的拦截器的作用原理和 http的中间件是一样的:
+
+![](./images/http-middle.png)
+
+#### 编写中间件
+
+基于此原理，我们来编写一个 Request Response模式下的中间件
+
+```go
+const (
+	ClientHeaderKey = "client-id"
+	ClientSecretKey = "client-secret"
+)
+
+// GrpcAuthUnaryServerInterceptor returns a new unary server interceptor for auth.
+func GrpcAuthUnaryServerInterceptor() grpc.UnaryServerInterceptor {
+	return newGrpcAuther().Auth
+}
+
+func newGrpcAuther() *grpcAuther {
+	return &grpcAuther{
+		log: zap.L().Named("Grpc Auther"),
+	}
+}
+
+// internal todo
+type grpcAuther struct {
+	log logger.Logger
+}
+
+func (a *grpcAuther) Auth(
+	ctx context.Context, req interface{},
+	info *grpc.UnaryServerInfo,
+	handler grpc.UnaryHandler,
+) (resp interface{}, err error) {
+	// 重上下文中获取认证信息
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, fmt.Errorf("ctx is not an grpc incoming context")
+	}
+
+	fmt.Println("gprc header info: ", md)
+
+	clientId, clientSecret := a.GetClientCredentialsFromMeta(md)
+
+	// 校验调用的客户端凭证是否有效
+	if err := a.validateServiceCredential(clientId, clientSecret); err != nil {
+		return nil, err
+	}
+
+	resp, err = handler(ctx, req)
+	return resp, err
+}
+
+func (a *grpcAuther) GetClientCredentialsFromMeta(md metadata.MD) (
+	clientId, clientSecret string) {
+	cids := md.Get(ClientHeaderKey)
+	sids := md.Get(ClientSecretKey)
+	if len(cids) > 0 {
+		clientId = cids[0]
+	}
+	if len(sids) > 0 {
+		clientSecret = sids[0]
+	}
+	return
+}
+
+func (a *grpcAuther) validateServiceCredential(clientId, clientSecret string) error {
+	if clientId == "" && clientSecret == "" {
+		return status.Errorf(codes.Unauthenticated, "client_id or client_secret is \"\"")
+	}
+
+	if !(clientId == "admin" && clientSecret == "123456") {
+		return status.Errorf(codes.Unauthenticated, "client_id or client_secret invalidate")
+	}
+
+	return nil
+}
+```
+
+#### Server添加认证
+
+```go
+// 首先是通过grpc.NewServer()构造一个gRPC服务对象
+grpcServer := grpc.NewServer(
+	// 添加认证中间件, 如果有多个中间件需要添加 使用ChainUnaryInterceptor
+	grpc.UnaryInterceptor(auther.GrpcAuthUnaryServerInterceptor()),
+)
+```
+
+#### Client携带认证(基础)
+
+客户端每次发送RPC时都需要携带上 调用凭证, 也就是服务端认证是需要的:
++ client_id
++ client_secret
+
+那客户端怎么把凭证传递给服务端端喃? 对照 http1.1 的认证逻辑(通过Header来传递), grpc也提供了类似的机制: metadata,
+
+我们可以把凭证放到metadata中, 传递给服务端, 然后服务端从中取出, 进行校验。
+
+下面是 我们的客户端调用方法: 注意我们可以传递很多: grpc.CallOption
+```go
+// HelloServiceClient is the client API for HelloService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type HelloServiceClient interface {
+	Hello(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Response, error)
+}
+```
+
+注意到其中有一个Option的时候 就命名为Header
+```go
+// CallOption configures a Call before it starts or extracts information from
+// a Call after it completes.
+type CallOption interface {
+	// before is called before the call is sent to any server.  If before
+	// returns a non-nil error, the RPC fails with that error.
+	before(*callInfo) error
+
+	// after is called after the call has completed.  after cannot return an
+	// error, so any failures should be reported via output parameters.
+	after(*callInfo, *csAttempt)
+}
+
+// Header returns a CallOptions that retrieves the header metadata
+// for a unary RPC.
+func Header(md *metadata.MD) CallOption {
+	return HeaderCallOption{HeaderAddr: md}
+}
+```
+
+依赖这种机制, 我们可以通过Header传递额外的一些信息, 比如凭证
+
+
+#### Client携带认证(改进)
+
+如果我们每次都 怎么传递, 是不是有点蠢, 我们为啥不封装一个类似 客户端中间件的函数, 每次发送的时候调用下喃?
+
+你的这种想法 作者也知道, 因此他为我们设计了一种机制: WithPerRPCCredentials, 每次调用的时候, 都从获取凭证 注入到metadata中:
+
+```go
+// WithPerRPCCredentials returns a DialOption which sets credentials and places
+// auth state on each outbound RPC.
+func WithPerRPCCredentials(creds credentials.PerRPCCredentials) DialOption {
+	return newFuncDialOption(func(o *dialOptions) {
+		o.copts.PerRPCCredentials = append(o.copts.PerRPCCredentials, creds)
+	})
+}
+```
+
+我们可以看到 PerRPCCredentials 是一个接口:
+
+```go
+// PerRPCCredentials defines the common interface for the credentials which need to
+// attach security information to every RPC (e.g., oauth2).
+type PerRPCCredentials interface {
+	// GetRequestMetadata gets the current request metadata, refreshing
+	// tokens if required. This should be called by the transport layer on
+	// each request, and the data should be populated in headers or other
+	// context. If a status code is returned, it will be used as the status
+	// for the RPC. uri is the URI of the entry point for the request.
+	// When supported by the underlying implementation, ctx can be used for
+	// timeout and cancellation. Additionally, RequestInfo data will be
+	// available via ctx to this call.
+	// TODO(zhaoq): Define the set of the qualified keys instead of leaving
+	// it as an arbitrary string.
+	GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error)
+	// RequireTransportSecurity indicates whether the credentials requires
+	// transport security.
+	RequireTransportSecurity() bool
+}
+```
+
+那接下来我们实现该接口, 就实现了我们的客户端认证的携带机制:
+
+```go
+package auther
+
+import "context"
+
+func NewClientAuthentication(clientId, clientSecret string) *Authentication {
+	return &Authentication{
+		clientID:     clientId,
+		clientSecret: clientSecret,
+	}
+}
+
+// Authentication todo
+type Authentication struct {
+	clientID     string
+	clientSecret string
+}
+
+// WithClientCredentials todo
+func (a *Authentication) WithClientCredentials(clientID, clientSecret string) {
+	a.clientID = clientID
+	a.clientSecret = clientSecret
+}
+
+// GetRequestMetadata todo
+func (a *Authentication) GetRequestMetadata(context.Context, ...string) (
+	map[string]string, error,
+) {
+	return map[string]string{
+		"client-id":     a.clientID,
+		"client-secret": a.clientSecret,
+	}, nil
+}
+
+// RequireTransportSecurity todo
+func (a *Authentication) RequireTransportSecurity() bool {
+	return false
+}
+```
+
+这样我们在建立grpc的连接的时候，就传递我们的Credential, 就实现了客户端携带凭证
+```go
+conn, err := grpc.Dial(
+	"localhost:1234",
+	grpc.WithInsecure(),
+	grpc.WithPerRPCCredentials(auther.NewClientAuthentication("admin", "123456")),
+)
+```
+
+是不是比之前的方式优雅很多
+
+#### 验证
+
+最后我们需要进行验证
+
+
+### Stream 认证
+
+stream认证 不同于 request reponse认证模式, 因为客户端和服务端是建立的长连接, 就行TCP一样, 因此一般我们只需要在 连接建立开始做下认证, 传递过程中 我们无需对每次交互做认证。
+
+#### 原理
+
+和http中间件一样, stream模式下，grpc也提供了一个钩子:
+
+![](./images/grpc-stream-unr.png)
+
++ srv service信息 
++ ss Server 了数据流
++ info 服务端相关数据, 不用理解这个
++ handler 处理请求的handler, 相当于next() 
++ err rpc 错误
+
+我们的任务就是实现一个这样的函数, 在函数中添加认证逻辑
+
+#### 编写中间件
+
+```go
+func (a *grpcAuther) StreamAuth(
+	srv interface{},
+	ss grpc.ServerStream,
+	info *grpc.StreamServerInfo,
+	handler grpc.StreamHandler) error {
+	fmt.Println(srv, info)
+	// 重上下文中获取认证信息
+	md, ok := metadata.FromIncomingContext(ss.Context())
+	if !ok {
+		return fmt.Errorf("ctx is not an grpc incoming context")
+	}
+	fmt.Println("gprc header info: ", md)
+
+	clientId, clientSecret := a.GetClientCredentialsFromMeta(md)
+
+	// 校验调用的客户端凭证是否有效
+	if err := a.validateServiceCredential(clientId, clientSecret); err != nil {
+		return err
+	}
+
+	return handler(srv, ss)
+}
+```
+
+#### Server添加认证
+
+然后我们补充上 stream的认证中间件
+
+```go
+// 首先是通过grpc.NewServer()构造一个gRPC服务对象
+grpcServer := grpc.NewServer(
+	// 添加认证中间件, 如果有多个中间件需要添加 使用ChainUnaryInterceptor
+	grpc.UnaryInterceptor(auther.GrpcAuthUnaryServerInterceptor()),
+	// 添加stream API的拦截器
+	grpc.StreamInterceptor(auther.GrpcAuthStreamServerInterceptor()),
+)
+```
+
+#### 客户端携带认证
+
+客户端提供凭证的逻辑和 Request Reponse模式一样
+
+#### 验证
+
+最后我们进行验证
+
+![](./images/grpc-stream-auth.png)
+
+
 ## 参考
 
 + [GRPC Quick Start](https://grpc.io/docs/languages/go/quickstart/)

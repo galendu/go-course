@@ -5,8 +5,8 @@ import (
 	"net"
 	"net/rpc"
 
-	"gitee.com/infraboard/go-course/day21/pbrpc/codec/server"
-	"gitee.com/infraboard/go-course/day21/pbrpc/service"
+	"gitee.com/infraboard/go-course/day15/pbrpc/codec/server"
+	"gitee.com/infraboard/go-course/day15/pbrpc/service"
 )
 
 // 通过接口约束HelloService服务

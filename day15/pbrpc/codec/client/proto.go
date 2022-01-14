@@ -6,8 +6,8 @@ import (
 	"net/rpc"
 	"sync"
 
-	"gitee.com/infraboard/go-course/day21/pbrpc/codec"
-	"gitee.com/infraboard/go-course/day21/pbrpc/codec/pb"
+	"gitee.com/infraboard/go-course/day15/pbrpc/codec"
+	"gitee.com/infraboard/go-course/day15/pbrpc/codec/pb"
 	"google.golang.org/protobuf/proto"
 )
 
