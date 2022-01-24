@@ -114,6 +114,8 @@
 
 ## Day18: 权限中心之鉴权
   * [权限判定](./day18/permission.md)
+  * [Etcd使用](./day18/etcd.md)
+  * [微服务网关](./day18/traefik.md)
   * [项目部署](./day18/deploy.md)
 
 ## Day19: Web 入门
@@ -144,7 +146,6 @@
   * [CMDB同步页面](./day23/cmdb-sync.md)
 
 ## Day24: CI/CD系统(一)
-  * [K8s架构与Etcd使用](./day24/k8s-arch.md)
   * [Workflow 项目介绍](./day24/workflow-summary.md)
   * [API Server 开发](./day24/api-server.md)
 
