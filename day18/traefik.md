@@ -218,39 +218,36 @@ docker run -d -p 8080:8080 -p 80:80 -p 18080:18080 \
 
 # web entrypoint 配置
 # web entrypoint 监听的地址 在traefik启动的时候已经配置好了: 80
-web:
+http:
   # services 配置, 具体配置请查看: https://doc.traefik.io/traefik/routing/services/
   services:
     # cmdb service 配置
-    cmdb:
+    cmdb-api:
       loadBalancer:
         # cmdb 服务的实例
         servers:
         - url: http://127.0.0.1:8080
+    # 注册 cmdb 的grpc服务, gprc采用http2协议, h2c兼容, 具体配置请参考 https://doc.traefik.io/traefik/user-guides/grpc/
+    cmdb-grpc:
+      loadBalancer:
+        servers:
+        - url: h2c://127.0.0.1:18080
+
   # routers 配置, 具体配置请参考: https://doc.traefik.io/traefik/routing/routers/
   routers:
     # cmdb 服务的路由
     cmdb:
-      service: cmdb
+      entryPoints:
+        - "web"
+      service: cmdb-api
       rule: PathPrefix(`/cmdb/api/v1`)
-
-# grpc entrypoint 配置
-# grpc entrypoint 监听的地址: 18080
-grpc:
-  routers:
     # cmdb的所有服务都有统一的前缀, 通过gprc生成的文件可以看到
     cmdb:
-      service: cmdb
+      entryPoints:
+        - "grpc"
+      service: cmdb-grpc
       rule: PathPrefix(`infraboard.cmdb`)
-
-  services:
-    # 注册 cmdb 的grpc服务, gprc采用http2协议, h2c兼容, 具体配置请参考 https://doc.traefik.io/traefik/user-guides/grpc/
-    cmdb:
-      loadBalancer:
-        servers:
-        - url: h2c://127.0.0.1:18080
 ```
-
 
 ### 基于KV的服务发现
 
@@ -263,8 +260,8 @@ grpc:
 
 服务注册 核心配置的是服务的地址, 也就是URL, 比如我有2个cmdb实例, 注册到etcd里面, key value结构大致如下: 
 ```
-traefik/web/services/cmdb/loadBalancer/servers/0/url	http://127.0.0.1:8080
-traefik/web/services/cmdb/loadBalancer/servers/1/url http://127.0.0.1:8081
+traefik/http/services/Service01/loadBalancer/servers/0/url	foobar
+traefik/http/services/Service01/loadBalancer/servers/1/url  foobar
 ```
 
 由此我们可以看出traefik的 key结构设计和yaml的结构设计是一样的, 只是etcd里面的使用/做完分层的方式:
@@ -281,15 +278,24 @@ traefik/web/services/cmdb/loadBalancer/servers/1/url http://127.0.0.1:8081
 + 0(变量):  index
 + url: 实例的地址
 
+可以测试下: 
+```
+docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/services/Service01/loadBalancer/servers/0/url foobar
+```
+
+![](./images/add-service.png)
+
 #### Router配置
 
 对于Router而言，核心需要配置的是:
-+ service
++ entry point
 + rule
++ service
 
 ```
-traefik/web/routers/cmdb/rule	PathPrefix(`/cmdb/api/v1`)
-traefik/web/routers/cmdb/service	cmdb
+traefik/http/routers/Router1/entryPoints/0	foobar
+traefik/http/routers/Router1/rule	foobar
+traefik/http/routers/Router1/service	foobar
 ```
 
 #### 完整配置
@@ -297,30 +303,70 @@ traefik/web/routers/cmdb/service	cmdb
 下面是cmdb和keyauth服务的服务发现配置
 
 ```
-# cmdb http 配置
-traefik/web/services/cmdb/loadBalancer/servers/0/url	http://127.0.0.1:8060
-traefik/web/routers/cmdb/rule	PathPrefix(`/cmdb/api/v1`)
-traefik/web/routers/cmdb/service cmdb
+# cmdb 和 keyauth services 配置
+traefik/http/services/cmdb/loadBalancer/servers/0/url	http://127.0.0.1:8060
+traefik/http/services/cmdb/loadBalancer/servers/0/url	h2c://127.0.0.1:18060
+traefik/http/services/keyauth/loadBalancer/servers/0/url	http://127.0.0.1:8050
+traefik/http/services/keyauth/loadBalancer/servers/0/url	h2c://127.0.0.1:18050
 
-# cmdb grpc 配置
-traefik/grpc/services/cmdb/loadBalancer/servers/0/url	h2c://127.0.0.1:18060
-traefik/grpc/routers/cmdb/rule PathPrefix(`infraboard.cmdb`)
-traefik/grpc/routers/cmdb/service cmdb
+# cmdb 和 keyauth router配置
+traefik/http/routers/cmdb-api/entryPoints/0	web
+traefik/http/routers/cmdb-api/rule	PathPrefix(`/cmdb/api/v1`)
+traefik/http/routers/cmdb-api/service cmdb-api
 
-# keyauth http 配置
-traefik/web/services/keyauth/loadBalancer/servers/0/url	http://127.0.0.1:8050
-traefik/web/routers/keyauth/rule	PathPrefix(`/keyauth/api/v1`)
-traefik/web/routers/keyauth/service keyauth
+traefik/http/routers/cmdb-grpc/entryPoints/0 grpc
+traefik/http/routers/cmdb-grpc/rule PathPrefix(`infraboard.cmdb`)
+traefik/http/routers/cmdb-grpc/service cmdb-grpc
 
-# keyauth grpc 配置
-traefik/grpc/services/keyauth/loadBalancer/servers/0/url	h2c://127.0.0.1:18050
-traefik/grpc/routers/keyauth/rule PathPrefix(`infraboard.keyauth`)
-traefik/grpc/routers/keyauth/service keyauth
+traefik/http/routers/keyauth-api/entryPoints/0 web
+traefik/http/routers/keyauth-api/rule	PathPrefix(`/keyauth/api/v1`)
+traefik/http/routers/keyauth-api/service keyauth-api
+
+traefik/http/routers/keyauth-grpc/entryPoints/0 grpc
+traefik/http/routers/keyauth-grpc/rule PathPrefix(`infraboard.keyauth`)
+traefik/http/routers/keyauth-grpc/service keyauth-grpc
 ```
 
 #### 验证测试
 
+我们手动操作etcd来把上面的配置写入: 
+```
+# cmdb http 配置
+docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/services/cmdb-api/loadBalancer/servers/0/url http://127.0.0.1:8060
+docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/routers/cmdb-api/rule 'PathPrefix(`/cmdb/api/v1`)'
+docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/routers/cmdb-api/service cmdb-api
+docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/routers/cmdb-api/entryPoints/0	web
 
+# cmdb grpc 配置
+docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/services/cmdb-grpc/loadBalancer/servers/0/url h2c://127.0.0.1:18060
+docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/routers/cmdb-grpc/rule 'PathPrefix(`/infraboard.cmdb`)'
+docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/routers/cmdb-grpc/service cmdb-grpc
+docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/routers/cmdb-grpc/entryPoints/0 grpc
+
+通过etcd我们可以看到key已经写入
+```sh
+$ docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl get --prefix  traefik 
+traefik/http/routers/cmdb-api/entryPoints/0
+web
+traefik/http/routers/cmdb-api/rule
+PathPrefix(`/cmdb/api/v1`)
+traefik/http/routers/cmdb-api/service
+cmdb-api
+traefik/http/routers/cmdb-grpc/entryPoints/0
+grpc
+traefik/http/routers/cmdb-grpc/rule
+PathPrefix(`/infraboard.cmdb`)
+traefik/http/routers/cmdb-grpc/service
+cmdb-grpc
+traefik/http/services/Service01/loadBalancer/servers/0/url
+foobar
+traefik/http/services/cmdb-api/loadBalancer/servers/0/url
+http://127.0.0.1:8060
+traefik/http/services/cmdb-grpc/loadBalancer/servers/0/url
+h2c://127.0.0.1:18060                                                         
+```
+
+![](./images/cmdb.png)
 
 ## 注册中心
 
