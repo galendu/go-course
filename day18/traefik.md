@@ -331,14 +331,14 @@ traefik/http/routers/keyauth-grpc/service keyauth-grpc
 
 我们手动操作etcd来把上面的配置写入: 
 ```
-# cmdb http 配置
-docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/services/cmdb-api/loadBalancer/servers/0/url http://127.0.0.1:8060
+# cmdb http 配置, 注意填写本级的IP, 因为traefik是在容器里面访问的
+docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/services/cmdb-api/loadBalancer/servers/0/url http://192.168.31.16:8060
 docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/routers/cmdb-api/rule 'PathPrefix(`/cmdb/api/v1`)'
 docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/routers/cmdb-api/service cmdb-api
 docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/routers/cmdb-api/entryPoints/0	web
 
 # cmdb grpc 配置
-docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/services/cmdb-grpc/loadBalancer/servers/0/url h2c://127.0.0.1:18060
+docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/services/cmdb-grpc/loadBalancer/servers/0/url h2c://192.168.31.16:18060
 docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/routers/cmdb-grpc/rule 'PathPrefix(`/infraboard.cmdb`)'
 docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/routers/cmdb-grpc/service cmdb-grpc
 docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/routers/cmdb-grpc/entryPoints/0 grpc
@@ -367,6 +367,35 @@ h2c://127.0.0.1:18060
 ```
 
 ![](./images/cmdb.png)
+
+
+启动cmdb服务, 确认好 http和grpc服务监听的端口:
+```
+$ cd cmdb
+$ make run
+```
+
+验证 http 访问
+```sh
+$ curl localhost/cmdb/api/v1/hosts
+{"code":400,"namespace":"global","reason":"请求不合法","message":"token required"}
+```
+
+验证 grpc 访问: 运行之前的测试用例测试
+```go
+func TestClient(t *testing.T) {
+	should := assert.New(t)
+	conf := client.NewConfig("localhost:18080")
+	conf.WithClientCredentials("nHerVBlrKIDurviMGUXVOQHC", "l5FB38Mw2JmxHgGm8rUcich2ZrGRVrl7")
+
+	c, err := client.NewClient(conf)
+	if should.NoError(err) {
+		rs, err := c.Resource().Search(context.Background(), resource.NewSearchRequest())
+		should.NoError(err)
+		fmt.Println(rs)
+	}
+}
+```
 
 ## 注册中心
 
