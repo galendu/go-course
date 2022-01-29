@@ -1,0 +1,20 @@
+api:
+  insecure: true
+  dashboard: true
+  debug: true
+
+entryPoints:
+  web:
+    address: ":80"
+
+  websecure:
+    address: ":443"
+
+  grpc:
+    address: ":18080"
+
+providers:
+  etcd:
+    endpoints:
+      - "127.0.0.1:2379"
+    rootKey: "traefik"

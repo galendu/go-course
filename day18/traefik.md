@@ -46,11 +46,10 @@ http:
 ### 配置介绍
 
 Traefik里面的配置由2部分组成:
-+ 静态配置: EntryPoints 和 Provider 需要在启动时配置好
-+ 动态配置: 路由规则和服务注册 可以动态发现
++ 静态配置: EntryPoints 和 Provider 需要在启动时配置好, [详细说明](https://doc.traefik.io/traefik/reference/static-configuration/overview/)
++ 动态配置: 路由规则和服务注册 可以动态发现, [详细说明](https://doc.traefik.io/traefik/reference/dynamic-configuration/file/)
 
 ![](./images/traefik-config.jpeg)
-
 
 Traefik和其他网关不同之处，在于其灵活的服务配置(服务发现)
 
@@ -58,28 +57,6 @@ Traefik和其他网关不同之处，在于其灵活的服务配置(服务发现
 
 其中最灵活的是Etcd, 我们将由程序自己实现服务的注册, 这样我们对外通过Traefik暴露我们的服务, 对内通过Etcd作为服务注册中心, 直接调用
 
-
-
-
-
-
-## 网关设计
-
-那基于Traefik如何实现服务的自动发现喃?
-
-traefik支持以etcd做完配置中心, 因此我们自己基于Traefik的格式 开发一套注册中心 可以对接Traefik了
-
-
-## 安装Traefik
-
-etcd的安装参考上节, 下面介绍Traefik的搭建
-
-安装Traefik
-```go
-docker pull traefik
-```
-
-启动Traefik是我们需要把2个静态配置配置好
 
 ### 配置EntryPoint
 
@@ -144,5 +121,86 @@ Root key used for KV store (Default: traefik)
 TRAEFIK_PROVIDERS_ETCD_USERNAME:
 KV Username
 ```
+
+### API配置
+
+```yaml
+api:
+  insecure: true
+  dashboard: true
+  debug: true
+```
+
+```
+TRAEFIK_API:
+Enable api/dashboard. (Default: false)
+
+TRAEFIK_API_DASHBOARD:
+Activate dashboard. (Default: true)
+
+TRAEFIK_API_DEBUG:
+Enable additional endpoints for debugging and profiling. (Default: false)
+
+TRAEFIK_API_INSECURE:
+Activate API directly on the entryPoint named traefik. (Default: false)
+```
+
+## 网关设计
+
+那基于Traefik如何实现服务的自动发现喃?
+
+traefik支持以etcd做完配置中心, 因此我们自己基于Traefik的格式 开发一套注册中心 可以对接Traefik了
+
+
+## 安装Traefik
+
+etcd的安装参考上节, 下面介绍Traefik的搭建
+
+安装Traefik
+```go
+docker pull traefik
+```
+
+准备好配置文件: traefik.yaml:
+```yaml
+api:
+  insecure: true
+  dashboard: true
+  debug: true
+
+entryPoints:
+  web:
+    address: ":80"
+
+  websecure:
+    address: ":443"
+
+  grpc:
+    address: ":18080"
+
+providers:
+  etcd:
+    endpoints:
+      - "127.0.0.1:2379"
+    rootKey: "traefik"
+```
+
+启动
+```
+# 其中 8080 是 traefik dashboard的地址
+# 80 是web,  18080 是grpc, 443不测试 故不暴露
+docker run -d -p 8080:8080 -p 80:80 -p 18080:18080 \
+    -v $PWD/traefik.yml:/etc/traefik/traefik.yml traefik:latest
+```
+
+然后访问: http://localhost:8080/dashboard 就可以看到Traefik dashboard了
+
+![](./images/traefik-db.png)
+
+更详细的安装文档请求参考: [Install Traefik](https://doc.traefik.io/traefik/getting-started/install-traefik/)
+
+
+
+
 
 
