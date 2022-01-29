@@ -58,7 +58,7 @@ Traefik和其他网关不同之处，在于其灵活的服务配置(服务发现
 其中最灵活的是Etcd, 我们将由程序自己实现服务的注册, 这样我们对外通过Traefik暴露我们的服务, 对内通过Etcd作为服务注册中心, 直接调用
 
 
-### 配置EntryPoint
+#### 配置EntryPoint
 
 下面是Yaml文件的配置:
 ```yaml
@@ -83,7 +83,7 @@ TRAEFIK_ENTRYPOINTS_<NAME>_ADDRESS:
 Entry point address.
 ```
 
-### 配置 Etcd Provider
+#### 配置 Etcd Provider
 
 下面是Etcd相关配置: [Traefik & Etcd](https://doc.traefik.io/traefik/providers/etcd/)
 
@@ -122,7 +122,7 @@ TRAEFIK_PROVIDERS_ETCD_USERNAME:
 KV Username
 ```
 
-### API配置
+#### API配置
 
 ```yaml
 api:
