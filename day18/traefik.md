@@ -156,7 +156,7 @@ traefik支持以etcd做完配置中心, 因此我们自己基于Traefik的格式
 
 etcd的安装参考上节, 下面介绍Traefik的搭建
 
-安装Traefik
+这里采用docker安装, 首先拉去官方镜像:
 ```go
 docker pull traefik
 ```
@@ -198,6 +198,131 @@ docker run -d -p 8080:8080 -p 80:80 -p 18080:18080 \
 ![](./images/traefik-db.png)
 
 更详细的安装文档请求参考: [Install Traefik](https://doc.traefik.io/traefik/getting-started/install-traefik/)
+
+## 服务注册与访问
+
+我们的服务想要接入到Traefik, 需要2步:
++ 服务注册: 配置services
++ 路由匹配: 配置Router
+
+我们先不忙 对接Etcd Provider, 我们先通过配置文件来看看, 如何配置
+
+### 配置详解
+
+以cmdb为例, cmdb提供2个服务:
++ HTTP RESTful API: 80
++ GRPC RPC:  18080
+
+```yaml
+## dynamic configuration ##
+
+# web entrypoint 配置
+# web entrypoint 监听的地址 在traefik启动的时候已经配置好了: 80
+web:
+  # services 配置, 具体配置请查看: https://doc.traefik.io/traefik/routing/services/
+  services:
+    # cmdb service 配置
+    cmdb:
+      loadBalancer:
+        # cmdb 服务的实例
+        servers:
+        - url: http://127.0.0.1:8080
+  # routers 配置, 具体配置请参考: https://doc.traefik.io/traefik/routing/routers/
+  routers:
+    # cmdb 服务的路由
+    cmdb:
+      service: cmdb
+      rule: PathPrefix(`/cmdb/api/v1`)
+
+# grpc entrypoint 配置
+# grpc entrypoint 监听的地址: 18080
+grpc:
+  routers:
+    # cmdb的所有服务都有统一的前缀, 通过gprc生成的文件可以看到
+    cmdb:
+      service: cmdb
+      rule: PathPrefix(`infraboard.cmdb`)
+
+  services:
+    # 注册 cmdb 的grpc服务, gprc采用http2协议, h2c兼容, 具体配置请参考 https://doc.traefik.io/traefik/user-guides/grpc/
+    cmdb:
+      loadBalancer:
+        servers:
+        - url: h2c://127.0.0.1:18080
+```
+
+
+### 基于KV的服务发现
+
+现在Traefik使用etcd provider动态发现配置, 因此我们需要将上面的配置转化为符合etcd provider的格式写入etcd中
+
+完整的文档请参考: [KV Configuration Reference](https://doc.traefik.io/traefik/reference/dynamic-configuration/kv/)
+
+
+#### Service配置
+
+服务注册 核心配置的是服务的地址, 也就是URL, 比如我有2个cmdb实例, 注册到etcd里面, key value结构大致如下: 
+```
+traefik/web/services/cmdb/loadBalancer/servers/0/url	http://127.0.0.1:8080
+traefik/web/services/cmdb/loadBalancer/servers/1/url http://127.0.0.1:8081
+```
+
+由此我们可以看出traefik的 key结构设计和yaml的结构设计是一样的, 只是etcd里面的使用/做完分层的方式:
+```
+<etcd_prefix>/<entry_point>/services/loadBalancer/servers/<index>/url   <url_value>
+```
+
++ traefik etcd配置的前缀, provider配置时 有设置
++ web(变量): entrypoint 名称
++ services: 表示 web entrypoint的 services配置
++ cmdb(变量): 表示是cmdb服务的配置
++ loadBalancer: cmdb 服务loadBalancer配置
++ servers: loadBalancer 下的实例配置
++ 0(变量):  index
++ url: 实例的地址
+
+#### Router配置
+
+对于Router而言，核心需要配置的是:
++ service
++ rule
+
+```
+traefik/web/routers/cmdb/rule	PathPrefix(`/cmdb/api/v1`)
+traefik/web/routers/cmdb/service	cmdb
+```
+
+#### 完整配置
+
+下面是cmdb和keyauth服务的服务发现配置
+
+```
+# cmdb http 配置
+traefik/web/services/cmdb/loadBalancer/servers/0/url	http://127.0.0.1:8060
+traefik/web/routers/cmdb/rule	PathPrefix(`/cmdb/api/v1`)
+traefik/web/routers/cmdb/service cmdb
+
+# cmdb grpc 配置
+traefik/grpc/services/cmdb/loadBalancer/servers/0/url	h2c://127.0.0.1:18060
+traefik/grpc/routers/cmdb/rule PathPrefix(`infraboard.cmdb`)
+traefik/grpc/routers/cmdb/service cmdb
+
+# keyauth http 配置
+traefik/web/services/keyauth/loadBalancer/servers/0/url	http://127.0.0.1:8050
+traefik/web/routers/keyauth/rule	PathPrefix(`/keyauth/api/v1`)
+traefik/web/routers/keyauth/service keyauth
+
+# keyauth grpc 配置
+traefik/grpc/services/keyauth/loadBalancer/servers/0/url	h2c://127.0.0.1:18050
+traefik/grpc/routers/keyauth/rule PathPrefix(`infraboard.keyauth`)
+traefik/grpc/routers/keyauth/service keyauth
+```
+
+#### 验证测试
+
+
+
+## 注册中心
 
 
 
