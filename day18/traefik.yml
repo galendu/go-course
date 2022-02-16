@@ -16,5 +16,5 @@ entryPoints:
 providers:
   etcd:
     endpoints:
-      - "192.168.31.16:2379"
+      - "172.22.111.202:2379"
     rootKey: "traefik"

@@ -181,7 +181,7 @@ entryPoints:
 providers:
   etcd:
     endpoints:
-      - "127.0.0.1:2379"
+      - "<your host ip>:2379"
     rootKey: "traefik"
 ```
 
@@ -396,6 +396,66 @@ func TestClient(t *testing.T) {
 	}
 }
 ```
+
+## 其他功能
+
+### 健康检查
+
+
+
+###  灰度发布
+
+灰度发布需要我们控制不通版本的集群的流量, traefik的Weighted Round Robin (service)提供该功能的支持
+
+```yaml
+## Dynamic configuration
+http:
+  services:
+    cmdb-api-app:
+      weighted:
+        services:
+        - name: appv1
+          weight: 3
+        - name: appv2
+          weight: 1
+
+    cmdb-api-v1:
+      loadBalancer:
+        servers:
+        - url: "http://192.168.31.16:8060"
+
+    cmdb-api-v2:
+      loadBalancer:
+        servers:
+        - url: "http://192.168.31.16:8070"
+```
+
+
+服务注册
+```
+# appv1和appv2
+docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/services/cmdb-api-v1/loadBalancer/servers/0/url http://172.22.111.202:8060
+docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/services/cmdb-api-v2/loadBalancer/servers/0/url http://172.22.111.202:8070
+
+# Weighted Round Robin (service)
+docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/services/cmdb-api-app/weighted/services/0/name cmdb-api-v1
+docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/services/cmdb-api-app/weighted/services/0/weight 3
+docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/services/cmdb-api-app/weighted/services/1/name cmdb-api-v2
+docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/services/cmdb-api-app/weighted/services/1/weight 1
+```
+
+![](./images/weighted.jpg)
+
+配置导出规则:
+```
+docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/routers/cmdb-api-app/rule 'PathPrefix(`/cmdb/api/v1`)'
+docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/routers/cmdb-api-app/service cmdb-api-app
+docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/routers/cmdb-api-app/entryPoints/0	web
+```
+
+![](./images/weighted-rule.png)
+
+最好验证服务的访问情况
 
 ## 注册中心
 
