@@ -399,45 +399,6 @@ func TestClient(t *testing.T) {
 
 ## 其他功能
 
-### 健康检查
-
-现在我们的服务实例注册上去了, 一个完整的网关一定要包含实例的检查检查, 这样到后端实例故障的时候，才能正常摘除
-
-traefik为服务提供的监控检查的功能:
-
-![](./images/traefik-hc.png)
-
-```yaml
-  services:
-    Service01:
-      loadBalancer:
-        sticky:
-          cookie:
-            name: foobar
-            secure: true
-            httpOnly: true
-            sameSite: foobar
-        servers:
-        - url: foobar
-        - url: foobar
-        healthCheck:
-          scheme: foobar
-          path: foobar
-          port: 42
-          interval: foobar
-          timeout: foobar
-          hostname: foobar
-          followRedirects: true
-          headers:
-            name0: foobar
-            name1: foobar
-        passHostHeader: true
-        responseForwarding:
-          flushInterval: foobar
-        serversTransport: foobar
-```
-
-
 ###  灰度发布
 
 灰度发布需要我们控制不通版本的集群的流量, traefik的Weighted Round Robin (service)提供该功能的支持
@@ -490,7 +451,71 @@ docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/routers/cmdb-a
 
 ![](./images/weighted-rule.png)
 
-最好验证服务的访问情况
+最后验证服务的访问情况
+
+### 健康检查
+
+现在我们的服务实例注册上去了, 一个完整的网关一定要包含实例的检查检查, 这样到后端实例故障的时候，才能正常摘除
+
+traefik为服务提供的监控检查的功能:
+
+![](./images/traefik-hc.png)
+
+```yaml
+  services:
+    Service01:
+      loadBalancer:
+        sticky:
+          cookie:
+            name: foobar
+            secure: true
+            httpOnly: true
+            sameSite: foobar
+        servers:
+        - url: foobar
+        - url: foobar
+        healthCheck:
+          scheme: foobar
+          path: foobar
+          port: 42
+          interval: foobar
+          timeout: foobar
+          hostname: foobar
+          followRedirects: true
+          headers:
+            name0: foobar
+            name1: foobar
+        passHostHeader: true
+        responseForwarding:
+          flushInterval: foobar
+        serversTransport: foobar
+```
+
+这是官方的配置样例
+```
+traefik/http/services/Service01/loadBalancer/healthCheck/followRedirects	true
+traefik/http/services/Service01/loadBalancer/healthCheck/headers/name0	foobar
+traefik/http/services/Service01/loadBalancer/healthCheck/headers/name1	foobar
+traefik/http/services/Service01/loadBalancer/healthCheck/hostname	foobar
+traefik/http/services/Service01/loadBalancer/healthCheck/interval	foobar
+traefik/http/services/Service01/loadBalancer/healthCheck/path	foobar
+traefik/http/services/Service01/loadBalancer/healthCheck/port	42
+traefik/http/services/Service01/loadBalancer/healthCheck/scheme	foobar
+traefik/http/services/Service01/loadBalancer/healthCheck/timeout
+```
+
+我们基于此来配置下app-v1/app-v2 的健康检查
+```
+# cmdb-api-v1
+docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/services/cmdb-api-v1/loadBalancer/healthCheck/path	/
+docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/services/cmdb-api-v1/loadBalancer/healthCheck/interval	5
+docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/services/cmdb-api-v1/loadBalancer/healthCheck/timeout	1
+
+# cmdb-api-v2
+docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/services/cmdb-api-v2/loadBalancer/healthCheck/path	/
+docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/services/cmdb-api-v2/loadBalancer/healthCheck/interval	5
+docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/services/cmdb-api-v2/loadBalancer/healthCheck/timeout	1
+```
 
 ## 注册中心
 
