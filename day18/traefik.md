@@ -401,6 +401,41 @@ func TestClient(t *testing.T) {
 
 ### 健康检查
 
+现在我们的服务实例注册上去了, 一个完整的网关一定要包含实例的检查检查, 这样到后端实例故障的时候，才能正常摘除
+
+traefik为服务提供的监控检查的功能:
+
+![](./images/traefik-hc.png)
+
+```yaml
+  services:
+    Service01:
+      loadBalancer:
+        sticky:
+          cookie:
+            name: foobar
+            secure: true
+            httpOnly: true
+            sameSite: foobar
+        servers:
+        - url: foobar
+        - url: foobar
+        healthCheck:
+          scheme: foobar
+          path: foobar
+          port: 42
+          interval: foobar
+          timeout: foobar
+          hostname: foobar
+          followRedirects: true
+          headers:
+            name0: foobar
+            name1: foobar
+        passHostHeader: true
+        responseForwarding:
+          flushInterval: foobar
+        serversTransport: foobar
+```
 
 
 ###  灰度发布
