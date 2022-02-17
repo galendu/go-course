@@ -444,12 +444,27 @@ func TestClient(t *testing.T) {
 
 灰度发布需要我们控制不通版本的集群的流量, traefik的Weighted Round Robin (service)提供该功能的支持
 
+```golang
+// WeightedRoundRobin is a weighted round robin load-balancer of services.
+type WeightedRoundRobin struct {
+	Services []WRRService `json:"services,omitempty" toml:"services,omitempty" yaml:"services,omitempty" export:"true"`
+	Sticky   *Sticky      `json:"sticky,omitempty" toml:"sticky,omitempty" yaml:"sticky,omitempty" export:"true"`
+	// HealthCheck enables automatic self-healthcheck for this service, i.e.
+	// whenever one of its children is reported as down, this service becomes aware of it,
+	// and takes it into account (i.e. it ignores the down child) when running the
+	// load-balancing algorithm. In addition, if the parent of this service also has
+	// HealthCheck enabled, this service reports to its parent any status change.
+	HealthCheck *HealthCheck `json:"healthCheck,omitempty" toml:"healthCheck,omitempty" yaml:"healthCheck,omitempty" label:"allowEmpty" file:"allowEmpty" export:"true"`
+}
+```
+
 ```yaml
 ## Dynamic configuration
 http:
   services:
     cmdb-api-app:
       weighted:
+        healthCheck: {}
         services:
         - name: appv1
           weight: 3
@@ -479,6 +494,10 @@ docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/services/cmdb-
 docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/services/cmdb-api-app/weighted/services/0/weight 3
 docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/services/cmdb-api-app/weighted/services/1/name cmdb-api-v2
 docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/services/cmdb-api-app/weighted/services/1/weight 1
+
+# 开启健康检查
+# KV 文档里面使用的是``
+docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/services/cmdb-api-app/weighted/healthCheck {}
 ```
 
 ![](./images/weighted.jpg)
@@ -491,6 +510,7 @@ docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/routers/cmdb-a
 ```
 
 ![](./images/weighted-rule.png)
+
 
 最后验证服务的访问情况
 
