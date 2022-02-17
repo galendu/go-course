@@ -558,6 +558,8 @@ docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/services/cmdb-
 docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/services/cmdb-api-v2/loadBalancer/healthCheck/timeout	1
 ```
 
+![](./images/traefik-hce.png)
+
 ## 注册中心
 
 
