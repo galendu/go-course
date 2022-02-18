@@ -714,6 +714,29 @@ http:
             Foo: Bar
 ```
 
+### 演示
+
+创建一个我们的插件仓库: [Demo插件](https://gitee.com/infraboard/traefik-plugin-demo.git)
+
+补充配置
+```yaml
+experimental:
+  localPlugins:
+    demo:
+      moduleName: gitee.com/infraboard/traefik-plugin-demo
+```
+
+添加配置
+```
+# 使用demo中间件创建一个middleware
+docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/middlewares/demo-plugin/plugin/demo/headers/Foo	Bar
+
+# 使用该middleware
+docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/routers/cmdb-api/middlewares/0	demo-plugin
+```
+
+启动服务进行测试
+
 ## 注册中心
 
 
