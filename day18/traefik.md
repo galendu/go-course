@@ -736,6 +736,13 @@ docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/routers/cmdb-a
 ```
 
 启动服务进行测试
+```
+# 其中 8080 是 traefik dashboard的地址
+# 80 是web,  18080 是grpc, 443不测试 故不暴露
+# /plugins-local/
+docker run -d -p 8080:8080 -p 80:80 -p 18080:18080 \
+    -v $PWD/traefik.yml:/etc/traefik/traefik.yml traefik:latest
+```
 
 ## 注册中心
 
