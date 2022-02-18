@@ -607,14 +607,112 @@ Hello World
 
 ### 如何开发一个插件
 
+插件就是一个Go的包, 只是必须满足如下条件:
++ A type type Config struct { ... }. The struct fields are arbitrary.
++ A function func CreateConfig() *Config.
++ A function func New(ctx context.Context, next http.Handler, config *Config, name string) (http.Handler, error).
 
+```go
+// Package example a example plugin.
+package example
 
+import (
+	"context"
+	"net/http"
+)
 
-### 配置使用插件
+// Config the plugin configuration.
+type Config struct {
+	// ...
+}
 
+// CreateConfig creates the default plugin configuration.
+func CreateConfig() *Config {
+	return &Config{
+		// ...
+	}
+}
 
+// Example a plugin.
+type Example struct {
+	next     http.Handler
+	name     string
+	// ...
+}
 
+// New created a new plugin.
+func New(ctx context.Context, next http.Handler, config *Config, name string) (http.Handler, error) {
+	// ...
+	return &Example{
+		// ...
+	}, nil
+}
 
+func (e *Example) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
+	// ...
+	e.next.ServeHTTP(rw, req)
+}
+```
+
+我们需要处理的 就是在ServeHTTP  添加我们的自定义逻辑, 也就常见的web 中间件的开发模式
+
+### 安装插件
+
+将我们开发好的插件放到./plugins-local/ 下, traefik启动时会加载这些插件
+
+```
+./plugins-local/
+    └── src
+        └── github.com
+            └── traefik
+                └── plugindemo
+                    ├── demo.go
+                    ├── demo_test.go
+                    ├── go.mod
+                    ├── LICENSE
+                    ├── Makefile
+                    └── readme.md
+```
+
+然后traefik配置好需要加载的插件的名称
+```
+# Static configuration
+
+experimental:
+  localPlugins:
+    example:
+      moduleName: github.com/traefik/plugindemo
+
+# 根据moduleName, 加载的插件:  ./plugins-local/src/github.com/traefik/plugindemo
+```
+
+最后我们在动态配置时使用 我们定义的插件:
+```yaml
+# Dynamic configuration
+
+http:
+  routers:
+    my-router:
+      rule: host(`demo.localhost`)
+      service: service-foo
+      entryPoints:
+        - web
+      middlewares:
+        - my-plugin
+
+  services:
+   service-foo:
+      loadBalancer:
+        servers:
+          - url: http://127.0.0.1:5000
+  
+  middlewares:
+    my-plugin:
+      plugin:
+        example:
+          headers:
+            Foo: Bar
+```
 
 ## 注册中心
 
