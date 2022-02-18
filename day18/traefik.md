@@ -580,6 +580,42 @@ docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/services/cmdb-
 
 ![](./images/traefik-hce.png)
 
+
+## 插件开发
+
+官方主要支持2种插件机制:
++ RemotePlugins: 远程插件, 通过http请求，请求Treafik官方插件市场(pilot), 把插件下载到本地
++ LocalPlugins: 本地插件, 直接将插件方针于本地目录
+
+
+### 插件工作机制
+
+Traefik的插件就是一个Go的pkg, 因此插件的开发语言就是Go, Go不是编译型的语言吗?, 我写的Go源码 也直接加载工作?
+
+Traefik内嵌了一个 Go的解释器, 用于解释执行Go代码, 因此效率上是比不上机械码的, 这个解释器是社区的，完全支持Go的语法解析[Yaeji](https://github.com/traefik/yaegi)
+
+比如: 
+```sh
+$ yaegi
+> 1 + 2
+3
+> import "fmt"
+> fmt.Println("Hello World")
+Hello World
+>
+```
+
+### 如何开发一个插件
+
+
+
+
+### 配置使用插件
+
+
+
+
+
 ## 注册中心
 
 
