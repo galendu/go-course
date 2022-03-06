@@ -18,3 +18,8 @@ providers:
     endpoints:
       - "192.168.50.85:2379"
     rootKey: "traefik"
+
+experimental:
+  localPlugins:
+    demo:
+      moduleName: gitee.com/infraboard/traefik-plugin-demo

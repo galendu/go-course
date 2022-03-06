@@ -448,12 +448,27 @@ func TestClient(t *testing.T) {
 
 灰度发布需要我们控制不通版本的集群的流量, traefik的Weighted Round Robin (service)提供该功能的支持
 
+```golang
+// WeightedRoundRobin is a weighted round robin load-balancer of services.
+type WeightedRoundRobin struct {
+	Services []WRRService `json:"services,omitempty" toml:"services,omitempty" yaml:"services,omitempty" export:"true"`
+	Sticky   *Sticky      `json:"sticky,omitempty" toml:"sticky,omitempty" yaml:"sticky,omitempty" export:"true"`
+	// HealthCheck enables automatic self-healthcheck for this service, i.e.
+	// whenever one of its children is reported as down, this service becomes aware of it,
+	// and takes it into account (i.e. it ignores the down child) when running the
+	// load-balancing algorithm. In addition, if the parent of this service also has
+	// HealthCheck enabled, this service reports to its parent any status change.
+	HealthCheck *HealthCheck `json:"healthCheck,omitempty" toml:"healthCheck,omitempty" yaml:"healthCheck,omitempty" label:"allowEmpty" file:"allowEmpty" export:"true"`
+}
+```
+
 ```yaml
 ## Dynamic configuration
 http:
   services:
     cmdb-api-app:
       weighted:
+        healthCheck: {}
         services:
         - name: appv1
           weight: 3
@@ -483,6 +498,10 @@ docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/services/cmdb-
 docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/services/cmdb-api-app/weighted/services/0/weight 3
 docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/services/cmdb-api-app/weighted/services/1/name cmdb-api-v2
 docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/services/cmdb-api-app/weighted/services/1/weight 1
+
+# 开启健康检查
+# KV 文档里面使用的是``
+docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/services/cmdb-api-app/weighted/healthCheck {}
 ```
 
 ![](./images/weighted.jpg)
@@ -495,6 +514,7 @@ docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/routers/cmdb-a
 ```
 
 ![](./images/weighted-rule.png)
+
 
 最后验证服务的访问情况
 
@@ -560,6 +580,172 @@ docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/services/cmdb-
 docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/services/cmdb-api-v2/loadBalancer/healthCheck/path	/
 docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/services/cmdb-api-v2/loadBalancer/healthCheck/interval	5
 docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/services/cmdb-api-v2/loadBalancer/healthCheck/timeout	1
+```
+
+![](./images/traefik-hce.png)
+
+
+## 插件开发
+
+官方主要支持2种插件机制:
++ RemotePlugins: 远程插件, 通过http请求，请求Treafik官方插件市场(pilot), 把插件下载到本地
++ LocalPlugins: 本地插件, 直接将插件方针于本地目录
+
+
+### 插件工作机制
+
+Traefik的插件就是一个Go的pkg, 因此插件的开发语言就是Go, Go不是编译型的语言吗?, 我写的Go源码 也直接加载工作?
+
+Traefik内嵌了一个 Go的解释器, 用于解释执行Go代码, 因此效率上是比不上机械码的, 这个解释器是社区的，完全支持Go的语法解析[Yaeji](https://github.com/traefik/yaegi)
+
+比如: 
+```sh
+$ yaegi
+> 1 + 2
+3
+> import "fmt"
+> fmt.Println("Hello World")
+Hello World
+>
+```
+
+### 如何开发一个插件
+
+插件就是一个Go的包, 只是必须满足如下条件:
++ A type type Config struct { ... }. The struct fields are arbitrary.
++ A function func CreateConfig() *Config.
++ A function func New(ctx context.Context, next http.Handler, config *Config, name string) (http.Handler, error).
+
+```go
+// Package example a example plugin.
+package example
+
+import (
+	"context"
+	"net/http"
+)
+
+// Config the plugin configuration.
+type Config struct {
+	// ...
+}
+
+// CreateConfig creates the default plugin configuration.
+func CreateConfig() *Config {
+	return &Config{
+		// ...
+	}
+}
+
+// Example a plugin.
+type Example struct {
+	next     http.Handler
+	name     string
+	// ...
+}
+
+// New created a new plugin.
+func New(ctx context.Context, next http.Handler, config *Config, name string) (http.Handler, error) {
+	// ...
+	return &Example{
+		// ...
+	}, nil
+}
+
+func (e *Example) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
+	// ...
+	e.next.ServeHTTP(rw, req)
+}
+```
+
+我们需要处理的 就是在ServeHTTP  添加我们的自定义逻辑, 也就常见的web 中间件的开发模式
+
+### 安装插件
+
+将我们开发好的插件放到./plugins-local/ 下, traefik启动时会加载这些插件
+
+```
+./plugins-local/
+    └── src
+        └── github.com
+            └── traefik
+                └── plugindemo
+                    ├── demo.go
+                    ├── demo_test.go
+                    ├── go.mod
+                    ├── LICENSE
+                    ├── Makefile
+                    └── readme.md
+```
+
+然后traefik配置好需要加载的插件的名称
+```
+# Static configuration
+
+experimental:
+  localPlugins:
+    example:
+      moduleName: github.com/traefik/plugindemo
+
+# 根据moduleName, 加载的插件:  ./plugins-local/src/github.com/traefik/plugindemo
+```
+
+最后我们在动态配置时使用 我们定义的插件:
+```yaml
+# Dynamic configuration
+
+http:
+  routers:
+    my-router:
+      rule: host(`demo.localhost`)
+      service: service-foo
+      entryPoints:
+        - web
+      middlewares:
+        - my-plugin
+
+  services:
+   service-foo:
+      loadBalancer:
+        servers:
+          - url: http://127.0.0.1:5000
+  
+  middlewares:
+    my-plugin:
+      plugin:
+        example:
+          headers:
+            Foo: Bar
+```
+
+### 演示
+
+创建一个我们的插件仓库: [Demo插件](https://gitee.com/infraboard/traefik-plugin-demo.git)
+
+补充配置
+```yaml
+experimental:
+  localPlugins:
+    demo:
+      moduleName: gitee.com/infraboard/traefik-plugin-demo
+```
+
+添加配置
+```
+# 使用demo中间件创建一个middleware
+docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/middlewares/demo-plugin/plugin/demo/headers/Foo	Bar
+
+# 使用该middleware
+docker exec -it -e "ETCDCTL_API=3" etcd  etcdctl put traefik/http/routers/cmdb-api/middlewares/0	demo-plugin
+```
+
+启动服务进行测试
+```
+# 其中 8080 是 traefik dashboard的地址
+# 80 是web,  18080 是grpc, 443不测试 故不暴露
+# /plugins-local/
+docker run -d -p 8080:8080 -p 80:80 -p 18080:18080 \
+    -v $PWD/traefik.yml:/etc/traefik/traefik.yml traefik:latest
 ```
 
 ## 注册中心
