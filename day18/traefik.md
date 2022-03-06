@@ -232,6 +232,10 @@ providers:
 # 80 是web,  18080 是grpc, 443不测试 故不暴露
 docker run -d -p 8080:8080 -p 80:80 -p 18080:18080 \
     -v $PWD/traefik.yml:/etc/traefik/traefik.yml traefik:latest
+
+
+# window 注意挂载路径
+docker run -d  -p 8080:8080 -p 80:80 -p 18080:18080  -v E:/Projects/Golang/go-course/day18/traefik.yml:/etc/traefik/traefik.yml traefik:latest
 ```
 
 然后访问: http://localhost:8080/dashboard 就可以看到Traefik dashboard了
