@@ -1,5 +1,17 @@
 # k8s operator开发
 
+## 需求与设计
+
+之前讲过使用Traefik + etcd的 内外网关打通的方案, 我们的服务在启动的时候可以通过框架直接注册到etcd中去, 那如果是其他框架或者语言, 比如 php, python, java 也想使用 Traefik+etcd这套方案这么办?
+
+直接能想到的就是 每个框架和语言 都实现一个套 注册到etcd的功能,  实现起来也并不难, 但是这就面临 对别人服务的侵入性, 别人不一定愿意接受
+
+现在的微服务开发，基本都基于容器部署, 而容器管理平台k8s也是当今 容器编排工具的标准, k8s本身是知道当前系统中有哪些service服务的, 那能否通过感知service的变化，来把service信息动态写入的etcd喃?
+
+那我们的解决方案就很简单了:
+
+k8s service <---watch---- service operater ------> etcd
+
 ## 环境准备
 
 + go version v1.15+ (kubebuilder v3.0 < v3.1).
@@ -170,6 +182,81 @@ $ kubebuilder create api
 ```
 
 ## 创建API
+
+通过脚手架为我们提供的create api来创建 CRD 相关的Resource 和控制器:
+```
+$ kubebuilder create api -h
+Scaffold a Kubernetes API by writing a Resource definition and/or a Controller.
+
+If information about whether the resource and controller should be scaffolded  
+was not explicitly provided, it will prompt the user if they should be.        
+
+After the scaffold is written, the dependencies will be updated and
+make generate will be run.
+
+Usage:
+  kubebuilder create api [flags]
+
+Examples:
+  # Create a frigates API with Group: ship, Version: v1beta1 and Kind: Frigate
+  kubebuilder create api --group ship --version v1beta1 --kind Frigate
+
+  # Edit the API Scheme
+  nano api/v1beta1/frigate_types.go
+
+  # Edit the Controller
+  nano controllers/frigate/frigate_controller.go
+
+  # Edit the Controller Test
+  nano controllers/frigate/frigate_controller_test.go
+
+  # Generate the manifests
+  make manifests
+
+  # Install CRDs into the Kubernetes cluster using kubectl apply
+  make install
+
+  # Regenerate code and run against the Kubernetes cluster configured by ~/.kube/config
+  make run
+
+
+Flags:
+      --controller           if set, generate the controller without prompting the user (default true)
+      --force                attempt to create resource even if it already exists
+      --group string         resource Group
+  -h, --help                 help for api
+      --kind string          resource Kind
+      --make make generate   if true, run make generate after generating files (default true)
+      --namespaced           resource is namespaced (default true)
+      --plural string        resource irregular plural form
+      --resource             if set, generate the resource without prompting the user (default true)
+      --version string       resource Version
+
+Global Flags:
+      --plugins strings   plugin keys to be used for this subcommand execution
+```
+
+### 生成样例代码
+
+```sh
+kubebuilder create api --group traefik --version v1 --kind TraefikService
+
+Create Resource [y/n]
+y
+Create Controller [y/n]
+y
+Writing kustomize manifests for you to edit...
+Writing scaffold for you to edit...
+api\v1\traefikservice_types.go
+controllers\traefikservice_controller.go
+Update dependencies:
+$ go mod tidy
+Running make:
+$ make generate
+/e/Projects/Golang/go-course-projects/k8s-operator/bin/controller-gen object:headerFile="hack\\boilerplate.go.txt" paths="./..."
+Next: implement your new API and generate the manifests (e.g. CRDs,CRs) with:
+$ make manifests
+```
 
 
 
