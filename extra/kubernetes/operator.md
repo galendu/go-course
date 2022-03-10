@@ -21,6 +21,32 @@ k8s service <---watch---- service operater ------> etcd
 + kubectl version v1.11.3+.
 + Access to a Kubernetes v1.11.3+ cluster.
 
+### 准备k8s集群
+
+直接在云商哪儿创建一个托管集群
+
+
+### 安装kubectl
+
+我们下载一个kubectl命令到本地:
+```
+curl -LO "https://dl.k8s.io/release/v1.23.0/bin/windows/amd64/kubectl.exe"
+```
+
+把kubectl copy到你的path路径下去就可以了
+
+然后简单验证下:
+```sh
+$ kubectl.exe get ns
+NAME              STATUS   AGE
+default           Active   111d
+kube-node-lease   Active   111d
+kube-public       Active   111d
+kube-system       Active   111d
+mpaas             Active   30d
+```
+
+
 ## 安装 kubebuilder
 
 ### Mac/Linux系统安装方法
@@ -328,12 +354,106 @@ $ make manifests generate
 
 ![](./images/treafik-crd-define.png)
 
+到此我们的CRD的描述文件已经生成ok, 剩下的就是把该文件注册到k8s集群内, 也就是我们所的安装CRD
+
 #### 安装CRD
 
+脚手架使用 
++ install: 安装CRD
++ uninstall: 卸载CRD
 
+```
+Deployment
+  install          Install CRDs into the K8s cluster specified in ~/.kube/config.
+  uninstall        Uninstall CRDs from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
+```
+
++ 提前准备好你的集群访问凭证: ~/.kube/config
++ kubebuilder 是通过SDK来操作的, 执行这个命令 并不依赖你本地kubectl
+
+执行如下命令安装:
+```sh
+$ make install
+/e/Projects/Golang/go-course-projects/k8s-operator/bin/controller-gen rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+/e/Projects/Golang/go-course-projects/k8s-operator/bin/kustomize build config/crd | kubectl apply -f -
+customresourcedefinition.apiextensions.k8s.io/traefikservices.traefik.magedu.com created
+```
+
+查看是否安装成功, 由于我的集群是腾讯托管的, 界面上可以直接看到,如下: 
+
+![](./images/crd-browser.png)
+
+当然你也可以使用SDK, List Resource 查看当前集群的所有支持的Resource
+```
+$ kubectl.exe get crd
+NAME                                             CREATED AT
+tkeserviceconfigs.cloud.tencent.com              2021-11-19T05:58:43Z
+traefikservices.traefik.magedu.com               2022-03-10T13:51:06Z
+volumesnapshotclasses.snapshot.storage.k8s.io    2021-11-19T05:59:24Z
+volumesnapshotcontents.snapshot.storage.k8s.io   2021-11-19T05:59:24Z
+volumesnapshots.snapshot.storage.k8s.io          2021-11-19T05:59:24Z
+```
 
 #### 验证CRD
 
+接下来我们验证通过CRD来创建一个 TraefikService的资源
+
+1. 准备CRD的YAML定义
+
+我们参考samples下的样例, 补充spec相关参数
+```yaml
+apiVersion: traefik.magedu.com/v1
+kind: TraefikService
+metadata:
+  name: traefikservice-sample
+spec:
+  # TODO(user): Add fields here
+  entrypoint: web
+  url: https://www.baidu.com
+```
+
+3. 创建我们的自定义资源:
+```sh
+# 创建资源
+$ kubectl.exe apply -f config/samples/traefik_v1_traefikservice.yaml 
+traefikservice.traefik.magedu.com/traefikservice-sample created
+
+# 查看资源
+$ kubectl.exe get TraefikService
+NAME                    AGE
+traefikservice-sample   13m
+
+# 查看资源yaml
+$ kubectl.exe get TraefikService -o yaml
+apiVersion: v1
+items:
+- apiVersion: traefik.magedu.com/v1
+  kind: TraefikService
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"traefik.magedu.com/v1","kind":"TraefikService","metadata":{"annotations":{},"name":"traefikservice-sample","namespace":"default"},"spec":{"entrypoint":"web","url":"https://www.baidu.com"}}
+    creationTimestamp: "2022-03-10T14:29:48Z"
+    generation: 1
+    name: traefikservice-sample
+    namespace: default
+    resourceVersion: "6043243202"
+    selfLink: /apis/traefik.magedu.com/v1/namespaces/default/traefikservices/traefikservice-sample
+    uid: aac22af5-6130-4d85-a5b0-dd4b4ff6d1de
+  spec:
+    entrypoint: web
+    url: https://www.baidu.com
+kind: List
+metadata:
+  resourceVersion: ""
+  selfLink: ""
+```
+
+最后我们删除我们定义的资源
+```sh
+$ kubectl.exe delete -f config/samples/traefik_v1_traefikservice.yaml 
+traefikservice.traefik.magedu.com "traefikservice-sample" deleted
+```
 
 ### Crontroller开发
 
