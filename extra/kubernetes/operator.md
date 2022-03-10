@@ -1,4 +1,4 @@
-# k8s operator开发
+# k8s 定制开发(kubebuilder)
 
 ## 需求与设计
 
