@@ -130,32 +130,29 @@
   * [Vue路由与状态管理](./day20/vue-all.md)
   * [作业](./day20/homework.md)
 
-## Day21: 项目前端(一)
+## Day21: 项目前端
   * [项目前端框架](./day21/devcloud-base.md)
-  * [项目登录页面](./day21/devcloud-login.md)
+  * [新登录页面](./day22/devcloud-new-login.md)
   * [项目404页面](./day21/devcloud-404.md)
   * [项目导航页面](./day21/devcloud-nav.md)
 
-## Day22: 项目前端(二)
-  * [新登录页面](./day22/devcloud-new-login.md)
+## Day22 CMDB 前端
   * [主机列表页面](./day22/cmdb-host.md)
-
-## Day23 CMDB 前端
   * [CMDB主机页面](./day23/cmdb-host.md)
   * [CMDB搜索页面](./day23/cmdb-search.md)
   * [CMDB同步页面](./day23/cmdb-sync.md)
 
-## Day24: CI/CD系统(一)
+## Day23: CI/CD系统(一)
   * [Workflow 项目介绍](./day24/workflow-summary.md)
   * [API Server 开发](./day24/api-server.md)
 
-## Day25: CI/CD系统(二)
+## Day24: CI/CD系统(二)
   * [Pipeline Scheduler 开发](./day25/pipeline-scheduler.md)
   * [Step Scheduler 开发](./day25/step-scheduler.md)
   * [Step Hook 开发](./day25/step-hook.md)
   * [Node 开发](./day25/node.md)
   * [API Server 订阅SCM事件](./day25/ci.md)
 
-## Day26: 总结与回顾
+## Day25: 总结与回顾
   * [课程回顾](./day26/summary.md)
 
