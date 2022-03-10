@@ -258,7 +258,84 @@ Next: implement your new API and generate the manifests (e.g. CRDs,CRs) with:
 $ make manifests
 ```
 
+样例生成完了后，我们会看到我们项目新增了一些文件:
 
+![](./images/create-api.png)
+
++ api/v1 目录下主要存放是我们API Object, 就是我们的Resource对象相关信息
++ config/crd 目录下是我们crd的描述文件, 我们需要把自定义资源(CRD)的描述信息注册给k8s时需要的
++ rbac 目录下 存放着 关于CRD资源的 role定义的样例文件(editor/viewer)
++ samples 目录下 存放着 CRD的一个样例文件, 后面部署完成后可以 直接编辑下 apply到k8s集群中去
++ controllers 目录下 存放着 我们所有的 Object 的Controller 代码
+
+### CRD开发
+
+按照之前的设计，我们其实是没有必要定义CRD的, 下面关于CRD的定义和安装 是出于教学演示目的, 如果你只想做项目，可以忽略这部分，甚至删除kubebuilder为我们生成关于CRD定义部分的相关代码
+
+#### CRD 设计
+
+我们需要定义Traefik Service, 我们来看看Traefik Service一个service 实例定义:
+```
+<etcd_prefix>/<entry_point>/services/loadBalancer/servers/<index>/url   <url_value>
+
+traefik etcd配置的前缀, provider配置时 有设置
+services: 表示 web entrypoint的 services配置
+loadBalancer: cmdb 服务loadBalancer配置
+servers: loadBalancer 下的实例配置
+0(变量): index
+```
+
+因此我们定义的Service需要有如下属性:
++ entrypoint name
++ service name
++ service url
+
+作为k8s的CRD 必须是一个runtime.Object, 也就是为我们生成的TraefikService对象, 我们需要编辑的是TraefikServiceSpec对象
+
+由于 Name已经在 ObjectMeta 有声明了, 因此我们只需要添加 entrypoint 和 url
+
+修改资源定义: api/v1/traefikservice_types.go 
+```go
+// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
+// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+
+// TraefikServiceSpec defines the desired state of TraefikService
+type TraefikServiceSpec struct {
+	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
+	// Important: Run "make" to regenerate code after modifying this file
+
+	// Foo is an example field of TraefikService. Edit traefikservice_types.go to remove/update
+	Entrypoint string `json:"entrypoint"`
+	URL        string `json:"url"`
+}
+```
+
+#### CRD代码生成
+
+我们通过make 提供 
+ 
++ manifests 重新生成修改后的 CRD定义描述
++ generate 重新生成代码
+
+```
+$ make manifests generate
+
+/e/Projects/Golang/go-course-projects/k8s-operator/bin/controller-gen rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+/e/Projects/Golang/go-course-projects/k8s-operator/bin/controller-gen object:headerFile="hack\\boilerplate.go.txt" paths="./..."
+```
+
+我们看到CRD的描述文件已经有变化了:
+
+![](./images/treafik-crd-define.png)
+
+#### 安装CRD
+
+
+
+#### 验证CRD
+
+
+### Crontroller开发
 
 
 ## 参考
