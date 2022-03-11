@@ -296,7 +296,7 @@ $ make manifests
 
 ### CRD开发
 
-按照之前的设计，我们其实是没有必要定义CRD的, 下面关于CRD的定义和安装 是出于教学演示目的, 如果你只想做项目，可以忽略这部分，甚至删除kubebuilder为我们生成关于CRD定义部分的相关代码
+按照之前的设计，我们其实是没有必要定义CRD的, 下面关于CRD的定义和安装 是出于教学演示目的, 如果你只想做项目，可以忽略这部分内容
 
 #### CRD 设计
 
@@ -455,7 +455,29 @@ $ kubectl.exe delete -f config/samples/traefik_v1_traefikservice.yaml
 traefikservice.traefik.magedu.com "traefikservice-sample" deleted
 ```
 
+到此为止我们仅仅完成了对象的基本操作, 比如创建和删除, 但是与这个对象关联的业务逻辑代码 我们还没编写,也就是
+说我们仅仅完成了对象的声明, 那如何开发对象的业务逻辑喃，着就是涉及到Crontroller了
+
 ### Crontroller开发
+
+什么是Crontroller? 他和 CRD之间又有啥纠葛, 且听我一一道来
+
+#### Crontroller的原理
+
+我们可以通过API Server声明一个资源对象(CRD)，实践上是声明了对象的期望状态, 是一个愿望, 比如期望副本数量为3个, Controller的核心逻辑就是让这个愿望实现, 并且实时Watch对象的变化, 一旦对象变化，我们就需要再次做出调整，让现实中的状态 变成期望的状态
+
+因此Crontroller 是个面向期望的编程模型, 我们声明的这个期望对象，就是API Object(K8s Runtime Object)
+
+#### Crontroller代码解读
+
+
+
+
+
+#### Crontroller 业务设计
+
+
+
 
 
 ## 参考
