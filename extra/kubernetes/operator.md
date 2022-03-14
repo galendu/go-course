@@ -468,15 +468,21 @@ traefikservice.traefik.magedu.com "traefikservice-sample" deleted
 
 因此Crontroller 是个面向期望的编程模型, 我们声明的这个期望对象，就是API Object(K8s Runtime Object)
 
-#### Crontroller代码解读
+![](./images/k8s-watch-list.png)
+
+#### Crontroller 代码解读
 
 
 
 
+#### Controller 样例开发
 
-#### Crontroller 业务设计
+
+#### 部署 Controller
 
 
+
+#### 验证 Controller
 
 
 
