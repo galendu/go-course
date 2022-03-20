@@ -27,7 +27,7 @@
 
 ### 简单粗暴
 
-我们之间开发一个满足prometheus格式的API接口即可
+我们直接开发一个满足prometheus格式的API接口即可
 
 ```go
 package main
@@ -51,6 +51,27 @@ func main () {
 
 ### 使用SDK
 
+并不是所有的代码都需要我们自己去实现, Prometheus为我们准备了一个客户端, 我们可以基于客户端快速添加监控
+
+```go
+package main
+
+import (
+ "net/http"
+
+ "github.com/prometheus/client_golang/prometheus/promhttp"
+)
+
+func main() {
+    // Serve the default Prometheus metrics registry over HTTP on /metrics.
+ http.Handle("/metrics", promhttp.Handler())
+ http.ListenAndServe(":8080", nil)
+}
 ```
 
-```
+### 自定义指标
+
+
+
+
+### 指标类型
