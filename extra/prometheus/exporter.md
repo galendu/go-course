@@ -121,8 +121,67 @@ queueLength.Add(23) // 增加23个增量.
 queueLength.Sub(42) // 减少42个.
 ```
 
+下面是编写的一个测试用例:
+```go
+package metric_test
+
+import (
+	"fmt"
+	"os"
+	"testing"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/common/expfmt"
+)
+
+func TestGauge(t *testing.T) {
+	queueLength := prometheus.NewGauge(prometheus.GaugeOpts{
+		// Namespace, Subsystem, Name 会拼接成指标的名称: magedu_mcube_demo_queue_length
+		// 其中Name是必填参数
+		Namespace: "magedu",
+		Subsystem: "mcube_demo",
+		Name:      "queue_length",
+		// 指标的描信息
+		Help: "The number of items in the queue.",
+		// 指标的标签
+		ConstLabels: map[string]string{
+			"module": "http-server",
+		},
+	})
+
+	queueLength.Set(100)
+
+	// 创建一个自定义的注册表
+	registry := prometheus.NewRegistry()
+	registry.MustRegister(queueLength)
+
+	// 获取注册所有数据
+	data, err := registry.Gather()
+	if err != nil {
+		panic(err)
+	}
+
+	// 编码输出
+	enc := expfmt.NewEncoder(os.Stdout, expfmt.FmtText)
+	fmt.Println(enc.Encode(data[0]))
+}
+```
+执行后他的输出
+```
+# HELP magedu_mcube_demo_queue_length The number of items in the queue.
+# TYPE magedu_mcube_demo_queue_length gauge
+magedu_mcube_demo_queue_length{module="http-server"} 100
+```
 
 ##### Counters
+
+Counters是计算器指标, 用于统计次数使用, 通过 prometheus.NewCounter() 函数来初始化指标对象
+```go
+totalRequests := prometheus.NewCounter(prometheus.CounterOpts{
+ Name: "http_requests_total",
+ Help: "The total number of handled HTTP requests.",
+})
+```
 
 
 ##### Histograms
