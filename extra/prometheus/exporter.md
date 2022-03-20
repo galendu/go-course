@@ -137,67 +137,21 @@ queueLength.Sub(42) // 减少42个.
 
 Prometheus 定义了一个注册表的接口:
 ```go
-// Registerer is the interface for the part of a registry in charge of
-// registering and unregistering. Users of custom registries should use
-// Registerer as type for registration purposes (rather than the Registry type
-// directly). In that way, they are free to use custom Registerer implementation
-// (e.g. for testing purposes).
+// 指标注册接口
 type Registerer interface {
-	// Register registers a new Collector to be included in metrics
-	// collection. It returns an error if the descriptors provided by the
-	// Collector are invalid or if they — in combination with descriptors of
-	// already registered Collectors — do not fulfill the consistency and
-	// uniqueness criteria described in the documentation of metric.Desc.
-	//
-	// If the provided Collector is equal to a Collector already registered
-	// (which includes the case of re-registering the same Collector), the
-	// returned error is an instance of AlreadyRegisteredError, which
-	// contains the previously registered Collector.
-	//
-	// A Collector whose Describe method does not yield any Desc is treated
-	// as unchecked. Registration will always succeed. No check for
-	// re-registering (see previous paragraph) is performed. Thus, the
-	// caller is responsible for not double-registering the same unchecked
-	// Collector, and for providing a Collector that will not cause
-	// inconsistent metrics on collection. (This would lead to scrape
-	// errors.)
+	// 注册采集器, 有异常会报错
 	Register(Collector) error
-	// MustRegister works like Register but registers any number of
-	// Collectors and panics upon the first registration that causes an
-	// error.
+	// 注册采集器, 有异常会panic
 	MustRegister(...Collector)
-	// Unregister unregisters the Collector that equals the Collector passed
-	// in as an argument.  (Two Collectors are considered equal if their
-	// Describe method yields the same set of descriptors.) The function
-	// returns whether a Collector was unregistered. Note that an unchecked
-	// Collector cannot be unregistered (as its Describe method does not
-	// yield any descriptor).
-	//
-	// Note that even after unregistering, it will not be possible to
-	// register a new Collector that is inconsistent with the unregistered
-	// Collector, e.g. a Collector collecting metrics with the same name but
-	// a different help string. The rationale here is that the same registry
-	// instance must only collect consistent metrics throughout its
-	// lifetime.
+	// 注销该采集器
 	Unregister(Collector) bool
 }
 ```
 
-#### 默认注册表
+##### 默认注册表
 
 Prometheus 实现了一个默认的Registerer对象, 也就是默认注册表
 ```go
-// DefaultRegisterer and DefaultGatherer are the implementations of the
-// Registerer and Gatherer interface a number of convenience functions in this
-// package act on. Initially, both variables point to the same Registry, which
-// has a process collector (currently on Linux only, see NewProcessCollector)
-// and a Go collector (see NewGoCollector, in particular the note about
-// stop-the-world implication with Go versions older than 1.9) already
-// registered. This approach to keep default instances as global state mirrors
-// the approach of other packages in the Go standard library. Note that there
-// are caveats. Change the variables with caution and only if you understand the
-// consequences. Users who want to avoid global state altogether should not use
-// the convenience functions and act on custom instances instead.
 var (
 	defaultRegistry              = NewRegistry()
 	DefaultRegisterer Registerer = defaultRegistry
@@ -212,7 +166,6 @@ prometheus.MustRegister(temp)
 prometheus.Register()
 prometheus.Unregister()
 ```
-
 
 下面时一个完整的例子
 ```go
@@ -262,7 +215,7 @@ magedu_mcube_demo_queue_length{module="http-server"} 100
 ...
 ```
 
-#### 自定义注册表
+##### 自定义注册表
 
 Prometheus 默认的Registerer, 会添加一些默认指标的采集, 比如上面的看到的go运行时和当前process相关信息, 如果不想采集指标, 那么最好的方式是 使用自定义的注册表
 
@@ -343,4 +296,72 @@ promhttp_metric_handler_errors_total{cause="gathering"} 0
 
 ### 采集器
 
+下面是Collector接口声明:
+```go
+type Collector interface {
+	// 指标的一些描述信息, 就是# 标识的那部分
+	// 注意这里使用的是指针, 因为描述信息 全局存储一份就可以了
+	Describe(chan<- *Desc)
+	// 指标的数据, 比如 promhttp_metric_handler_errors_total{cause="gathering"} 0
+	// 这里没有使用指针, 因为每次采集的值都是独立的
+	Collect(chan<- Metric)
+}
+```
+下面我们就把之前的单个指标的采集, 改造成使用采集器的方式编写
 
+#### demo采集器
+
+实现demo采集器
+```go
+func NewDemoCollector() *DemoCollector {
+	return &DemoCollector{
+		// 使用prometheus.NewDesc来创建一个指标描述
+		queueLengthDesc: prometheus.NewDesc(
+			"magedu_mcube_demo_queue_length",
+			"The number of items in the queue.",
+			nil,
+			prometheus.Labels{"module": "http-server"},
+		),
+	}
+}
+
+type DemoCollector struct {
+	queueLengthDesc *prometheus.Desc
+}
+
+func (c *DemoCollector) Describe(ch chan<- *prometheus.Desc) {
+	ch <- c.queueLengthDesc
+}
+
+func (c *DemoCollector) Collect(ch chan<- prometheus.Metric) {
+	ch <- prometheus.MustNewConstMetric(c.queueLengthDesc, prometheus.GaugeValue, 100)
+}
+```
+
+重构后我们的代码将变得简洁优雅:
+```go
+package main
+
+import (
+ "net/http"
+
+ "github.com/prometheus/client_golang/prometheus"
+ "github.com/prometheus/client_golang/prometheus/promhttp"
+)
+
+func main() {
+	// 创建一个自定义的注册表
+	registry := prometheus.NewRegistry()
+
+	// 可选: 添加 process 和 Go 运行时指标到我们自定义的注册表中
+	registry.MustRegister(prometheus.NewProcessCollector(prometheus.ProcessCollectorOpts{}))
+	registry.MustRegister(prometheus.NewGoCollector())
+
+	// 注册自定义采集器
+	registry.MustRegister(NewDemoCollector())
+
+	// 暴露指标
+	http.Handle("/metrics", promhttp.HandlerFor(registry, promhttp.HandlerOpts{Registry: registry}))
+	http.ListenAndServe(":8050", nil)
+ }
+```
