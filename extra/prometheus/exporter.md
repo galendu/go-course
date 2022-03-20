@@ -92,6 +92,8 @@ go_goroutines 19
 
 ##### Gauges
 
+着是最常见的Metric类型, 也就是我们说的实时指标, 值是什么就返回什么, 并不会进行加工处理
+
 SDK提供了该指标的构造函数: NewGauge
 ```go
 queueLength := prometheus.NewGauge(prometheus.GaugeOpts{
@@ -183,12 +185,116 @@ totalRequests := prometheus.NewCounter(prometheus.CounterOpts{
 })
 ```
 
++ Inc: +1：计数器增加1.
++ Add: +n：计数器增加23.
+
+```go
+func TestCounter(t *testing.T) {
+	totalRequests := prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "http_requests_total",
+		Help: "The total number of handled HTTP requests.",
+	})
+
+	for i := 0; i < 10; i++ {
+		totalRequests.Inc()
+	}
+
+	// 创建一个自定义的注册表
+	registry := prometheus.NewRegistry()
+	registry.MustRegister(totalRequests)
+
+	// 获取注册所有数据
+	data, err := registry.Gather()
+	if err != nil {
+		panic(err)
+	}
+
+	// 编码输出
+	enc := expfmt.NewEncoder(os.Stdout, expfmt.FmtText)
+	fmt.Println(enc.Encode(data[0]))
+}
+```
+
+输出结果
+```
+# HELP http_requests_total The total number of handled HTTP requests.
+# TYPE http_requests_total counter
+http_requests_total 10
+```
 
 ##### Histograms
 
 
 ##### Summaries
 
+
+#### 指标标签
+
+Prometheus将指标的标签分为2类:
++ 静态标签: constLabels, 在指标创建时, 就提前声明好, 采集过程中永不变动
++ 动态标签: variableLabels, 用于在指标的收集过程中动态补充标签, 比如kafka集群的exporter 需要动态补充 instance_id
+
+静态标签我们在NewGauge之类时已经指明, 下面讨论下如何添加动态标签
+
+要让你的指标支持动态标签 有专门的构造函数, 对应关系如下:
++ NewGauge() 变成 NewGaugeVec()
++ NewCounter() 变成 NewCounterVec()
++ NewSummary() 变成 NewSummaryVec()
++ NewHistogram() 变成 NewHistogramVec()
+
+下面以NewGaugeVec为例进行讲解
+
+NewGaugeVec相比于NewGauge只多出了一个labelNames的参数:
+```go
+func NewGaugeVec(opts GaugeOpts, labelNames []string) *GaugeVec
+```
+
+一定声明了labelNames, 我们在为指标设置值得时候就必须带上对应个数的标签(一一对应, 二维数组)
+```go
+queueLength.WithLabelValues("rm_001", "kafka01").Set(100)
+```
+
+完整测试用例:
+```go
+func TestGaugeVec(t *testing.T) {
+	queueLength := prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		// Namespace, Subsystem, Name 会拼接成指标的名称: magedu_mcube_demo_queue_length
+		// 其中Name是必填参数
+		Namespace: "magedu",
+		Subsystem: "mcube_demo",
+		Name:      "queue_length",
+		// 指标的描信息
+		Help: "The number of items in the queue.",
+		// 指标的标签
+		ConstLabels: map[string]string{
+			"module": "http-server",
+		},
+	}, []string{"instance_id", "instance_name"})
+
+	queueLength.WithLabelValues("rm_001", "kafka01").Set(100)
+
+	// 创建一个自定义的注册表
+	registry := prometheus.NewRegistry()
+	registry.MustRegister(queueLength)
+
+	// 获取注册所有数据
+	data, err := registry.Gather()
+	if err != nil {
+		panic(err)
+	}
+
+	// 编码输出
+	enc := expfmt.NewEncoder(os.Stdout, expfmt.FmtText)
+	fmt.Println(enc.Encode(data[0]))
+}
+```
+
+最终我们看到的结果如下:
+```
+# HELP magedu_mcube_demo_queue_length The number of items in the queue.
+# TYPE magedu_mcube_demo_queue_length gauge
+magedu_mcube_demo_queue_length{instance_id="rm_001",instance_name="kafka01",module="http-server"} 100
+```
 
 #### 指标注册
 
@@ -374,18 +480,22 @@ type Collector interface {
 ```go
 func NewDemoCollector() *DemoCollector {
 	return &DemoCollector{
-		// 使用prometheus.NewDesc来创建一个指标描述
 		queueLengthDesc: prometheus.NewDesc(
 			"magedu_mcube_demo_queue_length",
 			"The number of items in the queue.",
-			nil,
+			// 动态标签的key列表
+			[]string{"instnace_id", "instnace_name"},
+			// 静态标签
 			prometheus.Labels{"module": "http-server"},
 		),
+		// 动态标的value列表, 这里必须与声明的动态标签的key一一对应
+		labelValues: []string{"mq_001", "kafka01"},
 	}
 }
 
 type DemoCollector struct {
 	queueLengthDesc *prometheus.Desc
+	labelValues     []string
 }
 
 func (c *DemoCollector) Describe(ch chan<- *prometheus.Desc) {
@@ -393,7 +503,7 @@ func (c *DemoCollector) Describe(ch chan<- *prometheus.Desc) {
 }
 
 func (c *DemoCollector) Collect(ch chan<- prometheus.Metric) {
-	ch <- prometheus.MustNewConstMetric(c.queueLengthDesc, prometheus.GaugeValue, 100)
+	ch <- prometheus.MustNewConstMetric(c.queueLengthDesc, prometheus.GaugeValue, 100, c.labelValues...)
 }
 ```
 
@@ -423,4 +533,11 @@ func main() {
 	http.Handle("/metrics", promhttp.HandlerFor(registry, promhttp.HandlerOpts{Registry: registry}))
 	http.ListenAndServe(":8050", nil)
  }
+```
+
+最后我们看到的结果如下:
+```
+# HELP magedu_mcube_demo_queue_length The number of items in the queue.
+# TYPE magedu_mcube_demo_queue_length gauge
+magedu_mcube_demo_queue_length{instnace_id="mq_001",instnace_name="kafka01",module="http-server"} 10
 ```
