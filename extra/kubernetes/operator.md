@@ -334,6 +334,19 @@ type TraefikServiceSpec struct {
 	Entrypoint string `json:"entrypoint"`
 	URL        string `json:"url"`
 }
+
+// TraefikServiceStatus defines the observed state of TraefikService
+type TraefikServiceStatus struct {
+	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
+	// Important: Run "make" to regenerate code after modifying this file
+
+	// 是否被激活
+	Active bool `json:"active,omitempty"`
+	// 最新更新时间
+	LastUpdateTime *metav1.Time `json:"lastUpdateTime,omitempty"`
+	// 如果更新失败, 失败的原因
+	Message string `json:"message,omitempty"`
+}
 ```
 
 #### CRD代码生成
@@ -470,21 +483,95 @@ traefikservice.traefik.magedu.com "traefikservice-sample" deleted
 
 ![](./images/k8s-watch-list.png)
 
-#### Crontroller 代码解读
+#### Crontroller 业务逻辑编写
 
+Reconcile 函数是 Operator 的核心逻辑, 位于 controllers/traefikservice_controller.go 文件中, 我们修改他，添加我们的业务逻辑
 
+```go
+// TraefikServiceReconciler reconciles a TraefikService object
+type TraefikServiceReconciler struct {
+	client.Client
+	Scheme *runtime.Scheme
+}
 
+// 每当traefikv1.TraefikService{}对象有变化时，我们就会收到一个请求
+func (r *TraefikServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	// 获取日志对象
+	l := log.FromContext(ctx, "namespace", req.Namespace)
 
-#### Controller 样例开发
+	// TODO(user): your logic here
 
+	// 1.通过名称获取TraefikService对象, 并打印
+	var obj traefikv1.TraefikService
+	if err := r.Get(ctx, req.NamespacedName, &obj); err != nil {
+		l.Error(err, "unable to fetch TraefikService")
+		// we'll ignore not-found errors, since they can't be fixed by an immediate
+		// requeue (we'll need to wait for a new notification), and we can get them
+		// on deleted requests.
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+	l.Info("get TraefikService object",
+		"name", obj.Name,
+		"url", obj.Spec.URL,
+		"entrypoint", obj.Spec.Entrypoint)
+
+	// 2. 更加状态 排除已经同步完成的对象
+	if obj.Status.Active {
+		l.Info("traefik service is active, skip ...")
+		return ctrl.Result{}, nil
+	}
+
+	// 3. 注册服务到Traefik service中, 比如写入到etcd provider中
+	l.Info("set traefik service ...")
+
+	// 4. 修改成功调整对象的状态
+	obj.Status.Active = true
+	obj.Status.LastUpdateTime = &metav1.Time{Time: time.Now()}
+	if err := r.Status().Update(ctx, &obj); err != nil {
+		l.Info("unable to update status", "reason", err.Error())
+	}
+
+	return ctrl.Result{}, nil
+}
+
+// SetupWithManager sets up the controller with the Manager.
+func (r *TraefikServiceReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	return ctrl.NewControllerManagedBy(mgr).
+		For(&traefikv1.TraefikService{}).
+		Complete(r)
+}
+```
 
 #### 部署 Controller
 
+为了确保我们的CRD描述是最新的, 我们重新安装下
+```sh
+make manifests && make install
+```
 
+为了方便起见，我们将在本地运行 controller，当然您也可以将其部署到 Kubernetes 上运行
+```sh
+make run
+```
 
 #### 验证 Controller
 
+我们继续使用之前的样例, 看看Controller能否感觉对象的变化, 正常工作
+```sh
+# 创建资源
+$ kubectl.exe apply -f config/samples/traefik_v1_traefikservice.yaml 
+traefikservice.traefik.magedu.com/traefikservice-sample created
+```
 
+我们通过controller的日志, 来确认Controller是否正常工作
+```
+...
+1.6478685486381395e+09  INFO    controller.traefikservice       get TraefikService object       {"reconciler group": "traefik.magedu.com", "reconciler kind": "TraefikService", "name": "traefikservice-sample", "namespace": "default", "namespace": "default", "name": "traefikservice-sample", "url": "https://www.baidu.com", "entrypoint": "web"}
+1.6478685486386724e+09  INFO    controller.traefikservice       set traefik service ... {"reconciler group": "traefik.magedu.com", "reconciler kind": "TraefikService", "name": "traefikservice-sample", "namespace": "default", "namespace": "default"}
+1.6478685486955843e+09  INFO    controller.traefikservice       get TraefikService object       {"reconciler group": "traefik.magedu.com", "reconciler kind": "TraefikService", "name": "traefikservice-sample", "namespace": "default", "namespace": "default", "name": "traefikservice-sample", "url": "https://www.baidu.com", "entrypoint": "web"}
+1.6478685486961432e+09  INFO    controller.traefikservice       traefik service is active, skip ...     {"reconciler group": "traefik.magedu.com", "reconciler kind": "TraefikService", "name": "traefikservice-sample", 
+"namespace": "default", "namespace": "default"}
+```
 
 ## 参考
 
