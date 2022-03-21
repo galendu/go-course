@@ -331,7 +331,7 @@ http_request_duration_seconds_count 8
 
 ##### Summaries
 
-这种类型的指标 就是用于计算分位数(quantile)的, 因此他需要配置一个核心参数: 你需要统计那个(百)分位的数据
+这种类型的指标 就是用于计算分位数(quantile)的, 因此他需要配置一个核心参数: 你需要统计那个(百)分位
 
 用NewSummary来构建该类指标
 ```go
