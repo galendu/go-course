@@ -224,9 +224,177 @@ http_requests_total 10
 
 ##### Histograms
 
+Histograms 被叫主直方图或者柱状图, 主要用于统计指标值的一个分布情况, 也就是常见的概率统计问题
+
+比如, 我们要统计一个班级的 成绩分布情况：
+
+![](./images/student-fb.png)
+
++ 横轴表示 分数的区间(0~50, 50~55, ...)
++ 纵轴表示 落在该区间的人数
+
+prometheus的Histograms也是用于解决这类问题的, 在prometheus里面用于设置横轴区间的概念叫Bucket, 不同于传统的区间设置之处, 在于prometheus的Bucket只能设置上限, 下线就是最小值，也就是说 换用prometheus Histograms, 我们上面的区间会变成这样:
+```
+0 ~ 50
+0 ~ 55
+0 ~ 60
+...
+```
+
+可以看出当我们设置好了Bucket后, prometheus的客户端需要统计落入每个Bucket中的值得数量(也就是一个Counter), 也就是Histograms这种指标类型的计算逻辑
+
+在监控里面, Histograms 典型的应用场景 就是统计 请求耗时分布, 比如 
+```
+0 ~ 100ms 请求个数
+0 ~ 500ms 请求个数
+0 ~ 5000ms 请求个数
+```
+
+有同学可能会问题? 为啥不用平均值来进行统计? 提示: 平均值里面的噪点, 比如有一个值 远远大于其他所有值的和
+
+我们使用NewHistogram初始化一个直方图类型的指标:
+```go
+requestDurations := prometheus.NewHistogram(prometheus.HistogramOpts{
+  Name:    "http_request_duration_seconds",
+  Help:    "A histogram of the HTTP request durations in seconds.",
+  // Bucket 配置：第一个 bucket 包括所有在 0.05s 内完成的请求，最后一个包括所有在10s内完成的请求。
+  Buckets: []float64{0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10},
+})
+```
+
+Histogram类型指标提供一个 Observe() 方法, 用于加入一个值到直方图中, 当然加入后 体现在直方图中的不是具体的值，而是值落入区间的统计，实际上每个bucket 就是一个 Counter指标
+
+下面是一个完整测试用例
+```go
+func TestHistogram(t *testing.T) {
+	requestDurations := prometheus.NewHistogram(prometheus.HistogramOpts{
+		Name: "http_request_duration_seconds",
+		Help: "A histogram of the HTTP request durations in seconds.",
+		// Bucket 配置：第一个 bucket 包括所有在 0.05s 内完成的请求，最后一个包括所有在10s内完成的请求。
+		Buckets: []float64{0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10},
+	})
+
+	// 添加值
+	for _, v := range []float64{0.01, 0.02, 0.3, 0.4, 0.6, 0.7, 5.5, 11} {
+		requestDurations.Observe(v)
+	}
+
+	// 创建一个自定义的注册表
+	registry := prometheus.NewRegistry()
+	registry.MustRegister(requestDurations)
+
+	// 获取注册所有数据
+	data, err := registry.Gather()
+	if err != nil {
+		panic(err)
+	}
+
+	// 编码输出
+	enc := expfmt.NewEncoder(os.Stdout, expfmt.FmtText)
+	fmt.Println(enc.Encode(data[0]))
+}
+```
+
+最后的结果
+```
+# HELP http_request_duration_seconds A histogram of the HTTP request durations in seconds.
+# TYPE http_request_duration_seconds histogram
+http_request_duration_seconds_bucket{le="0.05"} 2
+http_request_duration_seconds_bucket{le="0.1"} 2
+http_request_duration_seconds_bucket{le="0.25"} 2
+http_request_duration_seconds_bucket{le="0.5"} 4
+http_request_duration_seconds_bucket{le="1"} 6
+http_request_duration_seconds_bucket{le="2.5"} 6
+http_request_duration_seconds_bucket{le="5"} 6
+http_request_duration_seconds_bucket{le="10"} 7
+http_request_duration_seconds_bucket{le="+Inf"} 8
+http_request_duration_seconds_sum 18.53
+http_request_duration_seconds_count 8
+```
+
+注意点:
++ le="+Inf", 表示小于正无穷, 也就是统计所有的含义
++ 后缀 _sum,  参加统计的值的求和
++ 后缀 _count 参加统计的值得总数
+
+很多时候直接依赖直方图还是很难定位问题, 因为很多时候，我们需要的是请求的一个概统分布, 比如百分之99的请求 落在了那个区间(比如99%请求都在500ms内完成的), 从而判断我们的访问 从整体上看 是良好的。
+
+而像上面的概念分布问题有一个专门的名称叫: quantile, 翻译过来就分位数, 及百分之多少的请求 在那个范围下
+
+那基于直方图提供的数据, 我们是可以计算出分位数的, 但是这个分位数的精度 会受到分区设置精度的影响(bucket设置)， 比如你如果只设置了2个bucket, 0.001, 5, 那么你统计出来的100%这个分位数 就是5s, 因为所有的请求都会落到这个bucket中
+
+如果我们的bucket设置是合理的, 我又想使用直方图来统计分位数喃? prometheus的QL, 提供了专门的函数histogram_quantile, 可以用于 基于直方图的统计数据，计算分位数
+
+如果服务端压力很大, bucket也不确定, 我能不能直接在客户端计算分位数(quantile)喃? 
+
+答案是有的，就是第四种指标类型: Summaries
 
 ##### Summaries
 
+这种类型的指标 就是用于计算分位数(quantile)的, 因此他需要配置一个核心参数: 你需要统计那个(百)分位的数据
+
+用NewSummary来构建该类指标
+```go
+requestDurations := prometheus.NewSummary(prometheus.SummaryOpts{
+    Name:       "http_request_duration_seconds",
+    Help:       "A summary of the HTTP request durations in seconds.",
+    Objectives: map[float64]float64{
+      0.5: 0.05,   // 第50个百分位数，最大绝对误差为0.05。
+      0.9: 0.01,   // 第90个百分位数，最大绝对误差为0.01。
+      0.99: 0.001, // 第90个百分位数，最大绝对误差为0.001。
+    },
+  },
+)
+```
+
+和直方图一样, 他也近提供一个方法: Observe, 用于统计数据
+
+下面是具体的测试用例:
+```go
+func TestSummary(t *testing.T) {
+	requestDurations := prometheus.NewSummary(prometheus.SummaryOpts{
+		Name: "http_request_duration_seconds",
+		Help: "A summary of the HTTP request durations in seconds.",
+		Objectives: map[float64]float64{
+			0.5:  0.05,  // 第50个百分位数，最大绝对误差为0.05。
+			0.9:  0.01,  // 第90个百分位数，最大绝对误差为0.01。
+			0.99: 0.001, // 第90个百分位数，最大绝对误差为0.001。
+		},
+	})
+
+	// 添加值
+	for _, v := range []float64{0.01, 0.02, 0.3, 0.4, 0.6, 0.7, 5.5, 11} {
+		requestDurations.Observe(v)
+	}
+
+	// 创建一个自定义的注册表
+	registry := prometheus.NewRegistry()
+	registry.MustRegister(requestDurations)
+
+	// 获取注册所有数据
+	data, err := registry.Gather()
+	if err != nil {
+		panic(err)
+	}
+
+	// 编码输出
+	enc := expfmt.NewEncoder(os.Stdout, expfmt.FmtText)
+	fmt.Println(enc.Encode(data[0]))
+}
+```
+
+最后的结果:
+```
+# HELP http_request_duration_seconds A summary of the HTTP request durations in seconds.
+# TYPE http_request_duration_seconds summary
+http_request_duration_seconds{quantile="0.5"} 0.4
+http_request_duration_seconds{quantile="0.9"} 11
+http_request_duration_seconds{quantile="0.99"} 11
+http_request_duration_seconds_sum 18.53
+http_request_duration_seconds_count 8
+```
+
+可以看出来 直接使用客户端计算分位数, 准确度不依赖我们设置bucket, 是比较推荐的做法
 
 #### 指标标签
 
