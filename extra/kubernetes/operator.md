@@ -573,6 +573,80 @@ traefikservice.traefik.magedu.com/traefikservice-sample created
 "namespace": "default", "namespace": "default"}
 ```
 
+## 项目配置
+
+默认情况下，是没有项目配置入口的, 你可以选择在项目初始化的时候就补充上--component-config参数, 这样就有配置文件加载的逻辑。
+```sh
+# we'll use a domain of tutorial.kubebuilder.io,
+# so all API groups will be <group>.tutorial.kubebuilder.io.
+kubebuilder init --domain tutorial.kubebuilder.io --component-config
+```
+
+但是显然我们在项目初始化的时候没生成, 因此这里就需要手动补充项目读取配置的逻辑
+
+### 配置文件加载
+
+配置文件的读取入口在: main.go里面
+
+1. 添加Flag 读取 配置文件配置路径
+
+```go
+var configFile string
+flag.StringVar(&configFile, "config", "",
+    "The controller will load its initial configuration from this file. "+
+        "Omit this flag to use the default configuration values. "+
+            "Command-line flags override configuration from this file.")
+```
+
+2. 项目
+```go
+	// 默认配置
+	options := ctrl.Options{
+		Scheme:                 scheme,
+		MetricsBindAddress:     metricsAddr,
+		Port:                   9443,
+		HealthProbeBindAddress: probeAddr,
+		LeaderElection:         enableLeaderElection,
+		LeaderElectionID:       "d18673dd.magedu.com",
+	}
+
+	// 如果有配置文件, 使用配置文件配置
+	var err error
+	if configFile != "" {
+		options, err = options.AndFrom(ctrl.ConfigFile().AtPath(configFile))
+		if err != nil {
+			setupLog.Error(err, "unable to load the config file")
+			os.Exit(1)
+		}
+	}
+```
+
+3. 修改配置
+
+配置文件: weconfig/manager/controller_manager_config.yaml
+```yaml
+apiVersion: controller-runtime.sigs.k8s.io/v1alpha1
+kind: ControllerManagerConfig
+health:
+  healthProbeBindAddress: :8081
+metrics:
+  bindAddress: 127.0.0.1:8080
+webhook:
+  port: 9443
+leaderElection:
+  leaderElect: true
+  resourceName: d18673dd.magedu.com
+```
+
+### 配置扩展
+
+
+
+
+
+
+
+
 ## 参考
 
 + [kubebuilder 官方文档](https://book.kubebuilder.io/introduction.html)
