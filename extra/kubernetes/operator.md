@@ -504,12 +504,17 @@ func (r *TraefikServiceReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	// 1.通过名称获取TraefikService对象, 并打印
 	var obj traefikv1.TraefikService
 	if err := r.Get(ctx, req.NamespacedName, &obj); err != nil {
-		l.Error(err, "unable to fetch TraefikService")
-		// we'll ignore not-found errors, since they can't be fixed by an immediate
-		// requeue (we'll need to wait for a new notification), and we can get them
-		// on deleted requests.
-		return ctrl.Result{}, client.IgnoreNotFound(err)
+		// 如果Not Found则表示该资源已经删除, 需要做删除处理
+		if apierrors.IsNotFound(err) {
+			l.Info("delete service ...")
+			err = nil
+		} else {
+      l.Error(err, "unable to fetch TraefikService")
+    }
+
+		return ctrl.Result{}, err
 	}
+
 	l.Info("get TraefikService object",
 		"name", obj.Name,
 		"url", obj.Spec.URL,
@@ -573,33 +578,75 @@ traefikservice.traefik.magedu.com/traefikservice-sample created
 "namespace": "default", "namespace": "default"}
 ```
 
-## 项目配置
+#### Pod Controller
 
-默认情况下，是没有项目配置入口的, 你可以选择在项目初始化的时候就补充上--component-config参数, 这样就有配置文件加载的逻辑。
-```sh
-# we'll use a domain of tutorial.kubebuilder.io,
-# so all API groups will be <group>.tutorial.kubebuilder.io.
-kubebuilder init --domain tutorial.kubebuilder.io --component-config
-```
+并不是什么时候我们都需要 CRD的, 比如我们只想Watch Pod的变化, 因此我们可以独立开发Controller即可
 
-但是显然我们在项目初始化的时候没生成, 因此这里就需要手动补充项目读取配置的逻辑
 
-### 配置文件加载
-
-配置文件的读取入口在: main.go里面
-
-1. 添加Flag 读取 配置文件配置路径
+#### 设置需要Watch的资源对象
 
 ```go
-var configFile string
-flag.StringVar(&configFile, "config", "",
-    "The controller will load its initial configuration from this file. "+
-        "Omit this flag to use the default configuration values. "+
-            "Command-line flags override configuration from this file.")
+// SetupWithManager sets up the controller with the Manager.
+func (r *PodReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	return ctrl.NewControllerManagedBy(mgr).
+		For(&v1.Pod{}).
+		Complete(r)
+}
 ```
 
-2. 项目
+
+#### 资源状态业务逻辑
+
 ```go
+func (r *EndpointReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	// 获取日志对象
+	l := log.FromContext(ctx)
+
+	// TODO(user): your logic here
+
+	// 1.通过名称获取Pods对象, 并打印
+	var obj v1.Pod
+	if err := r.Get(ctx, req.NamespacedName, &obj); err != nil {
+		// 如果Not Found则表示该资源已经删除, 需要做删除处理
+		if apierrors.IsNotFound(err) {
+			l.Info("delete Pods ...",
+				"namespace", req.Namespace,
+				"name", req.Name)
+			err = nil
+		} else {
+			l.Error(err, "unable to fetch Pods")
+		}
+	}
+
+	eps, _ := json.Marshal(obj)
+	l.Info(string(eps))
+
+	return ctrl.Result{}, nil
+}
+```
+
+#### Manager加载Controller
+
+controller开发完成后，需要注册给Manager, 才能给启动, 因此我们在main.go中完成该controller的加载
+
+```go
+func main() {
+	var metricsAddr string
+	var enableLeaderElection bool
+	var probeAddr string
+	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
+	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
+	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
+		"Enable leader election for controller manager. "+
+			"Enabling this will ensure there is only one active controller manager.")
+	opts := zap.Options{
+		Development: true,
+	}
+	opts.BindFlags(flag.CommandLine)
+	flag.Parse()
+
+	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
+
 	// 默认配置
 	options := ctrl.Options{
 		Scheme:                 scheme,
@@ -610,35 +657,57 @@ flag.StringVar(&configFile, "config", "",
 		LeaderElectionID:       "d18673dd.magedu.com",
 	}
 
-	// 如果有配置文件, 使用配置文件配置
-	var err error
-	if configFile != "" {
-		options, err = options.AndFrom(ctrl.ConfigFile().AtPath(configFile))
-		if err != nil {
-			setupLog.Error(err, "unable to load the config file")
-			os.Exit(1)
-		}
+	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), options)
+	if err != nil {
+		setupLog.Error(err, "unable to start manager")
+		os.Exit(1)
 	}
+
+	if err = (&controllers.TraefikServiceReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "TraefikService")
+		os.Exit(1)
+	}
+	//+kubebuilder:scaffold:builder
+
+	// Pods Controller
+	if err = (&controllers.PodReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Pods")
+		os.Exit(1)
+	}
+
+	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
+		setupLog.Error(err, "unable to set up health check")
+		os.Exit(1)
+	}
+	if err := mgr.AddReadyzCheck("readyz", healthz.Ping); err != nil {
+		setupLog.Error(err, "unable to set up ready check")
+		os.Exit(1)
+	}
+
+	setupLog.Info("starting manager")
+	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
+		setupLog.Error(err, "problem running manager")
+		os.Exit(1)
+	}
+}
 ```
 
-3. 修改配置
+#### 验证Pods Watch功能
 
-配置文件: weconfig/manager/controller_manager_config.yaml
-```yaml
-apiVersion: controller-runtime.sigs.k8s.io/v1alpha1
-kind: ControllerManagerConfig
-health:
-  healthProbeBindAddress: :8081
-metrics:
-  bindAddress: 127.0.0.1:8080
-webhook:
-  port: 9443
-leaderElection:
-  leaderElect: true
-  resourceName: d18673dd.magedu.com
+下面是创建一个Nginx 的Deployment 观察到的Pod变化
+```
+1.6479577314173741e+09  INFO    controller.pod  nginx-86bd55b966-hwhtz  {"reconciler group": "", "reconciler kind": "Pod", "name": "nginx-86bd55b966-hwhtz", "namespace": "default", "namespace": "default", "labels": {"k8s-app":"nginx","pod-template-hash":"86bd55b966","qcloud-app":"nginx"}}
+1.647957731418373e+09   INFO    controller.pod  172.16.0.69     {"reconciler group": "", "reconciler kind": "Pod", "name": "nginx-86bd55b966-hwhtz", "namespace": "default"}
+1.647957731419115e+09   INFO    controller.pod  test    {"reconciler group": "", "reconciler kind": "Pod", "name": "nginx-86bd55b966-hwhtz", "namespace": "default", "pod_id": null}
 ```
 
-### 配置扩展
+基于次, 我们就可以把Pod容器里面的服务注册到注册中心去了
 
 
 
