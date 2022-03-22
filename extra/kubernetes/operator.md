@@ -578,7 +578,7 @@ traefikservice.traefik.magedu.com/traefikservice-sample created
 "namespace": "default", "namespace": "default"}
 ```
 
-#### Pod Controller
+### Pod Controller
 
 并不是什么时候我们都需要 CRD的, 比如我们只想Watch Pod的变化, 因此我们可以独立开发Controller即可
 
