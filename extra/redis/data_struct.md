@@ -2,6 +2,10 @@
 
 ![](./images/key-value-data-stores.webp)
 
+
+
+## 环境准备
+
 ```sh
 # 使用Docker启动一个Redis服务
 docker run -p 6379:6379 -itd --name redis  redis
@@ -9,13 +13,18 @@ docker run -p 6379:6379 -itd --name redis  redis
 docker exec -it redis redis-cli
 ```
 
-## Strings
+## 关于Key
+
+
+## Value类型
+
+### Strings
 
 ![](./images/redis_strings.png)
 
 
 
-### 基本操作
+#### 基本操作
 
 单值操作:
 ```
@@ -37,40 +46,40 @@ OK
 
 更多操作请参考 [commands for strings](https://redis.io/commands/?group=string)
 
-## Sets
+### Sets
 
 ![](./images/redis_sets.png)
 
 
-## Sorted Sets
+### Sorted Sets
 
 ![](./images/redis_zset.png)
 
-## Lists
+### Lists
 
 ![](./images/list.png)
 
-## Hashes
+### Hashes
 
 ![](./images/hashes.png)
 
-## Bitmaps
+### Bitmaps
 
 ![](./images/bitmaps.png)
 
-## Bitfields
+### Bitfields
 
 ![](./images/bitmaps.png)
 
-## HyperLogLog
+### HyperLogLog
 
 ![](./images/bitmaps.png)
 
-## Geospatial indexes
+### Geospatial indexes
 
 ![](./images/data-structures-geospatial.webp)
 
-## Streams
+### Streams
 
 ![](./images/streams-2.webp)
 
