@@ -21,6 +21,7 @@ docker exec -it redis redis-cli
 
 ![](./images/redis_strings.png)
 
+Strings 数据结构是简单的key-value类型，value其实不仅是String，也可以是数字
 
 #### 基本操作
 
@@ -28,6 +29,9 @@ docker exec -it redis redis-cli
 + mset
 + get
 + mget
++ type
++ exists
++ del
 
 单值操作:
 ```
@@ -45,6 +49,30 @@ OK
 1) "10"
 2) "20"
 3) "30"
+```
+
+判断key是否存在与删除key
+```
+127.0.0.1:6379> set mykey hello
+OK
+
+# 获取值得长度
+127.0.0.1:6379> STRLEN mykey
+(integer) 5
+
+# 判断key的类型
+127.0.0.1:6379> type mykey
+string
+
+# 判断key是否存在
+127.0.0.1:6379> exists mykey
+(integer) 1
+
+# 删除key
+127.0.0.1:6379> del mykey
+(integer) 0
+127.0.0.1:6379> exists mykey
+(integer) 0
 ```
 
 #### 设置过期
@@ -78,6 +106,12 @@ set key value [EX seconds|PX milliseconds|EXAT timestamp|PXAT milliseconds-times
 
 #### 应用场景
 
+
+##### 缓存系统
+
+使用Strings类型，完全实现目前 Memcached 的功能，并且效率更高。还可以享受Redis的定时持久化，操作日志及 Replication等功能
+
+
 ##### 分布式锁
 
 针对 set 还有2个参数: 
@@ -107,6 +141,13 @@ OK
 (integer) 1
 ```
 
+存在问题:
++ 任务超时, 锁自动释放, 但是任务并没有处理完成
++ 加锁和释放锁不在同一个线程
++ redis集群(异步复制延迟，造成锁丢失)
++ 使用Redlock 基于Redis多实例实现, [Redlock源码详解](https://baijiahao.baidu.com/s?id=1716738811409438138&wfr=spider&for=pc)
+
+建议使用Etcd实现分布式锁
 
 ##### 计算器
 
@@ -133,7 +174,6 @@ OK
 127.0.0.1:6379>
 ```
 
-
 ### Sets
 
 ![](./images/redis_sets.png)
@@ -146,6 +186,32 @@ OK
 ### Lists
 
 ![](./images/list.png)
+
+#### 基本操作
+
++ rpush：right push(at the tail), 从右边往list里面添加元素, 也就是append操作 
++ lpush: left push(at the head), 从左边往list里面添加元素, 也就是从头添加
++ lrange: 通过索引访问列表中的元素
+
+```
+# 添加一个或者多个元素到 mylist中
+127.0.0.1:6379> rpush mylist A
+(integer) 1
+127.0.0.1:6379> rpush mylist B
+(integer) 2
+127.0.0.1:6379> rpush mylist C D
+(integer) 4
+
+# 查看mylist中 一个或者多个元素
+127.0.0.1:6379> lrange mylist 0 0
+1) "A"
+127.0.0.1:6379> lrange mylist 0 4
+1) "A"
+2) "B"
+3) "C"
+4) "D"
+```
+
 
 ### Hashes
 
