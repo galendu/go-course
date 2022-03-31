@@ -17,6 +17,7 @@ docker exec -it redis redis-cli
 
 ## Value类型
 
+
 ### Strings
 
 ![](./images/redis_strings.png)
