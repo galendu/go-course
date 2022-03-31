@@ -52,13 +52,6 @@
   * [包与工程](./zh-cn/base/pkg.md)
   * [单元测试和基准测试](./zh-cn/base/func.md)
 
-## Day08: 文件中转站
-  * [反馈问题解答](./day08/question.md)
-  * [重点知识回顾](./zh-cn/base/oop.md)
-  * [实战: 文件中转站]
-    * [简易版工具开发](./day08/simple_tool.md)
-    * [以系统方式开发](./day08/design.md)
-
 ## Day09
   * [密码学简介](./day09/summary.md)
   * [散列算法](./day09/go-hash.md)
@@ -87,8 +80,12 @@
   * [实战: Socket代理](./day11/websocket.md)
   * [HTTP与WebSocket](./day11/websocket.md)
 
-## Day13
+## Day12
   * [HTTP 协议](./day13/http.md)
+
+## Day13: 文件中转站
+  * [简易版工具开发](./day08/simple_tool.md)
+  * [以系统方式开发](./day08/design.md)
 
 ## Day14: 项目工程Demo
   * [Demo后端开发](./day14/demo-api.md)
