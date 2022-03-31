@@ -90,7 +90,7 @@
 ## Day13
   * [HTTP 协议](./day13/http.md)
 
-## Day14: CURD Demo
+## Day14: 项目工程Demo
   * [Demo后端开发](./day14/demo-api.md)
   * [Demo前端开发](./day14/demo-ui.md)
   * [作业](./day14/homework.md)
@@ -100,7 +100,7 @@
   * [Protobuf编解码](./day15/protobuf.md)
   * [proto3语法入门](./day15/proto3_synx.md)
   * [GRPC入门](./day15/grpc.md)
-  * [框架介绍](./day15/framework.md)
+  * [框架支持GRPC](./day15/framework.md)
 
 ## Day16: CMDB API
   * [云资源Provider](./day16/cmdb-provider.md)
