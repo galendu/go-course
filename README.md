@@ -108,15 +108,14 @@
   * [云资源同步API](./day16/cmdb-sync.md)
   * [CMDB改造](./day16/cmdb-grpc.md)
 
-## Day17: 权限中心之认证
+## Day17: 用户中心
   * [开发基础](./day17/user.md)
   * [登录认证](./day17/auth.md)
-
-## Day18: 权限中心之鉴权
   * [权限判定](./day18/permission.md)
-  * [Etcd使用](./day18/etcd.md)
-  * [微服务网关](./day18/traefik.md)
-  * [项目部署](./day18/deploy.md)
+
+## Day18: 审计中心
+  * [消息队列技术与Kafka](./day18/permission.md)
+  * [审计中心](./day18/permission.md)
 
 ## Day19: Web 入门
   * [JavaScript基础](./day19/javascript.md)
@@ -142,17 +141,22 @@
   * [CMDB搜索页面](./day23/cmdb-search.md)
   * [CMDB同步页面](./day23/cmdb-sync.md)
 
-## Day23: CI/CD系统(一)
-  * [Workflow 项目介绍](./day24/workflow-summary.md)
-  * [API Server 开发](./day24/api-server.md)
+## Day23 基于微服务网关的部署
+  * [传统部署](./day18/deploy.md)
+  * [Etcd使用](./day18/etcd.md)
+  * [微服务网关](./day18/traefik.md)
+  
+## Day24: Prometheus二次开发
+  * [Prometheus 概念介绍](./extra/prometheus/exporter.md)
+  * [Exporter 开发](./extra/prometheus/exporter.md)
+  * [服务发现与CMDB对接](./extra/prometheus/exporter.md)
+  * [TSDB技术与Prometheus](./extra/prometheus/exporter.md)
 
-## Day24: CI/CD系统(二)
-  * [Pipeline Scheduler 开发](./day25/pipeline-scheduler.md)
-  * [Step Scheduler 开发](./day25/step-scheduler.md)
-  * [Step Hook 开发](./day25/step-hook.md)
-  * [Node 开发](./day25/node.md)
-  * [API Server 订阅SCM事件](./day25/ci.md)
+## Day25: Kubernetes二次开发
+  * [Kubernetes 简介与client-go使用](./day25/pipeline-scheduler.md)
+  * [基于client-go 的多集群管理平台](./day25/pipeline-scheduler.md)
+  * [Kubernetes Operator 开发](./extra/kubernetes/operator.md)
 
-## Day25: 总结与回顾
+## Day26: 总结与回顾
   * [课程回顾](./day26/summary.md)
 
