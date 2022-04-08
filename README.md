@@ -90,7 +90,6 @@
 ## Day14: 项目工程Demo
   * [Demo后端开发](./day14/demo-api.md)
   * [Demo前端开发](./day14/demo-ui.md)
-  * [作业](./day14/homework.md)
 
 ## Day15: 从RPC到GRPC
   * [RPC入门](./day15/rpc.md)
@@ -119,12 +118,10 @@
   * [Web入门基础-HTLM](./day19/html.md)
   * [Web入门基础-CSS](./day19/css.md)
   * [Web入门基础-浏览器](./day19/browser.md)
-  * [作业](./day19/homework.md)
 
 ## Day20: Vue 入门
   * [Vue入门基础](./day20/vue-base.md)
   * [Vue路由与状态管理](./day20/vue-all.md)
-  * [作业](./day20/homework.md)
 
 ## Day21: 项目前端
   * [项目前端框架](./day21/devcloud-base.md)
