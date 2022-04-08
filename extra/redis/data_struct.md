@@ -108,9 +108,42 @@ set key value [EX seconds|PX milliseconds|EXAT timestamp|PXAT milliseconds-times
 #### 应用场景
 
 
-##### 缓存系统
+##### 对象缓存
 
 使用Strings类型，完全实现目前 Memcached 的功能，并且效率更高。还可以享受Redis的定时持久化，操作日志及 Replication等功能
+
+
+##### 计算器
+
+除了有简单的SET,GET操作, Redis为了解决分布式系统的计数问题, 专门支持了一些Counter操作:
+
++ incr:  +1
++ incrby:+n
++ decr:  -1
++ decrby:-n
+
+```
+127.0.0.1:6379> set counter 100
+OK
+127.0.0.1:6379> incr counter
+(integer) 101   
+127.0.0.1:6379> incr counter
+(integer) 102   
+127.0.0.1:6379> decr counter
+(integer) 101   
+127.0.0.1:6379> incrby counter 100
+(integer) 201   
+127.0.0.1:6379> decrby counter 100
+(integer) 101   
+127.0.0.1:6379>
+```
+
+典型的应用就是  用户秘密异常计数, 防止用户暴力破解密码
+
+##### 共享Session
+
+
+
 
 
 ##### 分布式锁
@@ -150,30 +183,6 @@ OK
 
 建议使用Etcd实现分布式锁
 
-##### 计算器
-
-除了有简单的SET,GET操作, Redis为了解决分布式系统的计数问题, 专门支持了一些Counter操作:
-
-+ incr:  +1
-+ incrby:+n
-+ decr:  -1
-+ decrby:-n
-
-```
-127.0.0.1:6379> set counter 100
-OK
-127.0.0.1:6379> incr counter
-(integer) 101   
-127.0.0.1:6379> incr counter
-(integer) 102   
-127.0.0.1:6379> decr counter
-(integer) 101   
-127.0.0.1:6379> incrby counter 100
-(integer) 201   
-127.0.0.1:6379> decrby counter 100
-(integer) 101   
-127.0.0.1:6379>
-```
 
 ### Sets
 
