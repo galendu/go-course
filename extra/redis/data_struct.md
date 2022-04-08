@@ -2,7 +2,6 @@
 
 ![](./images/key-value-data-stores.webp)
 
-
 ## 环境准备
 
 ```sh
@@ -113,7 +112,7 @@ set key value [EX seconds|PX milliseconds|EXAT timestamp|PXAT milliseconds-times
 使用Strings类型，完全实现目前 Memcached 的功能，并且效率更高。还可以享受Redis的定时持久化，操作日志及 Replication等功能
 
 
-##### 计算器
+##### 计数器
 
 除了有简单的SET,GET操作, Redis为了解决分布式系统的计数问题, 专门支持了一些Counter操作:
 
@@ -141,8 +140,6 @@ OK
 典型的应用就是  用户秘密异常计数, 防止用户暴力破解密码
 
 ##### 共享Session
-
-
 
 
 
@@ -183,7 +180,6 @@ OK
 
 建议使用Etcd实现分布式锁
 
-
 ### Sets
 
 ![](./images/redis_sets.png)
@@ -220,6 +216,49 @@ OK
 2) "B"
 3) "C"
 4) "D"
+
+# 删除mylist中的元素, 即pop操作, 删除一个或者多个元素
+# right pop
+127.0.0.1:6379> RPOP mylist 
+"D"
+127.0.0.1:6379> RPOP mylist 2
+1) "C"
+2) "B"
+127.0.0.1:6379> lrange mylist 0 4
+1) "A"
+# left pop
+127.0.0.1:6379> LPOP mylist 
+"A"
+127.0.0.1:6379> LPOP mylist 2
+1) "B"
+2) "C"
+127.0.0.1:6379> lrange mylist 0 4
+1) "D"
+# 如果队列没那么多元素, 则有多少返回多少
+127.0.0.1:6379> LPOP mylist 2
+1) "D"
+# 如果List为空, 则返回nil
+127.0.0.1:6379> LPOP mylist 2
+(nil)
+```
+
+#### 应用场景
+
+##### 队列
+
+List底层的实现就是一个「链表」，在头部和尾部操作元素，时间复杂度都是 O(1)，这意味着它非常符合消息队列的模型
+
+```
+127.0.0.1:6379> LPUSH queue msg1
+(integer) 1
+127.0.0.1:6379> LPUSH queue msg2
+(integer) 2
+127.0.0.1:6379> RPOP queue
+"msg1"
+127.0.0.1:6379> RPOP queue
+"msg2"
+127.0.0.1:6379> RPOP queue
+(nil)
 ```
 
 
@@ -253,3 +292,4 @@ OK
 + [Data Structures](https://redis.com/redis-enterprise/data-structures/)
 + [Data types tutorial](https://redis.io/docs/manual/data-types/data-types-tutorial/)
 + [Redis data types](https://redis.io/docs/manual/data-types/)
++ [把Redis当作队列来用，真的合适吗？](https://baijiahao.baidu.com/s?id=1715910577289070853&wfr=spider&for=pc)
