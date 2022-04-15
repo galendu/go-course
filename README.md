@@ -154,3 +154,17 @@
 ## Day26: 总结与回顾
   * [课程回顾](./day26/summary.md)
 
+
+## 录播: Workflow项目
+
+### CI/CD系统(一)
+  * [Workflow 项目介绍](./day24/workflow-summary.md)
+  * [API Server 开发](./day24/api-server.md)
+
+### CI/CD系统(二)
+  * [Pipeline Scheduler 开发](./day25/pipeline-scheduler.md)
+  * [Step Scheduler 开发](./day25/step-scheduler.md)
+  * [Step Hook 开发](./day25/step-hook.md)
+  * [Node 开发](./day25/node.md)
+  * [API Server 订阅SCM事件](./day25/ci.md)
+
