@@ -26,4 +26,32 @@ $ docker run -p 3306:3306 -itd -e MARIADB_USER=cmdb -e MARIADB_PASSWORD=123456 -
 
 
 
+## 联表查询
 
+![](./images/sql_join.jpeg)
+
+
+### LEFT JOIN
+
+
+
+### RIGHT JOIN
+
+
+### INNER JOIN
+
+
+
+### Left Join且不含B
+
+
+
+### Right Join且不含A
+
+
+
+### Full Join
+
+
+
+### Full Join且不含交集
