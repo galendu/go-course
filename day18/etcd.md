@@ -685,12 +685,7 @@ etcdctl compact 5
 
 ## 参考
 
++ [etcd UI 工具 etcd](https://www.electronjs.org/apps/etcd-manager)
 + [etcd 问题、调优、监控](https://www.kubernetes.org.cn/7569.html)
 + [The Raft Consensus Algorithm](https://raft.github.io/)
-
-
-
-
-
-
 
