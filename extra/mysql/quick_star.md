@@ -63,3 +63,22 @@ $ docker run -p 3306:3306 -itd -e MARIADB_USER=cmdb -e MARIADB_PASSWORD=123456 -
 ### Full Join且不含交集
 
 ![](./images/full_join_not.webp)
+
+
+
+## 子查询
+
+
+## 常用语言
+
+
+### SELECT INTO
+
+
+
+
+## 参考
+
++ [MySQL里面的子查询的基本使用](http://www.codebaoku.com/it-mysql/it-mysql-218378.html)
++ [MySQL 子查询优化](https://www.jianshu.com/p/3989222f7084)
++ [MySQL—基于规则优化 子查询优化](https://www.rsthe.com/archives/mysql%E5%9F%BA%E4%BA%8E%E8%A7%84%E5%88%99%E4%BC%98%E5%8C%96%E5%AD%90%E6%9F%A5%E8%AF%A2%E4%BC%98%E5%8C%96)
