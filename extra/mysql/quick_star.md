@@ -69,6 +69,24 @@ $ docker run -p 3306:3306 -itd -e MARIADB_USER=cmdb -e MARIADB_PASSWORD=123456 -
 ## 子查询
 
 
+
+## 常用函数
+
+
+
+### 字符函数
+
++ substr
++ length
++ contact
+
+
+### 日期函数
+
++ NOW()
++ TIMESTAMP
+
+
 ## 常用语句
 
 
@@ -87,10 +105,10 @@ $ docker run -p 3306:3306 -itd -e MARIADB_USER=cmdb -e MARIADB_PASSWORD=123456 -
 ### IF与IFNULL
 
 
-
 ### CASE语句
 
 
+### DELETE 联表
 
 
 
