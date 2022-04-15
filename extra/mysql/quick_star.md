@@ -33,25 +33,33 @@ $ docker run -p 3306:3306 -itd -e MARIADB_USER=cmdb -e MARIADB_PASSWORD=123456 -
 
 ### LEFT JOIN
 
+![](./images/left_join.webp)
 
 
 ### RIGHT JOIN
 
+![](./images/right_join.webp)
+
 
 ### INNER JOIN
 
+![](./images/inner_join.webp)
 
 
 ### Left Join且不含B
 
+![](./images/left_join_not_b.webp)
 
 
 ### Right Join且不含A
 
+![](./images/right_join_not_a.webp)
 
 
 ### Full Join
 
-
+![](./images/full_join.webp)
 
 ### Full Join且不含交集
+
+![](./images/full_join_not.webp)
