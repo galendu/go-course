@@ -18,6 +18,7 @@ $ docker run -p 3306:3306 -itd -e MARIADB_USER=cmdb -e MARIADB_PASSWORD=123456 -
 ### 数据类型
 
 
+
 ### 完整性约束
 
 
