@@ -150,7 +150,7 @@
   * [CMDB搜索页面](./day23/cmdb-search.md)
   * [CMDB同步页面](./day23/cmdb-sync.md)
 
-## Day23 基于微服务网关的部署
+### Day23 基于微服务网关的部署
   * [传统部署](./day18/deploy.md)
   * [Etcd使用](./day18/etcd.md)
   * [微服务网关](./day18/traefik.md)
