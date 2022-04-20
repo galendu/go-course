@@ -808,6 +808,8 @@ func (p *OssProgressListener) ProgressChanged(event *oss.ProgressEvent) {
 	switch event.EventType {
 	case oss.TransferStartedEvent:
 		p.bar = progressbar.NewOptions64(event.TotalBytes,
+			// ansi "github.com/k0kubun/go-ansi" 
+			// 引入第三方库 修复windows终端输出换行问题
 			progressbar.OptionSetWriter(ansi.NewAnsiStdout()),
 			progressbar.OptionEnableColorCodes(true),
 			progressbar.OptionShowBytes(true),
