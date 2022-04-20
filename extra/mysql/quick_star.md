@@ -29,7 +29,7 @@ Database Define Language缩写, 也就是用于创建数据库和表的SQL语法
 + 中文字符集(兼容ASCII): GB2312、BIG5、 GBK, GB18030 
 + 万国码(兼容ASCII): Unicode
 
-### 排序规则
+#### 排序规则
 
 
 ### 定义表
