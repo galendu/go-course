@@ -71,6 +71,9 @@ func (p *aliyun) UploadFile(bucketName, objectKey, localFilePath string) error {
 
 #### 配置测试用例运行环境
 
+
+##### 测试用例环境变量注入
+
 为了能不把我们测试用例使用的参数硬编码到代码里，可以有2个选择:
 + 单独加载测试用例使用的配置文件
 + 测试用例的配置通过环境变量配置
@@ -94,6 +97,9 @@ ALI_BUCKET_NAME=xxx
 
 这样配置后, 当你点击 test或者 debug test的时候，测试用例就可以从你配置的文件中读取环境变量, 你们可以自行测试下
 
+
+##### 测试用例显示Print打印
+
 测试用例配置的问题解决完了，还有一个另外一个问题, 那就是默认情况下 我们在测试用例中使用print的时候 控制台是不打印 这些测试用例的中间环节信息的, 如果我们需要打印 就需要进行配置, 如何配置?
 
 vscode 的 go插件在 执行测试用例的时候 是调用 go test 来执行的, 但是他没有加上 -v 参数, 因此我们通过vscode配置上该参数就可以了
@@ -114,6 +120,20 @@ func TestUpload(t *testing.T) {
 	fmt.Println("hello test detail log")
 }
 ```
+
+##### 关闭Go Test缓存
+
+In vscode:
+```
+"go.testFlags": ["-count=1"]
+```
+
+想要查询所有的参数:
+```
+go help testflag
+```
+
+参考: [how to disable (run test) Cached](https://github.com/golang/go/issues/24573)
 
 #### 为插件编写测试用例
 
