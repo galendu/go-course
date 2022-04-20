@@ -803,6 +803,32 @@ func (p *OssProgressListener) ProgressChanged(event *oss.ProgressEvent) {
 
 当然你也可以优化下显示, 直接控制下显示的样式，比如
 ```go
+const (
+        bu = 1 << 10
+        kb = 1 << 20
+        mb = 1 << 30
+        gb = 1 << 40
+        tb = 1 << 50
+        eb = 1 << 60
+)
+
+// HumanBytesLoaded 单位转换
+func HumanBytesLoaded(bytesLength int64) string {
+        if bytesLength < bu {
+                return fmt.Sprintf("%dB", bytesLength)
+        } else if bytesLength < kb {
+                return fmt.Sprintf("%.2fKB", float64(bytesLength)/float64(bu))
+        } else if bytesLength < mb {
+                return fmt.Sprintf("%.2fMB", float64(bytesLength)/float64(kb))
+        } else if bytesLength < gb {
+                return fmt.Sprintf("%.2fGB", float64(bytesLength)/float64(mb))
+        } else if bytesLength < tb {
+                return fmt.Sprintf("%.2fTB", float64(bytesLength)/float64(gb))
+        } else {
+                return fmt.Sprintf("%.2fEB", float64(bytesLength)/float64(tb))
+        }
+}
+
 // ProgressChanged todo
 func (p *OssProgressListener) ProgressChanged(event *oss.ProgressEvent) {
 	switch event.EventType {
