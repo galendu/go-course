@@ -159,23 +159,135 @@ FROM
 A中与B没有交集的部分，所以就是，join B表会得到null的内容, 比如获取哪些用户没有部门
 
 ```sql
+SELECT
+	u.*,
+	d.name 
+FROM
+	t_user u
+	LEFT JOIN t_department d ON u.department_id = d.id WHERE d.name is NULL
 ```
+
+![](./images/left_join_2.png)
 
 
 ### Right Join且不含A
 
 ![](./images/right_join_not_a.webp)
 
+同理，就是与上面的情况相反, 不如我们需要筛选出那么部门没有人
+
+```sql
+SELECT
+	u.*,
+	d.name 
+FROM
+	t_user u
+	RIGHT JOIN t_department d ON u.department_id = d.id WHERE u.id IS NULL
+```
+
+
+![](./images/right_join_2.png)
+
+
 
 ### Full Join
 
 ![](./images/full_join.webp)
 
+mysql语法不支持full outer join, 也就是说我们无法通过一个语句来实现集合的求和操作, 所以我们用union来实现, UNION 操作符用于合并两个或多个 SELECT 语句的结果集
+
+union 是对数据进行并集操作, 因此需要要求数据: 
++ 合并集合的结果有相同个数的列
++ 并且每个列的类型是一样的
+
+1. Union: 合并集合, 并且数据去重
+```sql
+SELECT
+	u.*,
+	d.NAME 
+FROM
+	t_user u
+	LEFT JOIN t_department d ON u.department_id = d.id 
+UNION
+SELECT
+	u.*,
+	d.NAME 
+FROM
+	t_user u
+	RIGHT JOIN t_department d ON u.department_id = d.id
+```
+
+![](./images/union_1.png)
+
+2. Union ALL: 合并集合, 不去重
+```sql
+SELECT
+	u.*,
+	d.NAME 
+FROM
+	t_user u
+	LEFT JOIN t_department d ON u.department_id = d.id 
+UNION ALL
+SELECT
+	u.*,
+	d.NAME 
+FROM
+	t_user u
+	RIGHT JOIN t_department d ON u.department_id = d.id
+```
+
+![](./images/union_2.png)
+
+因为Union ALL 少了去重的操作, 性能上会把Union好很多, 特别是当集合特别大的时候
+
+3. union all 自己计算
+
+比如我们把红色部分拆分为2部分:
++ A和B的左连接(A + AB公共的)
++ A和B的右连接去除公共部分(B独有的部分)
+
+```sql
+SELECT
+	u.*,
+	d.NAME 
+FROM
+	t_user u
+	LEFT JOIN t_department d ON u.department_id = d.id 
+UNION ALL
+SELECT
+	u.*,
+	d.NAME 
+FROM
+	t_user u
+	RIGHT JOIN t_department d ON u.department_id = d.id WHERE u.id IS NULL
+```
+
+![](./images/union_3.png)
+
+
 ### Full Join且不含交集
 
 ![](./images/full_join_not.webp)
 
+还是用union来实现full outer join
 
+```sql
+SELECT
+	u.*,
+	d.NAME 
+FROM
+	t_user u
+	LEFT JOIN t_department d ON u.department_id = d.id WHERE d.id IS NULL 
+UNION ALL
+SELECT
+	u.*,
+	d.NAME 
+FROM
+	t_user u
+	RIGHT JOIN t_department d ON u.department_id = d.id WHERE u.id IS NULL
+```
+
+![](./images/union_4.png)
 
 ## 子查询
 
