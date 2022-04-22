@@ -92,7 +92,7 @@ mysql> select * from t_department;
 
 ![](./images/left_join.webp)
 
-以左表为准, 把符合条件的关联过来, 如果没有这使用null
+以左表为准, 把符合条件的关联过来, 如果没有则使用null
 
 比如查询用户的同时，查询出用户所属的部门
 ```sql
@@ -117,15 +117,49 @@ FROM
 
 ![](./images/right_join.webp)
 
+以右表为准, 把符合条件的关联过来, 如果没有则使用null
+
+```sql
+SELECT
+	u.*,
+	d.name 
+FROM
+	t_user u
+	RIGHT JOIN t_department d ON u.department_id = d.id
+```
+
+![](./images/right_join_exm.png)
+
+注意:
++ 张三 部门1        左边表有数据
++ 王五 部门0        不符合关联条件 无数据
++ 市场部            右表有, 左表无数据
 
 ### INNER JOIN
 
 ![](./images/inner_join.webp)
 
+意思就是取交集，就是要两边都有的东西，所以也就是不能有null出现
+
+```sql
+SELECT
+	u.*,
+	d.name 
+FROM
+	t_user u
+	INNER JOIN t_department d ON u.department_id = d.id
+```
+
+![](./images/inner_join_exm.png)
 
 ### Left Join且不含B
 
 ![](./images/left_join_not_b.webp)
+
+A中与B没有交集的部分，所以就是，join B表会得到null的内容, 比如获取哪些用户没有部门
+
+```sql
+```
 
 
 ### Right Join且不含A
