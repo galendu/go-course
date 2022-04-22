@@ -98,6 +98,13 @@ mariadb> SELECT * FROM t_user WHERE name = 'sob';
 + utf8_unicode_ci: 德语、法语或者俄语
 + utf8_general_ci: 主流语言, 比如中、英文
 
+下面3个也是相等的, 同样可以自己尝试, 有些黑客会用此来伪装密码
+```
+Ä = A
+Ö = O
+Ü = U
+```
+
 ### 定义表
 
 
