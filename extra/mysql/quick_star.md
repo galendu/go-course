@@ -55,11 +55,63 @@ Database Define Language缩写, 也就是用于创建数据库和表的SQL语法
 
 ![](./images/sql_join.jpeg)
 
+在进行关联查询之前 我们需要至少准备2张表（现实中的项目往往比较复杂, 5，6张表联合查询是常事儿）
+
+我们以用户系统为例:
+
++ 用户表: t_user
+
+![](./images/t_user.png)
+```
+mysql> select * from t_user;
++----+--------+---------------+
+| id | name   | department_id |
++----+--------+---------------+
+|  1 | 张三 |             1 |
+|  2 | 王五 |             0 |
++----+--------+---------------+
+```
+
+
+
++ 部门表: t_department
+
+![](./images/t_department.png)
+```
+mysql> select * from t_department;
++----+-----------+
+| id | name      |
++----+-----------+
+|  1 | 市场部 |
+|  3 | 研发部 |
++----+-----------+
+```
+
 
 ### LEFT JOIN
 
 ![](./images/left_join.webp)
 
+以左表为准, 把符合条件的关联过来, 如果没有这使用null
+
+比如查询用户的同时，查询出用户所属的部门
+```sql
+SELECT
+	u.*,
+	d.name 
+FROM
+	t_user u
+	LEFT JOIN t_department d ON u.department_id = d.id
+
+-- ON 也可以添加多个条件
+```
+
+![](./images/left_join_exm.png)
+
+注意:
++ department 1 右表有数据
++ department 0 右表无数据
++ department 3 左表无数据
 
 ### RIGHT JOIN
 
@@ -109,7 +161,7 @@ Database Define Language缩写, 也就是用于创建数据库和表的SQL语法
 ### 日期函数
 
 + NOW()
-+ TIMESTAMP
++ UNIX_TIMESTAMP
 
 
 ## 常用语句
