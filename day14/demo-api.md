@@ -55,12 +55,12 @@ cmd        程序cli工具包
 conf       程序配置对象
 protocol   程序监听的协议
 version    程序自身的版本信息
-pkg        业务领域包
+apps        业务领域包
   - host
 	- model     业务需要的数据模型
 	- interface 业务接口(领域方法)
 	- impl      业务具体实现
-  - mysql
+  - oss
   - lb
   - ...
 main 程序入口文件
@@ -92,41 +92,31 @@ type Host struct {
 type Vendor int
 
 type Resource struct {
-	Id          string            `json:"id"`          // 全局唯一Id
-	Vendor      Vendor            `json:"vendor"`      // 厂商
-	Region      string            `json:"region"`      // 地域
-	Zone        string            `json:"zone"`        // 区域
-	CreateAt    int64             `json:"create_at"`   // 创建时间
-	ExpireAt    int64             `json:"expire_at"`   // 过期时间
-	Category    string            `json:"category"`    // 种类
-	Type        string            `json:"type"`        // 规格
-	InstanceId  string            `json:"instance_id"` // 实例ID
-	Name        string            `json:"name"`        // 名称
-	Description string            `json:"description"` // 描述
-	Status      string            `json:"status"`      // 服务商中的状态
-	Tags        map[string]string `json:"tags"`        // 标签
-	UpdateAt    int64             `json:"update_at"`   // 更新时间
-	SyncAt      int64             `json:"sync_at"`     // 同步时间
-	SyncAccount string            `json:"sync_accout"` // 同步的账号
-	PublicIP    string            `json:"public_ip"`   // 公网IP
-	PrivateIP   string            `json:"private_ip"`  // 内网IP
-	PayType     string            `json:"pay_type"`    // 实例付费方式
+	Id          string            `json:"id"  validate:"required"`     // 全局唯一Id
+	Vendor      Vendor            `json:"vendor"`                      // 厂商
+	Region      string            `json:"region"  validate:"required"` // 地域
+	CreateAt    int64             `json:"create_at"`                   // 创建时间
+	ExpireAt    int64             `json:"expire_at"`                   // 过期时间
+	Type        string            `json:"type"  validate:"required"`   // 规格
+	Name        string            `json:"name"  validate:"required"`   // 名称
+	Description string            `json:"description"`                 // 描述
+	Status      string            `json:"status"`                      // 服务商中的状态
+	Tags        map[string]string `json:"tags"`                        // 标签
+	UpdateAt    int64             `json:"update_at"`                   // 更新时间
+	SyncAt      int64             `json:"sync_at"`                     // 同步时间
+	Account     string            `json:"accout"`                      // 资源的所属账号
+	PublicIP    string            `json:"public_ip"`                   // 公网IP
+	PrivateIP   string            `json:"private_ip"`                  // 内网IP
 }
 
 type Describe struct {
-	ResourceId              string `json:"resource_id"`                // 关联Resource
-	CPU                     int    `json:"cpu"`                        // 核数
-	Memory                  int    `json:"memory"`                     // 内存
-	GPUAmount               int    `json:"gpu_amount"`                 // GPU数量
-	GPUSpec                 string `json:"gpu_spec"`                   // GPU类型
-	OSType                  string `json:"os_type"`                    // 操作系统类型，分为Windows和Linux
-	OSName                  string `json:"os_name"`                    // 操作系统名称
-	SerialNumber            string `json:"serial_number"`              // 序列号
-	ImageID                 string `json:"image_id"`                   // 镜像ID
-	InternetMaxBandwidthOut int    `json:"internet_max_bandwidth_out"` // 公网出带宽最大值，单位为 Mbps
-	InternetMaxBandwidthIn  int    `json:"internet_max_bandwidth_in"`  // 公网入带宽最大值，单位为 Mbps
-	KeyPairName             string `json:"key_pair_name"`              // 秘钥对名称
-	SecurityGroups          string `json:"security_groups"`            // 安全组  采用逗号分隔
+	CPU          int    `json:"cpu" validate:"required"`    // 核数
+	Memory       int    `json:"memory" validate:"required"` // 内存
+	GPUAmount    int    `json:"gpu_amount"`                 // GPU数量
+	GPUSpec      string `json:"gpu_spec"`                   // GPU类型
+	OSType       string `json:"os_type"`                    // 操作系统类型，分为Windows和Linux
+	OSName       string `json:"os_name"`                    // 操作系统名称
+	SerialNumber string `json:"serial_number"`              // 序列号
 }
 ```
 
@@ -156,17 +146,6 @@ type QueryHostRequest struct {
 定义服务需要实现这个服务的实例: service
 
 ```go
-package impl
-
-import (
-	"database/sql"
-
-	"github.com/infraboard/mcube/logger"
-	"github.com/infraboard/mcube/logger/zap"
-
-	"gitee.com/infraboard/go-course/day14/demo/api/conf"
-)
-
 var (
 	// Service 服务实例
 	Service = &service{}
@@ -185,14 +164,6 @@ func (s *service) Config() error {
 定义需要实现的方法:
 
 ```go
-package impl
-
-import (
-	"context"
-
-	"gitee.com/infraboard/go-course/day14/demo/api/pkg/host"
-)
-
 func (s *service) SaveHost(context.Context, *host.Host) (*host.Host, error) {
 	return nil, nil
 }
@@ -509,53 +480,41 @@ public_ip    Btree
 最后resource表的创建SQL:
 ```sql
 CREATE TABLE `resource` (
-  `id` char(64) CHARACTER SET latin1 NOT NULL,
+  `id` char(64) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL COMMENT '资源的实例Id',
   `vendor` tinyint(1) NOT NULL,
-  `region` varchar(64) CHARACTER SET latin1 NOT NULL,
-  `zone` varchar(64) CHARACTER SET latin1 NOT NULL,
-  `create_at` bigint(13) NOT NULL,
-  `expire_at` bigint(13) DEFAULT NULL,
-  `category` varchar(64) CHARACTER SET latin1 NOT NULL,
-  `type` varchar(120) CHARACTER SET latin1 NOT NULL,
-  `instance_id` varchar(120) CHARACTER SET latin1 NOT NULL,
+  `region` varchar(64) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
+  `create_at` bigint NOT NULL,
+  `expire_at` bigint NOT NULL,
+  `type` varchar(120) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
   `name` varchar(255) NOT NULL,
-  `description` varchar(255) DEFAULT NULL,
-  `status` varchar(255) CHARACTER SET latin1 NOT NULL,
-  `update_at` bigint(13) DEFAULT NULL,
-  `sync_at` bigint(13) DEFAULT NULL,
-  `sync_accout` varchar(255) CHARACTER SET latin1 DEFAULT NULL,
-  `public_ip` varchar(64) CHARACTER SET latin1 DEFAULT NULL,
-  `private_ip` varchar(64) CHARACTER SET latin1 DEFAULT NULL,
-  `pay_type` varchar(255) CHARACTER SET latin1 DEFAULT NULL,
-  `describe_hash` varchar(255) NOT NULL,
-  `resource_hash` varchar(255) NOT NULL,
+  `description` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `status` varchar(255) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
+  `update_at` bigint NOT NULL,
+  `sync_at` bigint NOT NULL,
+  `accout` varchar(255) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
+  `public_ip` varchar(64) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
+  `private_ip` varchar(64) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
   PRIMARY KEY (`id`),
   KEY `name` (`name`) USING BTREE,
-  KEY `status` (`status`) USING HASH,
+  KEY `status` (`status`),
   KEY `private_ip` (`public_ip`) USING BTREE,
-  KEY `public_ip` (`public_ip`) USING BTREE,
-  KEY `instance_id` (`instance_id`) USING HASH
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  KEY `public_ip` (`public_ip`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 ```
 
 host表SQL如下:
 ```sql
 CREATE TABLE `host` (
   `resource_id` varchar(64) NOT NULL,
-  `cpu` tinyint(4) NOT NULL,
-  `memory` int(13) NOT NULL,
-  `gpu_amount` tinyint(4) DEFAULT NULL,
+  `cpu` tinyint NOT NULL,
+  `memory` int NOT NULL,
+  `gpu_amount` tinyint DEFAULT NULL,
   `gpu_spec` varchar(255) DEFAULT NULL,
   `os_type` varchar(255) DEFAULT NULL,
   `os_name` varchar(255) DEFAULT NULL,
   `serial_number` varchar(120) DEFAULT NULL,
-  `image_id` char(64) DEFAULT NULL,
-  `internet_max_bandwidth_out` int(10) DEFAULT NULL,
-  `internet_max_bandwidth_in` int(10) DEFAULT NULL,
-  `key_pair_name` varchar(255) DEFAULT NULL,
-  `security_groups` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`resource_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
 ### 实现接口
@@ -566,17 +525,36 @@ CREATE TABLE `host` (
 定义Insert和Select语句
 ```go
 const (
-	insertResourceSQL = `INSERT INTO resource (
-		id,vendor,region,zone,create_at,expire_at,category,type,instance_id,
-		name,description,status,update_at,sync_at,sync_accout,public_ip,
-		private_ip,pay_type,resource_hash,describe_hash
-	) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);`
+const (
+	InsertResourceSQL = `
+	INSERT INTO resource (
+		id,
+		vendor,
+		region,
+		create_at,
+		expire_at,
+		type,
+		name,
+		description,
+		status,
+		update_at,
+		sync_at,
+		accout,
+		public_ip,
+		private_ip
+	)
+	VALUES
+		(?,?,?,?,?,?,?,?,?,?,?,?,?,?);
+	`
 
-	insertDescribeSQL = `INSERT INTO host (
-		resource_id,cpu,memory,gpu_amount,gpu_spec,os_type,os_name,
-		serial_number,image_id,internet_max_bandwidth_out,
-		internet_max_bandwidth_in,key_pair_name,security_groups
-	) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?);`
+	// INSERT INTO `host` ( resource_id, cpu, memory, gpu_amount, gpu_spec, os_type, os_name, serial_number )
+	// VALUES
+	// ( "111", 1, 2048, 1, 'n', 'linux', 'centos8', '00000' );
+	InsertDescribeSQL = `
+	INSERT INTO host ( resource_id, cpu, memory, gpu_amount, gpu_spec, os_type, os_name, serial_number )
+	VALUES
+		( ?,?,?,?,?,?,?,? );
+	`
 
 	queryHostSQL = `SELECT * FROM resource as r LEFT JOIN host h ON r.id=h.resource_id`
 )
@@ -588,88 +566,66 @@ const (
 + 查询时需要使用sqlbuilder(自己简单实现)
 
 ```go
-func (i *impl) CreateHost(ctx context.Context, ins *host.Host) (
-	*host.Host, error) {
-
-	// 校验数据合法性
-	if err := ins.Validate(); err != nil {
-		return nil, err
-	}
-
-	ins.Id = xid.New().String()
-	if ins.CreateAt == 0 {
-		ins.CreateAt = ftime.Now().Timestamp()
-	}
+// 把Host对象保存到数据内
+func (i *HostServiceImpl) save(ctx context.Context, ins *host.Host) error {
+	var (
+		err error
+	)
 
 	// 把数据入库到 resource表和host表
 	// 一次需要往2个表录入数据, 我们需要2个操作 要么都成功，要么都失败, 事务的逻辑
-
-	// 全局异常
-	var (
-		resStmt  *sql.Stmt
-		descStmt *sql.Stmt
-		err      error
-	)
-
-	// 初始化一个事务, 所有的操作都使用这个事务来进行提交
 	tx, err := i.db.BeginTx(ctx, nil)
 	if err != nil {
-		return nil, err
+		return fmt.Errorf("start tx error, %s", err)
 	}
 
-	// 函数执行完成后, 专门判断事务是否正常
+	// 通过Defer处理事务提交方式
+	// 1. 无报错，则Commit 事务
+	// 2. 有报错, 则Rollback 事务
 	defer func() {
-		// 事务执行有异常
 		if err != nil {
-			err := tx.Rollback()
-			if err != nil {
-				i.log.Debugf("tx rollback error, %s", err)
+			if err := tx.Rollback(); err != nil {
+				i.l.Error("rollback error, %s", err)
 			}
 		} else {
-			err := tx.Commit()
-			if err != nil {
-				i.log.Debugf("tx commit error, %s", err)
+			if err := tx.Commit(); err != nil {
+				i.l.Error("commit error, %s", err)
 			}
 		}
 	}()
 
-	// 需要判断事务执行过程当中是否有异常
-	// 有异常 就回滚事务, 无异常就提交事务
-
-	// 在这个事务里面执行 Insert SQL, 先执行Prepare, 防止SQL注入攻击
-	resStmt, err = tx.Prepare(insertResourceSQL)
+	// 插入Resource数据
+	rstmt, err := tx.Prepare(InsertResourceSQL)
 	if err != nil {
-		return nil, fmt.Errorf("prepare resource sql error, %s", err)
+		return err
 	}
-	defer resStmt.Close()
+	defer rstmt.Close()
 
-	// 注意: Prepare语句 会占用MySQL资源, 如果你使用后不关闭会导致Prepare溢出
-	_, err = resStmt.Exec(
-		ins.Id, ins.Vendor, ins.Region, ins.Zone, ins.CreateAt, ins.ExpireAt, ins.Category, ins.Type, ins.InstanceId,
-		ins.Name, ins.Description, ins.Status, ins.UpdateAt, ins.SyncAt, ins.SyncAccount, ins.PublicIP,
-		ins.PrivateIP, ins.PayType, ins.ResourceHash, ins.DescribeHash,
+	_, err = rstmt.Exec(
+		ins.Id, ins.Vendor, ins.Region, ins.CreateAt, ins.ExpireAt, ins.Type,
+		ins.Name, ins.Description, ins.Status, ins.UpdateAt, ins.SyncAt, ins.Account, ins.PublicIP,
+		ins.PrivateIP,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("insert resource error, %s", err)
+		return err
 	}
 
-	// 同样的逻辑,  我们也需要Host的数据存入
-	descStmt, err = tx.Prepare(insertDescribeSQL)
+	// 插入Describe 数据
+	dstmt, err := tx.Prepare(InsertDescribeSQL)
 	if err != nil {
-		return nil, fmt.Errorf("prepare describe sql error, %s", err)
+		return err
 	}
-	defer descStmt.Close()
+	defer dstmt.Close()
 
-	_, err = descStmt.Exec(
-		ins.Id, ins.CPU, ins.Memory, ins.GPUAmount, ins.GPUSpec, ins.OSType, ins.OSName,
-		ins.SerialNumber, ins.ImageID, ins.InternetMaxBandwidthOut,
-		ins.InternetMaxBandwidthIn, ins.KeyPairName, ins.SecurityGroups,
+	_, err = dstmt.Exec(
+		ins.Id, ins.CPU, ins.Memory, ins.GPUAmount, ins.GPUSpec,
+		ins.OSType, ins.OSName, ins.SerialNumber,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("insert describe error, %s", err)
+		return err
 	}
 
-	return ins, nil
+	return nil
 }
 ```
 
@@ -1596,6 +1552,9 @@ Git Commit:
 Go Version: 
 ```
 
+## 项目源码
+
++ [ restful-api-demo-g7 项目](https://gitee.com/go-course/restful-api-demo-g7)
 
 
 
