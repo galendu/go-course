@@ -124,20 +124,87 @@ mariadb> SELECT * FROM t_user WHERE name = 'sob';
 
 ### INSERT
 
+语法格式:
+```sql
+INSERT INTO table_name (column1,column2,column3,...)
+VALUES (value1,value2,value3,...);
+```
+
+如果列的顺序和你表的顺序一致可以省略列:
+```sql
+INSERT INTO table_name
+VALUES (value1,value2,value3,...);
+```
+
+为了提升插入的性能，也可以一次插入多条数据
+```sql
+INSERT INTO table_name
+VALUES (value1,value2,value3,...),
+       (value1,value2,value3,...),
+	   (value1,value2,value3,...);
+```
+
 
 ### SELECT
 
+语法格式:
+```sql
+SELECT column_name,column_name
+FROM table_name;
+```
+
+1. SELECT Column 实例
+```
+SELECT id,`name` FROM t_user;
++----+--------+
+| id | name   |
++----+--------+
+|  1 | 张三 |
+|  2 | 王五 |
++----+--------+
+```
+
+
+2. SELECT * 实例
+```
+mariadb> SELECT * FROM t_user;
++----+--------+---------------+
+| id | name   | department_id |
++----+--------+---------------+
+|  1 | 张三 |             1 |
+|  2 | 王五 |             0 |
++----+--------+---------------+
+```
 
 ### UPDATE
+
+语法格式:
+```sql
+UPDATE table_name
+SET column1=value1,column2=value2,...
+WHERE some_column=some_value;
+```
 
 
 ### DELETE
 
+语法格式
+```sql
+DELETE FROM table_name
+WHERE some_column=some_value;
+```
 
 ### REPLATE
 
+我们经常会遇到这样的场景: 如果不重复则插入新数据, 如果有重复记录则替换
 
+使用REPLACE的最大好处就是可以将DELETE和INSERT合二为一，形成一个原子操作。这样就可以不必考虑在同时使用DELETE和INSERT时添加事务等复杂操作了
 
+REPLACE的语法和INSERT非常的相似:
+```sql
+REPLACE INTO table_name (column1,column2,column3,...)
+VALUES (value1,value2,value3,...);
+```
 
 ## 联表查询
 
