@@ -2,13 +2,7 @@
 
 功能: CMDB主机信息录入与查询
 
-涉及到的技能:
-
-+ go http标准库
-+ 第三方路由库: [httprouter](https://github.com/julienschmidt/httprouter)
-+ go 操作mysql
-
-项目相关源码地址: [RESTful Demo源码](https://gitee.com/go-course/restful-api-demo)
+![](./images/demo-search.png)
 
 ## 业务描述
 
