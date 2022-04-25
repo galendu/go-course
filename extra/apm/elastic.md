@@ -16,8 +16,29 @@ Kubernetes让微服务的部署变得容易, 但随着微服务规模的扩大�
 有没工具能整合以上所有功能, 很好的实现服务的可观测性喃? 这就是我们今天主角: Elastic APM
 
 
+<<<<<<< HEAD
 ## 选择Elastic APM
+=======
 
+
+
+## 凭啥选择Elastic APM
+
+>>>>>>> a73fde52f09f6b7f3628de58c59790c0da08c0aa
+
+
+## 安装
+
+我们采用Docker安装, 通过查看官方的镜像使用说明来获取最新的版本:
++ [elasticsearch](https://hub.docker.com/_/elasticsearch)
++ [kibana](https://hub.docker.com/_/kibana)
++ [apm-server](https://hub.docker.com/r/elastic/apm-server)
+
+如何使用Docker部署相关参考:
++ [Run APM Server on Docker](https://www.elastic.co/guide/en/apm/guide/master/running-on-docker.html)
+
+```
+```
 
 
 
@@ -26,3 +47,5 @@ Kubernetes让微服务的部署变得容易, 但随着微服务规模的扩大�
 
 + [微服务应用性能如何](https://segmentfault.com/a/1190000037701422)
 + [Elastic APM 补齐服务监控](https://lxkaka.wang/golang-apm/)
++ [Kibana Guide](https://www.elastic.co/guide/en/kibana/current/index.html)
++ [Elasticsearch Guide](https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html)
