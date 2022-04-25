@@ -52,7 +52,9 @@ Elastic APM 由四个组件组成：
 + [Run APM Server on Docker](https://www.elastic.co/guide/en/apm/guide/master/running-on-docker.html)
 
 
+登陆elasticsearch添加超级管理员用户
 ```
+bin/elasticsearch-users useradd admin -p 123456 -r superuser
 ```
 
 

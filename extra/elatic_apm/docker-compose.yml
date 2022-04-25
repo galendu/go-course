@@ -28,11 +28,13 @@ services:
     container_name: apm-server
     user: apm-server
     links:
-      - elasticsearch:elasticsearch #可以用elasticsearch这个域名访问elasticsearch服务
+      - elasticsearch:elasticsearch
     depends_on:
-      - elasticsearch #kibana在elasticsearch启动之后再启动
+      - elasticsearch 
     environment:
-      - "output.elasticsearch.hosts=http://elasticsearch:9200" #设置访问elasticsearch的地址
+      - "output.elasticsearch.hosts=http://elasticsearch:9200" 
     volumes:
-      - "./apm-server.docker.yml:/usr/share/apm-server/apm-server.yml" #数据文件挂载
+      - "./apm-server.docker.yml:/usr/share/apm-server/apm-server.yml" 
+    ports:
+      - 8200:8200
 
