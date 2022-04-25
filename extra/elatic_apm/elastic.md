@@ -56,7 +56,6 @@ Elastic APM 由四个组件组成：
 ```
 
 
-
 ## 数据模型
 
 Elastic APM agent从其检测（instrument）的应用程序中收集不同类型的数据，这些被称为事件，类型包括 span，transaction，错误和指标四种。
@@ -67,14 +66,42 @@ Elastic APM agent从其检测（instrument）的应用程序中收集不同类�
 + 指标(Metric)：APM agent 自动获取基本的主机级别指标，包括系统和进程级别的 CPU 和内存指标。除此之外还可获取特定于代理的指标，例如 Java agent 中的JVM 指标和 Go agent 中的 Go Runtime 指标
 
 更多详情 请参考[Data Model](https://www.elastic.co/guide/en/apm/guide/current/data-model.html)
++ [Spans](https://www.elastic.co/guide/en/apm/guide/current/data-model-spans.html)
++ [Transactions](https://www.elastic.co/guide/en/apm/guide/current/data-model-transactions.html)
++ [Errors](https://www.elastic.co/guide/en/apm/guide/current/data-model-errors.html)
++ [Metrics](https://www.elastic.co/guide/en/apm/guide/current/data-model-metrics.html)
 
 ### Spans
 
+
+
 ### Transactions
+
+
 
 ### Errors
 
+
 ### Metrics
+
+
+### Metadata
+
+[Metadata](https://www.elastic.co/guide/en/apm/guide/current/data-model-metadata.html)
+
+#### Labels
+
+
+#### Custom context 
+
+
+#### User context 
+
+
+
+## 实践
+
+
 
 
 
@@ -85,3 +112,5 @@ Elastic APM agent从其检测（instrument）的应用程序中收集不同类�
 + [Kibana Guide](https://www.elastic.co/guide/en/kibana/current/index.html)
 + [Elasticsearch Guide](https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html)
 + [APM User Guide ](https://www.elastic.co/guide/en/apm/guide/current/apm-overview.html)
++ [APM User Guide](https://www.elastic.co/guide/en/apm/guide/current/index.html)
++ [How to instrument your Go app with the Elastic APM Go agent](https://www.elastic.co/blog/how-to-instrument-your-go-app-with-the-elastic-apm-go-agent?baymax=rec&rogue=rec-1&elektra=guide)
