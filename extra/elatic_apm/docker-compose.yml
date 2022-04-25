@@ -8,8 +8,6 @@ services:
       - "discovery.type=single-node" #以单一节点模式启动
       - "ES_JAVA_OPTS=-Xms256m -Xmx256m" #设置使用jvm内存大小
       - TZ=Asia/Shanghai
-    volumes:
-      - "./mydata/elasticsearch:/usr/share/elasticsearch" #数据文件挂载
     ports:
       - 9200:9200
       - 9300:9300
