@@ -16,8 +16,7 @@ Kubernetes让微服务的部署变得容易, 但随着微服务规模的扩大�
 有没工具能整合以上所有功能, 很好的实现服务的可观测性喃? 这就是我们今天主角: Elastic APM
 
 
-## 凭啥选择Elastic APM
-
+## 选择Elastic APM
 
 
 
