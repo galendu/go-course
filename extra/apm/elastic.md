@@ -30,6 +30,9 @@ Kubernetes让微服务的部署变得容易, 但随着微服务规模的扩大�
 + [kibana](https://hub.docker.com/_/kibana)
 + [apm-server](https://hub.docker.com/r/elastic/apm-server)
 
+如何使用Docker部署相关参考:
++ [Run APM Server on Docker](https://www.elastic.co/guide/en/apm/guide/master/running-on-docker.html)
+
 ```
 ```
 
