@@ -23,7 +23,22 @@ Kubernetes让微服务的部署变得容易, 但随着微服务规模的扩大�
 
 ## 架构
 
-![](./images/es-apm-arch.png)
+1. APM Server 中心化部署模式
+![](./images/apm-architecture.png)
+
+
+2. APM Server 分布式部署模式
+![](./images/apm-architecture-two.png)
+
+Elastic APM 由四个组件组成：
++ APM agents：以应用程序库的形式提供，收集程序中的性能监控数据并上报给APM server。上报的数据包括: 
+    + logs
+    + metrics
+    + traces
+    + and other types of data to each host
++ Elastic APM integration(APM Server)：接收来自于APM agents的数据、进行校验和处理后写入 Elasticsearch 特定的 APM 索引中。虽然 agent 也可以实现为：将数据收集处理后直接上报到ES，不这么做官方给出的理由：使 agent 保持轻量，防止某些安全风险以及提升 Elastic 组件的兼容性。
++ Elasticsearch：用于存储性能指标数据并提供聚合功能。
++ Kibana：可视化性能数据并帮助找到性能瓶颈。
 
 
 ## 安装
@@ -42,6 +57,24 @@ Kubernetes让微服务的部署变得容易, 但随着微服务规模的扩大�
 
 
 
+## 数据模型
+
+Elastic APM agent从其检测（instrument）的应用程序中收集不同类型的数据，这些被称为事件，类型包括 span，transaction，错误和指标四种。
+
++ Span 包含有关已执行的特定代码路径的信息。它们从活动的开始到结束进行度量，并且可以与其他span具有父/子关系。
++ 事务（Transaction） 是一种特殊的Span（没有父span，只能从中派生出子span，可以理解为“树”这种数据结构的根节点），具有与之关联的其他属性。可以将事务视为服务中最高级别的工作，比如服务中的请求等。
++ 错误(Error)：错误事件包含有关发生的原始异常或有关发生异常时创建的日志的信息。
++ 指标(Metric)：APM agent 自动获取基本的主机级别指标，包括系统和进程级别的 CPU 和内存指标。除此之外还可获取特定于代理的指标，例如 Java agent 中的JVM 指标和 Go agent 中的 Go Runtime 指标
+
+更多详情 请参考[Data Model](https://www.elastic.co/guide/en/apm/guide/current/data-model.html)
+
+### Spans
+
+### Transactions
+
+### Errors
+
+### Metrics
 
 
 
