@@ -21,14 +21,4 @@ services:
       - TZ=Asia/Shanghai
     ports:
       - 5601:5601
-  apm-server:
-    image: docker.elastic.co/apm/apm-server:8.1.3
-    container_name: apm-server
-    user: apm-server
-    depends_on:
-      - elasticsearch 
-    volumes:
-      - "./apm-server.docker.yml:/usr/share/apm-server/apm-server.yml" 
-    ports:
-      - 8200:8200
 
