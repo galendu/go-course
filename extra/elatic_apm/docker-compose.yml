@@ -29,10 +29,9 @@ services:
     user: apm-server
     links:
       - elasticsearch:elasticsearch
+      - kibana:kibana
     depends_on:
       - elasticsearch 
-    environment:
-      - "output.elasticsearch.hosts=http://elasticsearch:9200" 
     volumes:
       - "./apm-server.docker.yml:/usr/share/apm-server/apm-server.yml" 
     ports:
