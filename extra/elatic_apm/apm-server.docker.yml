@@ -327,7 +327,7 @@ output.elasticsearch:
   # Authentication credentials - either API key or username/password.
   #api_key: "id:api_key"
   username: "admin"
-  password: "changeme"
+  password: "123456"
 
   # Dictionary of HTTP parameters to pass within the url with index operations.
   #parameters:
