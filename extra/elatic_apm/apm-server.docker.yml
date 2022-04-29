@@ -202,19 +202,19 @@ apm-server:
   # Specify cache key expiration via this setting. Default is 30 seconds.
   #agent.config.cache.expiration: 30s
 
-  #kibana:
+  kibana:
     # Enabled must be true to enable APM Agent configuration, and for fetching source maps uploaded through Kibana.
-    #enabled: false
+    enabled: true
 
     # Scheme and port can be left out and will be set to the default (`http` and `5601`).
     # In case you specify an additional path, the scheme is required: `http://localhost:5601/path`.
     # IPv6 addresses should always be defined as: `https://[2001:db8::1]:5601`.
-    #host: "localhost:5601"
+    host: "kibana:5601"
 
     # Optional protocol and basic auth credentials.
-    #protocol: "https"
-    #username: "elastic"
-    #password: "changeme"
+    protocol: "http"
+    username: "admin"
+    password: "123456"
 
     # Optional HTTP path.
     #path: ""
@@ -316,18 +316,18 @@ output.elasticsearch:
   hosts: ["elasticsearch:9200"]
 
   # Boolean flag to enable or disable the output module.
-  #enabled: true
+  enabled: true
 
   # Set gzip compression level.
   #compression_level: 0
 
   # Protocol - either `http` (default) or `https`.
-  #protocol: "https"
+  protocol: "http"
 
   # Authentication credentials - either API key or username/password.
   #api_key: "id:api_key"
-  #username: "elastic"
-  #password: "changeme"
+  username: "admin"
+  password: "123456"
 
   # Dictionary of HTTP parameters to pass within the url with index operations.
   #parameters:
