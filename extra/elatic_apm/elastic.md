@@ -113,6 +113,5 @@ Elastic APM agent从其检测（instrument）的应用程序中收集不同类�
 + [Elastic APM 补齐服务监控](https://lxkaka.wang/golang-apm/)
 + [Kibana Guide](https://www.elastic.co/guide/en/kibana/current/index.html)
 + [Elasticsearch Guide](https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html)
-+ [APM User Guide ](https://www.elastic.co/guide/en/apm/guide/current/apm-overview.html)
 + [APM User Guide](https://www.elastic.co/guide/en/apm/guide/current/index.html)
 + [How to instrument your Go app with the Elastic APM Go agent](https://www.elastic.co/blog/how-to-instrument-your-go-app-with-the-elastic-apm-go-agent?baymax=rec&rogue=rec-1&elektra=guide)
