@@ -97,11 +97,13 @@
   * [简易版工具开发](./day08/simple_tool.md)
   * [以系统方式开发](./day08/design.md)
 
-### Day14: 项目工程Demo
+### Day14: 项目工程Demo简化版(-)
   * [Demo后端开发](./day14/demo-api.md)
-  * [Demo前端开发](./day14/demo-ui.md)
 
-### Day15: 从RPC到GRPC
+### Day15: 项目工程DemoIoc版(二)
+  * [Demo后端开发](./day14/demo-api.md)
+
+### Day16: 从RPC到GRPC
   * [RPC入门](./day15/rpc.md)
   * [Protobuf编解码](./day15/protobuf.md)
   * [proto3语法入门](./day15/proto3_synx.md)
@@ -110,60 +112,60 @@
 
 ## 项目后端
 
-### Day16: CMDB API
+### Day17: CMDB API
   * [云资源Provider](./day16/cmdb-provider.md)
   * [云凭证管理](./day16/cmdb-secret.md)
   * [云资源同步API](./day16/cmdb-sync.md)
   * [CMDB改造](./day16/cmdb-grpc.md)
 
-### Day17: 用户中心
+### Day18: 用户中心
   * [开发基础](./day17/user.md)
   * [登录认证](./day17/auth.md)
   * [权限判定](./day18/permission.md)
 
-### Day18: 审计中心
+### Day19: 审计中心
   * [消息队列技术与Kafka](./day18/permission.md)
   * [审计中心](./day18/permission.md)
 
 
 ## 项目前端
 
-### Day19: Web 入门
+### Day20: Web 入门
   * [JavaScript基础](./day19/javascript.md)
   * [Web入门基础-HTLM](./day19/html.md)
   * [Web入门基础-CSS](./day19/css.md)
   * [Web入门基础-浏览器](./day19/browser.md)
 
-### Day20: Vue 入门
+### Day21: Vue 入门
   * [Vue入门基础](./day20/vue-base.md)
   * [Vue路由与状态管理](./day20/vue-all.md)
 
-### Day21: 项目前端
+### Day22: 项目前端
   * [项目前端框架](./day21/devcloud-base.md)
   * [新登录页面](./day22/devcloud-new-login.md)
   * [项目404页面](./day21/devcloud-404.md)
   * [项目导航页面](./day21/devcloud-nav.md)
 
-### Day22 CMDB 前端
+### Day23 CMDB 前端
   * [主机列表页面](./day22/cmdb-host.md)
   * [CMDB主机页面](./day23/cmdb-host.md)
   * [CMDB搜索页面](./day23/cmdb-search.md)
   * [CMDB同步页面](./day23/cmdb-sync.md)
 
-### Day23 基于微服务网关的部署
+### Day24 基于微服务网关的部署
   * [传统部署](./day18/deploy.md)
   * [Etcd使用](./day18/etcd.md)
   * [微服务网关](./day18/traefik.md)
 
 ## 经典项目二开
   
-### Day24: Prometheus二次开发
+### Day25: Prometheus二次开发
   * [Prometheus 概念介绍](./extra/prometheus/exporter.md)
   * [Exporter 开发](./extra/prometheus/exporter.md)
   * [服务发现与CMDB对接](./extra/prometheus/exporter.md)
   * [TSDB技术与Prometheus](./extra/prometheus/exporter.md)
 
-### Day25: Kubernetes二次开发
+### Day26: Kubernetes二次开发
   * [Kubernetes 简介与client-go使用](./day25/pipeline-scheduler.md)
   * [基于client-go 的多集群管理平台](./day25/pipeline-scheduler.md)
   * [Kubernetes Operator 开发](./extra/kubernetes/operator.md)
@@ -172,7 +174,7 @@
 
 ## 项目结束
 
-### Day26: 总结与回顾
+### Day27: 总结与回顾
   * [课程回顾](./day26/summary.md)
 
 
