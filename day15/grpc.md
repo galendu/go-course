@@ -710,3 +710,4 @@ grpcServer := grpc.NewServer(
 
 + [GRPC Quick Start](https://grpc.io/docs/languages/go/quickstart/)
 + [GRPC Examples](https://github.com/grpc/grpc-go/tree/master/examples)
++ [gRPC 内容介绍](https://blog.csdn.net/phantom_111/article/details/74356739)
