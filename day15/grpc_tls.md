@@ -86,15 +86,30 @@ server_cert.pem: OK
 openssl genrsa -out client_key.pem 4096
 
 # 证书签署申请
-
+openssl req -new                                    \
+  -key client_key.pem                               \
+  -days 3650                                        \
+  -out client_csr.pem                               \
+  -subj /C=US/ST=CA/L=SVL/O=gRPC/CN=test-client1/
 
 # CA签署证书
-
-
+openssl x509 -req           \
+  -in client_csr.pem        \
+  -CAkey ../ca.key  \
+  -CA ../ca.pem    \
+  -days 3650                \
+  -set_serial 1000          \
+  -out client_cert.pem      \
+  -sha256
+# CA校验证书有效性
+openssl verify -verbose -CAfile ../ca.pem  client_cert.pem
+client_cert.pem: OK
 ```
 
-
 ## Grpc TLS双向认证
+
+接下来我们将基于自建CA颁发的证书来进行GRPC的双向认证
+
 
 
 ### Server

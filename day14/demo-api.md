@@ -1402,6 +1402,16 @@ go build -ldflags "-s -w" -o demo-api main.go
 
 ### Makefile
 
+
+#### 安装make
+
+macOS/Linux的同学 直接用包管理工具安装就可以了, windows的同学请参考:
+
+1. 下载 mingw-get-setup.exe 包（https://osdn.net/projects/mingw/releases/）
+2. 执行mingw-get install  mingw32-make
+3. 最后重命名 mingw32-make.exe为make.exe即可
+
+#### 编写Makefile
 我们把常用的功能添加成make指令如下:
 
 ```makefile
