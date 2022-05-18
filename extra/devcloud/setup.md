@@ -97,6 +97,14 @@ npm 从5.2版开始，增加了 npx 命令, 如果没有安装请手动安装:
 
 ![](./images/eslint.png)
 
++ open in browser: 鼠标右键快速在浏览器中打开html文件
+
+![](./images/open-in-browser.png)
+
++ Code Runner: 快速运行
+
+![](./images/code%20runner.png)
+
 
 vue开发增强插件:
 + Vue Language Features (Volar): vue3语法支持
@@ -114,3 +122,4 @@ vue开发增强插件:
 + [node-pre-gyp官方介绍](https://www.npmjs.com/package/@mapbox/node-pre-gyp)
 + [20+前端常用的vscode插件](https://www.php.cn/tool/vscode/475531.html)
 + [用Prettier和ESLint自动格式化修复JavaScript代码](https://juejin.cn/post/6971635051998117924)
++ [2021 VSCode前端插件推荐](https://juejin.cn/post/7014300784649043981)
