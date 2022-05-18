@@ -1,8 +1,6 @@
-# 项目搭建
+# 项目开发准备
 
-## 环境准备
-
-### 安装NodeJs
+## 安装NodeJs
 
 到[NodeJs官网](https://nodejs.org/)下载最新的稳定版, 并安装
 1. NodeJs 安装  
@@ -14,7 +12,7 @@ v16.15.0
 > npm -v 
 8.5.5
 ```
-### 安装Yarn
+## 安装Yarn
 你可以认为Yarn是npm的增强版, 具体对比可以参考: [Yarn vs npm](https://www.cnblogs.com/ypppt/p/13050845.html)
 
 ```sh
@@ -25,7 +23,7 @@ v16.15.0
 1.22.18
 ```
 
-### Yarn 源的管理
+## Yarn 源的管理
 
 默认Yarn使用的是国外的源, 这对于国内开放者而言的体验是很差的(由于网速经常拉去不下来包), 因此我们需要切换源, 而yrm 就是专门用于管理yarn源配置的工具, YARN registry manager(yrm):
 ```sh
@@ -71,7 +69,7 @@ v16.15.0
     * taobao - 273ms
 ```
 
-### npx安装
+## npx安装
 
 npm 从5.2版开始，增加了 npx 命令, 如果没有安装请手动安装:
 ```sh
@@ -82,7 +80,7 @@ npm 从5.2版开始，增加了 npx 命令, 如果没有安装请手动安装:
 > npm install -g npx
 ```
 
-### IDE插件安装
+## IDE插件安装
 
 以vscode为例:
 
@@ -177,6 +175,39 @@ The app.vue file is the main component in your Nuxt 3 applications.
 
 
 
+### 安装UI组件
+
+通过插件的方式安装UI组件: plugins/element-plus.ts
+```ts
+import ElementPlus from 'element-plus'
+
+export default defineNuxtPlugin(nuxtApp => {
+    nuxtApp.vueApp.use(ElementPlus)
+})
+```
+
+
+### 全局样式管理
+
+修改Nuxt配置, 添加全局样式表
+
+nuxt.config.ts
+```ts
+import { defineNuxtConfig } from 'nuxt'
+
+// https://v3.nuxtjs.org/api/configuration/nuxt.config
+export default defineNuxtConfig({
+    // css
+    css: ['~/assets/css/index.css'],
+})
+```
+
+
+
+
+
+
+
 # 参考
 
 + [npx 使用教程](https://www.ruanyifeng.com/blog/2019/02/npx.html)
@@ -184,3 +215,4 @@ The app.vue file is the main component in your Nuxt 3 applications.
 + [vue3官方文档](https://vuejs.org/guide/introduction.html)
 + [nuxtjs官网](https://v3.nuxtjs.org/getting-started/quick-start)
 + [nuxt项目启动时跳过Are you interested in participation](http://www.flydream.cc/article/nuxt-bootstrap-skip-participation/)
++ [element-plus-nuxt-starter](https://github.com/element-plus/element-plus-nuxt-starter)
