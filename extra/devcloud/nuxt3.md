@@ -128,6 +128,9 @@ pages/detail.vue --->  /detail
 
 同一个页面 可能由于访问的用户不同展示出来的页面内容的数据也所有差异, 如果解决这个问题喃? 有如下2种思路:
 + 固定路径 + 路径参数, 比如 /detail?id=xxx
++ 动态路由参数, 比如 /detail/xxx, 
+
+1. 固定路由
 
 修改pages/detail.vue页面:
 ```
@@ -160,7 +163,8 @@ pages/detail.vue --->  /detail
 getDataById($route.query.id)
 ```
 
-+ 动态路由参数, 比如 /detail/xxx, 
+
+2. 动态路由
 
 为了避免之前路径的影响，先删除之前的detail.vue页面，然后创建一个pages/detail/[id].vue的页面, 这里使用[id], 就是路径参数变量的表示
 ```vue
