@@ -163,7 +163,6 @@ pages/detail.vue --->  /detail
 getDataById($route.query.id)
 ```
 
-
 2. 动态路由
 
 为了避免之前路径的影响，先删除之前的detail.vue页面，然后创建一个pages/detail/[id].vue的页面, 这里使用[id], 就是路径参数变量的表示
@@ -181,6 +180,8 @@ getDataById($route.query.id)
 
 #### 路由嵌套
 
+```
+```
 
 #### 路由跳转
 
@@ -189,6 +190,9 @@ getDataById($route.query.id)
 
 
 #### 编程式路由
+
+
+#### Nuxt与Vue Router
 
 
 
@@ -220,8 +224,6 @@ export default defineNuxtConfig({
     css: ['~/assets/css/index.css'],
 })
 ```
-
-
 
 ### 页面布局
 
