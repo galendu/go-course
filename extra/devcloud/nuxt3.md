@@ -70,7 +70,7 @@ Nuxt的工程结构如下:
 
 ### 入口文件
 
-收入我们需要找到工程的入口文件:
+首先我们需要找到工程的入口文件:
 ```
 The app.vue file is the main component in your Nuxt 3 applications.
 ```
@@ -80,14 +80,42 @@ The app.vue file is the main component in your Nuxt 3 applications.
 <template>
   <div>
     <!-- <NuxtWelcome /> -->
-    <h1>Hello World!</h1>
+    <h1>Hello Nuxt3!</h1>
   </div>
 </template>
 ```
 
 ### 业务页面
 
-我们不可能把所有的页面逻辑都写在入口文件里面, 因此Nuxt为我们准备了一个
+我们不可能把所有的页面逻辑都写在入口文件里面, 因此Nuxt为我们准备了一个pages目录, 放在该目录下的vue文件, nuxt会根据文件路径自动为我们创建路由映射, 比如:
+```
+pages/index.vue --->   /
+pages/detail.vue --->  /detail
+```
+
++ pages/index.vue
+```vue
+<template>
+    <div>
+        <h1>Index page</h1>
+    </div>
+</template>
+```
+
++ pages/detail.vue
+```vue
+<template>
+    <div>
+        <h1>Detail Page</h1>
+    </div>
+</template>
+```
+
+
+
+
+
+### 页面布局
 
 
 
