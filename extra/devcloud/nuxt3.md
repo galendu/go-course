@@ -85,7 +85,7 @@ The app.vue file is the main component in your Nuxt 3 applications.
 </template>
 ```
 
-### 业务页面
+### 页面与路由
 
 我们不可能把所有的页面逻辑都写在入口文件里面, 因此Nuxt为我们准备了一个pages目录, 放在该目录下的vue文件, nuxt会根据文件路径自动为我们创建路由映射, 比如:
 ```
@@ -111,15 +111,87 @@ pages/detail.vue --->  /detail
 </template>
 ```
 
++ app.vue
+```vue
+<template>
+  <div>
+    <h1>hello, nuxt3</h1>
+    <!-- 添加页面路由出口 -->
+     <NuxtPage />
+  </div>
+</template>
+```
+
+然后我们切换页面访问路径: / --> /detail 也试图就会改变
+
+#### 动态路由
+
+同一个页面 可能由于访问的用户不同展示出来的页面内容的数据也所有差异, 如果解决这个问题喃? 有如下2种思路:
++ 固定路径 + 路径参数, 比如 /detail?id=xxx
+
+修改pages/detail.vue页面:
+```
+<template>
+    <div>
+        <h1>Detail Page</h1>
+        <!-- $route保存了当前路由信息 -->
+        <p>{{ $route }}</p>
+    </div>
+</template>
+```
+
+访问页面: /detail?id=xxx, 就能看到当前路由页面的路由信息
+```json
+{
+    "fullPath":"/detail?id=xxx",
+    "hash":"",
+    "query":{"id":"xxx"},
+    "name":"detail",
+    "path":"/detail",
+    "params":{},
+    "matched":[ ... ],
+    "meta":{},
+    "href":"/detail?id=xxx"
+}
+```
+
+那我们在编程就可以根据id向后端请求不同的数据:
+```js
+getDataById($route.query.id)
+```
+
++ 动态路由参数, 比如 /detail/xxx, 
+
+为了避免之前路径的影响，先删除之前的detail.vue页面，然后创建一个pages/detail/[id].vue的页面, 这里使用[id], 就是路径参数变量的表示
+```vue
+<template>
+    <div>
+        <h1>Detail Page</h1>
+        <!-- $route保存了当前路由信息, 通过params获取路径参数的所有变量 -->
+        <p>{{ $route.params }}</p>
+    </div>
+</template>
+```
+
+访问页面: /detail/xxx, 就能看到当前路由页面的路由信息
+
+#### 路由嵌套
+
+
+#### 路由跳转
+
+
+#### 页面元数据
+
+
+#### 编程式路由
 
 
 
-
-### 页面布局
-
+### 插件安装
 
 
-### 安装UI组件
+#### 安装UI组件
 
 通过插件的方式安装UI组件: plugins/element-plus.ts
 ```ts
@@ -130,8 +202,7 @@ export default defineNuxtPlugin(nuxtApp => {
 })
 ```
 
-
-### 全局样式管理
+#### 全局样式管理
 
 修改Nuxt配置, 添加全局样式表
 
@@ -145,6 +216,12 @@ export default defineNuxtConfig({
     css: ['~/assets/css/index.css'],
 })
 ```
+
+
+
+### 页面布局
+
+
 
 
 ## 参考
