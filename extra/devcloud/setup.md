@@ -12,6 +12,7 @@ v16.15.0
 > npm -v 
 8.5.5
 ```
+
 ## 安装Yarn
 你可以认为Yarn是npm的增强版, 具体对比可以参考: [Yarn vs npm](https://www.cnblogs.com/ypppt/p/13050845.html)
 
@@ -29,6 +30,7 @@ v16.15.0
 ```sh
 # 安装yrm
 > npm install -g yrm
+
 # 查看yrm的版本
 > yrm -V    
 1.0.6
