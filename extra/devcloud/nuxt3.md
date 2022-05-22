@@ -230,7 +230,6 @@ export default defineNuxtConfig({
 
 
 
-
 ## 参考
 
 + [vue3官方文档](https://vuejs.org/guide/introduction.html)
