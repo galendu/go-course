@@ -178,10 +178,93 @@ getDataById($route.query.id)
 
 访问页面: /detail/xxx, 就能看到当前路由页面的路由信息
 
+#### 自定义404页面
+
+Nuxt3默认有404页面，如果想要自定义404页面, 只需要添加pages/404.vue页面,比如: 
+```vue
+<template>
+    <div>
+        <h1>custom 404</h1>
+    </div>
+</template>
+```
+
+再次访问就能访问到看看404页面是否生效
+
 #### 路由嵌套
 
+很多场景下 我们一个页面可能很复杂，有很多个组件构成, 我们可以选择以组件的方式构建页面，比如:
+```vue
+<template>
+    <div>
+        <h1>dashboard main page</h1>
+        <component1 />
+        <component2 />
+        <component3 />
+    </div>
+</template>
 ```
+
+我们也可以选择路由嵌套来实现, 比如下面就是一个dashboard嵌套页面的目录:
+```sh
+# 注意: dashboard.vue 如果是是嵌套, 则需要创建一个名称为:dashboard的目录, 里面存放具体嵌套的页面
+-| pages/
+---| dashboard/
+------| index.vue
+------| component1.vue
+------| component2.vue
+------| component3.vue
+---| dashboard.vue
 ```
+
+上面目录结构 映射为 下面这样的 嵌套路由:
+```json
+[
+  {
+    path: '/dashboard',
+    component: '~/pages/dashboard.vue',
+    name: 'dashboard',
+    children: [
+      {
+        path: '/',
+        component: '~/pages/dashboard/index.vue',
+        name: 'dashboard-index'
+      },
+      {
+        path: '/component1',
+        component: '~/pages/dashboard/component1.vue',
+        name: 'dashboard-component1'
+      },
+      {
+        path: '/component2',
+        component: '~/pages/dashboard/component2.vue',
+        name: 'dashboard-component2'
+      },
+      {
+        path: '/component3',
+        component: '~/pages/dashboard/component3.vue',
+        name: 'dashboard-component3'
+      }
+    ]
+  }
+]
+```
+
+这里需要注意的是, 页面嵌套时, 主页面需要添加 NuxtPage 才能路由的字页面, 比如pages/dashboard.vue
+```vue
+<template>
+    <div>
+        <h1>dashboard main page</h1>
+        <!-- 子页面出口 -->
+        <NuxtPage />
+    </div>
+</template>
+```
+
+
+思考: 你想把当前的页面(日程)通过url分享给另外一个人, 如何确保分享点开页面是显示的是日程这个标签页
+
+![](./images/tabs.png)
 
 #### 路由跳转
 
