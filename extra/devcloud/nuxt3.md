@@ -344,13 +344,82 @@ definePageMeta({
 
 ##### 内置Meta
 
-+ keepalive
-+ key
-+ layout
-+ middleware
++ keepalive: 组件缓存, 具体效果请参考[Keep Alive组件使用](https://vuejs.org/guide/built-ins/keep-alive.html#basic-usage)
+```ts
+<script setup>
+definePageMeta({
+  keepalive: true
+})
+</script>
+
++ key: vue组件 有一个关键属性:key, 只要key的值有变化 就会触发vue组件刷新, 比如下面: 只要url发生变化就触发重新刷新
+```ts
+<script setup>
+definePageMeta({
+  key: route => route.fullPath
+})
+</script>
+```
+
++ layout: 指定当前页面使用那种布局, 布局需要提前定义在layouts目录下
+```vue
+<template>
+  <div>
+    Some shared layout content:
+    <slot />
+  </div>
+</template>
+```
+
+然后在我们需要你用到的页面指定:
+```ts
+<script>
+// This will also work in `<script setup>`
+definePageMeta({
+  layout: "custom",
+});
+</script>
+```
+
++ middleware: 页面中间件(页面加载之前的一些处理逻辑), 比如auth, 这个后面讲中间件时单独介绍
+```ts
+<script setup>
+definePageMeta({
+  middleware: ["auth"]
+  // or middleware: 'auth'
+})
+</script>
+```
 
 + layouttransition: 用于设置layout的过渡动画
-+ pagetransition:  用于设置页面的过渡动画
++ pagetransition:  用于设置页面的过渡动画, 为页面添加动画过渡, 具体参考[Vue Transition](https://vuejs.org/guide/built-ins/transition.html#css-based-transitions)
+```vue
+<Transition name="bounce">
+  <p v-if="show" style="text-align: center;">
+    Hello here is some bouncy text!
+  </p>
+</Transition>
+```
+下面使用css 做的过渡动画
+```css
+.bounce-enter-active {
+  animation: bounce-in 0.5s;
+}
+.bounce-leave-active {
+  animation: bounce-in 0.5s reverse;
+}
+@keyframes bounce-in {
+  0% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1.25);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+```
 
 + alias: page 别名, 通过该功能 可以让多个page 和 一个页面 对应, 具体可以参考[vue router alias](https://router.vuejs.org/guide/essentials/redirect-and-alias.html#alias)
 ```ts
@@ -400,7 +469,7 @@ function jumpTo(id){
 
 
 
-### 插件安装
+### 安装UI组件
 
 
 #### UI组调研
@@ -409,8 +478,9 @@ function jumpTo(id){
 + [Ant Design Vue](https://www.antdv.com/docs/vue/introduce-cn): 阿里开源UI库
 + [Vuetify](https://vuetifyjs.com/zh-Hans/): Material 样式的 Vue UI 组件库
 + [TDesign](https://tdesign.tencent.com/vue-next/overview): 腾讯开源UI库
++ [Arco Design](https://arco.design/): 字节跳动出品的企业级设计系统
 
-#### 安装UI组件
+#### 安装Element Plus
 
 通过插件的方式安装UI组件: plugins/element-plus.ts
 ```ts
@@ -421,8 +491,6 @@ export default defineNuxtPlugin(nuxtApp => {
 })
 ```
 
-#### 全局样式管理
-
 修改Nuxt配置, 添加全局样式表
 
 nuxt.config.ts
@@ -432,9 +500,29 @@ import { defineNuxtConfig } from 'nuxt'
 // https://v3.nuxtjs.org/api/configuration/nuxt.config
 export default defineNuxtConfig({
     // css
-    css: ['~/assets/css/index.css'],
+    css: ['~/assets/style/index.css'],
 })
 ```
+
+#### 安装Arco Design
+
+1. 安装UI库
+```sh
+# npm
+npm install --save-dev @arco-design/web-vue
+# yarn
+yarn add --dev @arco-design/web-vue
+```
+
+2. vue加载UI库
+```vue
+yarn add -D less
+yarn add -D less-loader
+yarn add -D unplugin-auto-import
+yarn add -D unplugin-icons
+yarn add -D unplugin-vue-components
+```
+
 
 ### 页面布局
 
@@ -447,3 +535,4 @@ export default defineNuxtConfig({
 + [nuxt项目启动时跳过Are you interested in participation](http://www.flydream.cc/article/nuxt-bootstrap-skip-participation/)
 + [element-plus-nuxt-starter](https://github.com/element-plus/element-plus-nuxt-starter)
 + [Nuxt.js 2中文教程](https://www.w3cschool.cn/nuxtjs/nuxtjs-iwvf36gt.html)
++ [Arco Design Plans for Nuxt 3 support?](https://github.com/arco-design/arco-design-vue/issues/24)
