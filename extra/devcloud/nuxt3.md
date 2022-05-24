@@ -268,13 +268,133 @@ Nuxt3默认有404页面，如果想要自定义404页面, 只需要添加pages/4
 
 #### 路由跳转
 
+路由调整Nuxt提供2种方式:
++ 组件方式: NuxtLink组件
++ 编程方式: navigateTo函数
+
+##### 组件方式
+
+我们经常需要进行页面跳转, 典型的场景就是 列表页跳转到详情页:
+
+pages/user/index.vue
+```vue
+<template>
+    <div>
+        <h1>User Index Page</h1>
+        <NuxtLink to="/user/detail?id=1">User 1</NuxtLink> <br>
+        <NuxtLink to="/user/detail?id=2">User 2</NuxtLink> <br>
+        <NuxtLink to="/user/detail?id=3">User 3</NuxtLink> <br>
+    </div>
+</template>
+```
+
+pages/user/detail.vue
+```vue
+<template>
+    <div>
+        <h1>User {{ $route.query.id }} Detail Page</h1>
+    </div>
+</template>
+```
+
+##### 编程方式
+
+修改pages/users/index.vue 调整为a标签, 然后自己控制路由跳转
+```vue
+<template>
+    <div>
+        <h1>User Index Page</h1>
+        <a @click="jumpTo(1)">User 1</a> <br>
+        <a @click="jumpTo(2)">User 2</a> <br>
+        <a @click="jumpTo(3)">User 3</a> <br>
+    </div>
+</template>
+
+<script setup>
+
+function jumpTo(id){
+  return navigateTo({
+    path: '/user/detail',
+    query: {
+        id: id
+    }
+  })
+}
+</script>
+```
+
+下面是navigateTo函数参数的定义: 总体而言支持路径参数 和 命名参数 也就是上面的(path选项或者name选项)
+```ts
+export interface NavigateToOptions {
+    replace?: boolean;
+    redirectCode?: number;
+}
+export declare const navigateTo: (to: RouteLocationRaw, options?: NavigateToOptions) => Promise<void | NavigationFailure> | RouteLocationRaw;
+```
 
 #### 页面元数据
 
+我们可以通过definePageMeta函数, 对当前页面设置Meta信息, 来完成对当前改页面进行装饰(比如添加缓存, ...), 可以把该功能理解为页面装饰器/页面增强
 
-#### 编程式路由
+```js
+definePageMeta({
+  title: 'User Index Page'
+})
+```
 
+##### 内置Meta
 
++ keepalive
++ key
++ layout
++ middleware
+
++ layouttransition: 用于设置layout的过渡动画
++ pagetransition:  用于设置页面的过渡动画
+
++ alias: page 别名, 通过该功能 可以让多个page 和 一个页面 对应, 具体可以参考[vue router alias](https://router.vuejs.org/guide/essentials/redirect-and-alias.html#alias)
+```ts
+definePageMeta({
+  title: 'User Index Page',
+  allow: ['admin'],
+  // /user/list 会自动重定向到该页面, 常用于老页面的替换升级
+  alias: ['/user/list'],
+})
+```
+
+##### 自定义Meta
+
+我们可以为当前页面添加一些元数据, 比如描述当前页面有哪些角色可以访问, 只是声明描述, 具体的业务路径可以配置中间件来实现
+
+比如 pages/user/index.vue, 添加一个allow的meta信息
+```vue
+<template>
+    <div>
+        <h1>User Index Page</h1>
+        <!-- 通过route可以访问到当前meta信息, 你也可以理解为路由装饰, 通过中间件可以实现非常灵活的业务, 而是分离了 声明(meta定义)+逻辑(中间件) -->
+        <h1>{{ $route.meta }}</h1>
+        <a @click="jumpTo(1)">User 1</a> <br>
+        <a @click="jumpTo(2)">User 2</a> <br>
+        <a @click="jumpTo(3)">User 3</a> <br>
+    </div>
+</template>
+
+<script setup>
+definePageMeta({
+  title: 'User Index Page',
+  allow: ['admin']
+})
+
+function jumpTo(id){
+  return navigateTo({
+    path: '/user/detail',
+    query: {
+        id: id
+    }
+  })
+}
+</script>
+```
 
 #### Nuxt与Vue Router
 
@@ -326,3 +446,4 @@ export default defineNuxtConfig({
 + [nuxtjs官网](https://v3.nuxtjs.org/getting-started/quick-start)
 + [nuxt项目启动时跳过Are you interested in participation](http://www.flydream.cc/article/nuxt-bootstrap-skip-participation/)
 + [element-plus-nuxt-starter](https://github.com/element-plus/element-plus-nuxt-starter)
++ [Nuxt.js 2中文教程](https://www.w3cschool.cn/nuxtjs/nuxtjs-iwvf36gt.html)
