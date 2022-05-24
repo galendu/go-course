@@ -280,7 +280,7 @@ Nuxt3默认有404页面，如果想要自定义404页面, 只需要添加pages/4
 
 
 
-### 插件安装
+### 安装UI组件
 
 
 #### UI组调研
@@ -289,8 +289,9 @@ Nuxt3默认有404页面，如果想要自定义404页面, 只需要添加pages/4
 + [Ant Design Vue](https://www.antdv.com/docs/vue/introduce-cn): 阿里开源UI库
 + [Vuetify](https://vuetifyjs.com/zh-Hans/): Material 样式的 Vue UI 组件库
 + [TDesign](https://tdesign.tencent.com/vue-next/overview): 腾讯开源UI库
++ [Arco Design](https://arco.design/): 字节跳动出品的企业级设计系统
 
-#### 安装UI组件
+#### 安装Element Plus
 
 通过插件的方式安装UI组件: plugins/element-plus.ts
 ```ts
@@ -301,8 +302,6 @@ export default defineNuxtPlugin(nuxtApp => {
 })
 ```
 
-#### 全局样式管理
-
 修改Nuxt配置, 添加全局样式表
 
 nuxt.config.ts
@@ -312,9 +311,29 @@ import { defineNuxtConfig } from 'nuxt'
 // https://v3.nuxtjs.org/api/configuration/nuxt.config
 export default defineNuxtConfig({
     // css
-    css: ['~/assets/css/index.css'],
+    css: ['~/assets/style/index.css'],
 })
 ```
+
+#### 安装Arco Design
+
+1. 安装UI库
+```sh
+# npm
+npm install --save-dev @arco-design/web-vue
+# yarn
+yarn add --dev @arco-design/web-vue
+```
+
+2. vue加载UI库
+```vue
+yarn add -D less
+yarn add -D less-loader
+yarn add -D unplugin-auto-import
+yarn add -D unplugin-icons
+yarn add -D unplugin-vue-components
+```
+
 
 ### 页面布局
 
@@ -326,3 +345,4 @@ export default defineNuxtConfig({
 + [nuxtjs官网](https://v3.nuxtjs.org/getting-started/quick-start)
 + [nuxt项目启动时跳过Are you interested in participation](http://www.flydream.cc/article/nuxt-bootstrap-skip-participation/)
 + [element-plus-nuxt-starter](https://github.com/element-plus/element-plus-nuxt-starter)
++ [Arco Design Plans for Nuxt 3 support?](https://github.com/arco-design/arco-design-vue/issues/24)
