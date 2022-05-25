@@ -526,6 +526,16 @@ yarn add -D unplugin-vue-components
 
 ### 页面布局
 
+首先我们需要设计页面的布局风格: 下面是常见的3种中后台设计布局
+
+![](./images/layout_design.png)
+
+更多可以参考: [腾讯TDesign中后台设计指南](https://tdesign.tencent.com/design/offices)
+
+这里我们选择上下混合的布局风格, 就是第3种, 具体布局可以参考:
+
+![](./images/feishu_layout.png)
+
 
 
 ## 参考
