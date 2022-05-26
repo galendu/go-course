@@ -471,6 +471,31 @@ function jumpTo(id){
 ### 安装UI组件
 
 
+#### Nuxt插件
+
+Nuxt 将自动读取您plugins目录中的文件并加载它们。您可以在文件名中使用.server或.client后缀以仅在服务器或客户端加载插件
+
+只有目录顶层的plugins/文件（或任何子目录中的索引文件）将被注册为插件
+```sh
+# 只有myPlugin.ts并且myOtherPlugin/index.ts会被注册
+plugins
+ | - myPlugin.ts
+ | - myOtherPlugin
+ | --- supportingFile.ts
+ | --- componentToRegister.vue
+ | --- index.ts
+```
+
+传递给插件的唯一参数是nuxtApp, vue的Root实例对象可以通过nuxtApp.vueApp访问到:
+```js
+export default defineNuxtPlugin(nuxtApp => {
+  // Doing something with nuxtApp
+  nuxtApp.vueApp.use(vuePlugin)
+})
+```
+
+我们的选择的Vue UI组件就通过这种方式加载, 接下来为我们的项目挑选UI组件
+
 #### UI组件调研
 
 + [Element Plus](https://element-plus.org/zh-CN/guide/design.html): Element开源UI库
@@ -613,6 +638,19 @@ const onCollapse = (val: String, type: String) => {
 这里我们选择上下混合的布局风格, 就是第3种, 具体布局可以参考:
 
 ![](./images/feishu_layout.png)
+
+#### Layouts目录
+
+Nuxt 提供了一个可定制的布局框架，您可以在整个应用程序中使用，非常适合将常见的 UI 或代码模式提取到可重用的布局组件中
+
+布局放置在layouts/目录中，使用时将通过异步导入自动加载。layout通过将属性设置为页面元数据的一部分（如果您正在使用~/pages集成）或使用<NuxtLayout>组件来使用布局
+
+如果您的应用程序中只有一个布局，我们建议您改用app.vue
+
+
+
+
+
 
 
 
