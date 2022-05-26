@@ -87,6 +87,7 @@ The app.vue file is the main component in your Nuxt 3 applications.
 
 ### 页面与路由
 
+#### 页面路由
 我们不可能把所有的页面逻辑都写在入口文件里面, 因此Nuxt为我们准备了一个pages目录, 放在该目录下的vue文件, nuxt会根据文件路径自动为我们创建路由映射, 比如:
 ```
 pages/index.vue --->   /
@@ -647,6 +648,26 @@ Nuxt 提供了一个可定制的布局框架，您可以在整个应用程序中
 
 如果您的应用程序中只有一个布局，我们建议您改用app.vue
 
+
+
+
+#### 使用UI布局
+
+我们使用Arco Design的[布局组件](https://arco.design/vue/component/layout)来进行布局
+
+
+##### 顶部导航布局
+
+
+
+
+
+##### 侧边栏导航布局
+
+
+
+
+##### 内容区布局 
 
 
 
