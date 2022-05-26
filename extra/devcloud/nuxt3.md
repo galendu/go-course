@@ -3,6 +3,22 @@
 ![](./images/nuxt3.png)
 
 
+## 为什么选择Nuxt3
+
+一般我们开发Vue3的应用都会使用到的组件有:
++ vue3
++ vite
++ typescript(推荐)
+
+而Nuxt3整合了Vue3生态的工具, 为开发vue3应用提供开箱即用的体验:
+
+![](./images/nuxt3_features.png)
+
+而且vue3的作者 尤雨溪在微博中(2021年)提及到了Nuxt3:
+
+![](./images/you_nuxt3.png)
+
+
 ## 项目初始化
 
 
