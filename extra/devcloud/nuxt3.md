@@ -14,7 +14,7 @@
 
 ![](./images/nuxt3_features.png)
 
-而且vue3的作者 尤雨溪在微博中(2021年)提及到了Nuxt3:
+而且vue的作者 尤雨溪在微博中(2021年)提及到了Nuxt3:
 
 ![](./images/you_nuxt3.png)
 
