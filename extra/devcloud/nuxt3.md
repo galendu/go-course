@@ -664,6 +664,44 @@ Nuxt 提供了一个可定制的布局框架，您可以在整个应用程序中
 
 如果您的应用程序中只有一个布局，我们建议您改用app.vue
 
+##### 基于app.vue的布局
+
+1. 定义默认Layout布局: layouts/default.vue
+
+在您的布局文件中，您需要使用<slot />定义布局内容的加载位置。例如
+```vue
+<template>
+  <div>
+    <h1>Default Layout: </h1>
+    <slot />
+  </div>
+</template>
+```
+
+2. 修改app.vue
+```ts
+<template>
+  <NuxtLayout name="default">
+    <NuxtPage />
+  </NuxtLayout>
+</template>
+```
+
+在Nuxt中default.vue指代默认布局, 因此可以省去name指定，比如:
+```vue
+<template>
+  <NuxtLayout>
+    <NuxtPage />
+  </NuxtLayout>
+</template>
+```
+
+如果使用了app.vue, 如果定义了多个布局文件 nuxt 会有bug，按照官方建议, 当我们使用app.vue来定义布局的, 只能适用于单一布局, 比如如果我有多个布局需要切换, 在app.vue中定义就无法实现
+
+##### 基于页面的布局
+
+``在使用页面布局之前，需要先删除app.vue文件,这步非常重要, 我们直接使用index.vue 作为根目录``
+
 
 
 
