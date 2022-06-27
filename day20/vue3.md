@@ -240,17 +240,21 @@ MVVM最早由微软提出来，它借鉴了桌面应用程序的MVC思想，在�
 
 ![](./images/vue-components.png)
 
+下面这个页面就是有多个vue组件构成的:
+![](./images/vue-comp.png)
+
 
 ## Vue与MVVM
 
 + Model: vue中用于标识model的数据是 data对象, data 对象中的所有的 property 加入到 Vue 的响应式系统中, 有vue监听变化
 + View: vue使用模版来实现展示, 但是渲染时要结合 vdom技术
 + ViewModle: vue的核心, 负责视图的响应, 也就是数据双向绑定
-    + 监听view中的数据,  如果数据有变化, 动态同步到 data中
-    + 监听data中的数据,  如果数据有变化, 通过vdom动态渲视图
+  + 监听view中的数据,  如果数据有变化, 动态同步到 data中
+  + 监听data中的数据,  如果数据有变化, 通过vdom动态渲视图
 
+比如下面我们修改App.vue 去除样例
 
-比如在我们的demo中, 修改HelloWorld, 在model中添加一个name属性
+比如在我们的中, 修改HelloWorld, 在model中添加一个name属性
 ```js
 <script>
 export default {
@@ -1366,7 +1370,7 @@ export declare class ElementUIComponent extends Vue {
 
 ## 参考
 
-+ [VUE2官方文档](https://cn.vuejs.org/v2/guide)
++ [VUE3官方文档](https://staging-cn.vuejs.org/guide/introduction.html)
 + [那些前端MVVM框架是如何诞生的](https://zhuanlan.zhihu.com/p/36453279)
 + [MVVM设计模式](https://zhuanlan.zhihu.com/p/36141662)
 + [vue核心之虚拟DOM(vdom)](https://www.jianshu.com/p/af0b398602bc)
