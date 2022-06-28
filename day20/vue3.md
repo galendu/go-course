@@ -252,9 +252,8 @@ MVVM最早由微软提出来，它借鉴了桌面应用程序的MVC思想，在�
   + 监听view中的数据,  如果数据有变化, 动态同步到 data中
   + 监听data中的数据,  如果数据有变化, 通过vdom动态渲视图
 
-比如下面我们修改App.vue 去除样例
 
-比如在我们的中, 修改HelloWorld, 在model中添加一个name属性
+比如我们修改下About组件, 在model中添加一个name属性
 ```js
 <script>
 export default {
@@ -282,11 +281,86 @@ export default {
 <input v-model="name" type="text">
 ```
 
-![](./images/binding-example.jpg)
-
 在安装了Vue Devtools的时候，我们可以在console里看到我们的虚拟dom
 
-![](./images/vm-console.png)
+![](./images/optional-api.png)
+
+
+## 选项式 API和组合式 API
+
+这两种 API 风格都能够覆盖大部分的应用场景。
+
+它们只是同一个底层系统所提供的两套不同的接口。实际上，选项式 API 也是用组合式 API 实现的！关于 Vue 的基础概念和知识在它们之间都是通用的
+
+
+### 选项式 API
+
+我们上面使用的就是选项式API, 使用选项式 API，我们可以用包含多个选项的对象来描述组件的逻辑，例如 data、methods 和 mounted。选项所定义的属性都会暴露在函数内部的 this 上，它会指向当前的组件实例
+
+比如我们在about页面，添加一个mounted选项(当界面模版渲染完成后调用), 打印下this(当前组件实例)
+```vue
+<script>
+export default {
+  name: "HelloWorld",
+  // data() 返回的属性将会成为响应式的状态
+  // 并且暴露在 `this` 上
+  data() {
+    return {
+      name: "老喻",
+    };
+  },
+  props: {
+    msg: String,
+  },
+  // 生命周期钩子会在组件生命周期的各个不同阶段被调用
+  // 例如这个函数就会在组件挂载完成后被调用
+  mounted() {
+    console.log(this);
+  },
+};
+</script>
+```
+
+在右侧console就能看到该实例对象:
+
+![](./images/vue3-this.png)
+
+由此可以选项式 API 就是 vue 实例(或者叫组件的实例)给我们留的构子, 用于我们控制vue实例的行为。
+
+### 组合式 API
+
+组合式API 为我们提供了另外一种设置Vue实例的方式: 直接在函数作用域内定义响应式状态变量， 这个变量可以是数据, 比如 [], {},... 也可以是函数 比如 search() ...
+
+通过组合式 API，我们可以使用导入的 API 函数来描述组件逻辑
+
+```vue
+<script setup>
+// 以库的形式来使用vue实例提供的API
+import { ref, onMounted, getCurrentInstance } from "vue";
+
+// 响应式状态
+// 相当于 data里面的 name属性
+const name = ref("");
+
+// 使用构造函数onMounted
+// 想到于mounted选项
+onMounted(() => {
+  // 通过getCurrentInstance获取到当前组件的vue实例
+  const _this = getCurrentInstance();
+  console.log(_this);
+});
+</script>
+```
+
+当前实例对象上的proxy就是当前实例
+![](./images/proxy-object.png)
+
+
+### 如何选择
+
+
+
+
 
 
 ## Vue实例
