@@ -19,6 +19,7 @@ onMounted(() => {
   // 通过getCurrentInstance获取到当前组件的vue实例
   const _this = getCurrentInstance();
   console.log(_this);
+  console.log(_this.proxy.$data);
 });
 </script>
 

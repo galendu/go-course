@@ -358,70 +358,65 @@ onMounted(() => {
 
 ### 如何选择
 
++ 选项式API更好理解(简单场景使用)
 
+选项式 API 以“组件实例”的概念为中心 (即上述例子中的 this)，对于有面向对象语言背景的用户来说，这通常与基于类的心智模型更为一致,从而对初学者而言更为友好
 
++ 组合式API更灵活(复杂场景使用)
 
+组合式 API 的核心思想是直接在函数作用域内定义响应式状态变量，并将从多个函数中得到的状态组合起来处理复杂问题,这种形式更加自由
 
 
 ## Vue实例
 
+我们知道可以通过getCurrentInstance获取当前vue实例, 下面是关于该实例的描述:
 ```ts
-export interface Vue {
-  // 生产的HTML元素
-  readonly $el: Element; 
-  // 实例的一些配置, 比如components, directives, filters ...
-  readonly $options: ComponentOptions<Vue>;
-  // 父Vue实例 
-  readonly $parent: Vue;
-  // Root Vue实例
-  readonly $root: Vue;
-  // 该vue实例的子vue实例，一般为 子组建
-  readonly $children: Vue[];
-  // 元素refs, 当元素有refs属性时才能获取
-  readonly $refs: { [key: string]: Vue | Element | (Vue | Element)[] | undefined };
-  // 插槽, 模版插槽
-  readonly $slots: { [key: string]: VNode[] | undefined };
-  readonly $scopedSlots: { [key: string]: NormalizedScopedSlot | undefined };
-  readonly $isServer: boolean;
-  // Model对应的数据
-  readonly $data: Record<string, any>;
-  // 实例props, 用于组件见消息传递
-  readonly $props: Record<string, any>;
-  readonly $ssrContext: any;
-  // 虚拟node
-  readonly $vnode: VNode;
-  readonly $attrs: Record<string, string>;
-  readonly $listeners: Record<string, Function | Function[]>;
-
-  // 实例挂在到具体的HTML上
-  $mount(elementOrSelector?: Element | string, hydrating?: boolean): this;
-  // 强制刷新渲染, 收到刷新界面, 当有些情况下 界面没响应时
-  $forceUpdate(): void;
-  // 销毁实例
-  $destroy(): void;
-  $set: typeof Vue.set;
-  $delete: typeof Vue.delete;
-  // watch对象变化
-  $watch(
-    expOrFn: string,
-    callback: (this: this, n: any, o: any) => void,
-    options?: WatchOptions
-  ): (() => void);
-  $watch<T>(
-    expOrFn: (this: this) => T,
-    callback: (this: this, n: T, o: T) => void,
-    options?: WatchOptions
-  ): (() => void);
-  $on(event: string | string[], callback: Function): this;
-  $once(event: string | string[], callback: Function): this;
-  $off(event?: string | string[], callback?: Function): this;
-  // 触发事件
-  $emit(event: string, ...args: any[]): this;
-  // Dom更新完成后调用
-  $nextTick(callback: (this: this) => void): void;
-  $nextTick(): Promise<void>;
-  $createElement: CreateElement;
+/**
+ * We expose a subset of properties on the internal instance as they are
+ * useful for advanced external libraries and tools.
+ */
+export declare interface ComponentInternalInstance {
+    uid: number;
+    type: ConcreteComponent;
+    parent: ComponentInternalInstance | null;
+    root: ComponentInternalInstance;
+    appContext: AppContext;
+    /**
+     * Vnode representing this component in its parent's vdom tree
+     */
+    vnode: VNode;
+    /* Excluded from this release type: next */
+    /**
+     * Root vnode of this component's own vdom tree
+     */
+    subTree: VNode;
+    ...
+    proxy: ComponentPublicInstance | null;
+    ...
 }
+```
+
+内部实例一般是给库或者框架开发者预留的, 属于底层扩展,比如操作虚拟dom, 访问响应式数据, 而留给vue使用者的实例是ComponentPublicInstance, 比如定义的响应式数据: 
+```ts
+export declare type ComponentPublicInstance<P = {}, // props type extracted from props option
+B = {}, // raw bindings returned from setup()
+D = {}, // return from data()
+C extends ComputedOptions = {}, M extends MethodOptions = {}, E extends EmitsOptions = {}, PublicProps = P, Defaults = {}, MakeDefaultsOptional extends boolean = false, Options = ComponentOptionsBase<any, any, any, any, any, any, any, any, any>> = {
+    $: ComponentInternalInstance;
+    $data: D;
+    $props: MakeDefaultsOptional extends true ? Partial<Defaults> & Omit<P & PublicProps, keyof Defaults> : P & PublicProps;
+    $attrs: Data;
+    $refs: Data;
+    $slots: Slots;
+    $root: ComponentPublicInstance | null;
+    $parent: ComponentPublicInstance | null;
+    $emit: EmitFn<E>;
+    $el: any;
+    $options: Options & MergedComponentOptionsOverride;
+    $forceUpdate: () => void;
+    $nextTick: typeof nextTick;
+    $watch(source: string | Function, cb: Function, options?: WatchOptions): WatchStopHandle;
+} & P & ShallowUnwrapRef<B> & UnwrapNestedRefs<D> & ExtractComputedReturns<C> & M & ComponentCustomProperties;
 ```
 
 那我们如何实例化一个vue实例, 下面是 Vue实例的构造函数
