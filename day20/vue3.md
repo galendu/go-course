@@ -471,6 +471,69 @@ app.use(router);
 app.mount("#app");
 ```
 
+#### 根组件
+
+每个应用都需要一个“根组件”，其他组件将作为其子组件
+
+```sh
+App (root component)
+├─ TodoList
+│  └─ TodoItem
+│     ├─ TodoDeleteButton
+│     └─ TodoEditButton
+└─ TodoFooter
+   ├─ TodoClearButton
+   └─ TodoStatistics
+```
+
+这里传染的就是一个根组件: App.vue, 也就是vue Root实例, 也就是 MVVM里面的 ViewModel 概念的实体
+```js
+import { createApp } from "vue";
+import App from "./App.vue";
+const app = createApp(App);
+```
+
+
+#### 挂载应用
+
+应用实例必须在调用了 .mount() 方法后才会渲染出来
+
+```js
+// 该方法接收一个“容器”参数，可以是一个实际的 DOM 元素或是一个 CSS 选择器字符串
+// 这里的参数是一个 css id选择器, 他对于者一个HTML的元素
+app.mount('#app')
+```
+
+允许npm run build后 会在 dist目录下看到构建后的 HTML产物: 
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite App</title>
+    <!-- 这就是编译后压缩 的纯JS脚步, 他的作用就是动态操作DOM(VDOM) -->
+    <script type="module" crossorigin src="/assets/index.454cea7e.js"></script>
+    <link rel="stylesheet" href="/assets/index.f6f45cab.css">
+  </head>
+  <body>
+    <!-- js 框架(vue) 作用的根元素, 后期就是靠 vue框架生产虚拟DOM来动态选择出界面的 -->
+    <div id="app"></div>
+
+  </body>
+</html>
+```
+
+#### 应用配置
+
+应用配置就是全局配置, 当你有一些配置想要对全局生效, 你应该要能想起他
+
+上面的use 就是用于加载全局插件使用的, 后面我们加载UI插件也会使用到use
+```js
+app.use(createPinia());
+app.use(router);
+```
 
 ### Vue实例生命周期
 
