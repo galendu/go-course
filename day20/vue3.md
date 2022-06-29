@@ -15,7 +15,12 @@ vue借鉴了很有框架优秀的部分进行了整合:
 
 在学习之前，快速浏览下官网: [vue3官网](https://staging-cn.vuejs.org/guide/introduction.html), 阅读完简介部分
 
-## 安装
+
+## 快速上手
+
+我们先快速初始化一个vue3的项目, 让我们对vue有一个感性的认识
+
+### 安装
 
 vue提供了一套脚手架用于快速初始化一个vue3的项目
 ```sh
@@ -64,20 +69,20 @@ Done. Now run:
 这是我们看到的经过编译后，显示的界面
 ![](./images/vue3-run.png)
 
-### Vue Devtools
+#### Vue Devtools
 
 在使用 Vue 时，我们推荐在你的浏览器上安装 Vue Devtools。它允许你在一个更友好的界面中审查和调试 Vue 应用
 
-#### chrome商店安装
+##### chrome商店安装
 
 vue-devtools可以从chrome商店直接下载安装，非常简单， 具体请参考: [Chrome Setting](https://devtools.vuejs.org/guide/installation.html#settings) 这里就不过多介绍了。不过要注意的一点就是，需要翻墙才能下载
 
 
-#### 离线安装
+##### 离线安装
 
 请参考 [vue-devtools离线安装](https://www.jianshu.com/p/63f09651724c)
 
-### vscode 插件
+#### vscode 插件
 
 + ESLint: js eslint语法风格检查
 + Auto Rename Tag: tag rename
@@ -85,7 +90,7 @@ vue-devtools可以从chrome商店直接下载安装，非常简单， 具体请�
 + TypeScript Vue Plugin (Volar): Vue Plugin for TypeScript server
 + Vue VSCode Snippets: 代码片段
 
-## 工程目录结构
+### 工程目录结构
 
 通过vue脚手架搭建一个vue项目，会自动生成一系列文件，而这些文件具体是怎样的结构、文件对应起什么作用，可以看看下面的解释
 ```
@@ -118,7 +123,7 @@ vue-devtools可以从chrome商店直接下载安装，非常简单， 具体请�
 
 ![](./images/vue-tools.jpg)
 
-## vue项目部署
+### vue项目部署
 
 如何部署:
 ```sh
@@ -288,10 +293,11 @@ export default {
 
 ## 选项式 API和组合式 API
 
-这两种 API 风格都能够覆盖大部分的应用场景。
+在上面的例子中 我们通过 export default {} 暴露出一个vue的实例(先不要纠结什么是vue实例, 我们马上就要讲到), 我们可以把 export 出去的这个对象认为是 vue实例的配置
+
+vue提供了2种方式来配置vue实例, 被叫做两种 API 风格, 他们都能够覆盖大部分的应用场景。
 
 它们只是同一个底层系统所提供的两套不同的接口。实际上，选项式 API 也是用组合式 API 实现的！关于 Vue 的基础概念和知识在它们之间都是通用的
-
 
 ### 选项式 API
 
@@ -369,7 +375,9 @@ onMounted(() => {
 
 ## Vue实例
 
-我们知道可以通过getCurrentInstance获取当前vue实例, 下面是关于该实例的描述:
+我们知道可以通过getCurrentInstance获取当前vue实例, 不要被内部的细节吓到, 我们只是大体上认知下vue实例上的一些关键属性, 好方便有个全局意识, 在后面的细节讲解中 会对他们有详细解释.
+
+下面是关于该实例的描述:
 ```ts
 /**
  * We expose a subset of properties on the internal instance as they are
@@ -396,7 +404,7 @@ export declare interface ComponentInternalInstance {
 }
 ```
 
-内部实例一般是给库或者框架开发者预留的, 属于底层扩展,比如操作虚拟dom, 访问响应式数据, 而留给vue使用者的实例是ComponentPublicInstance, 比如定义的响应式数据: 
+内部实例一般是给库或者框架开发者预留的, 属于底层扩展,比如操作虚拟dom, 访问响应式数据, 而留给vue使用者的实例是ComponentPublicInstance, 比如定义实例的一些属性(props, slots)和一些钩子函数的定义(mounted,...): 
 ```ts
 export declare type ComponentPublicInstance<P = {}, // props type extracted from props option
 B = {}, // raw bindings returned from setup()
@@ -412,6 +420,7 @@ C extends ComputedOptions = {}, M extends MethodOptions = {}, E extends EmitsOpt
     $parent: ComponentPublicInstance | null;
     $emit: EmitFn<E>;
     $el: any;
+    // 这是当前vue实例的配置参数, vue
     $options: Options & MergedComponentOptionsOverride;
     $forceUpdate: () => void;
     $nextTick: typeof nextTick;
@@ -419,69 +428,51 @@ C extends ComputedOptions = {}, M extends MethodOptions = {}, E extends EmitsOpt
 } & P & ShallowUnwrapRef<B> & UnwrapNestedRefs<D> & ExtractComputedReturns<C> & M & ComponentCustomProperties;
 ```
 
-那我们如何实例化一个vue实例, 下面是 Vue实例的构造函数
-+ Data: Model
-+ Methods: 方法
-+ Computed: 计算属性
-+ Props: 类似于一个自定义 attribute
+
+```ts
+declare type MergedComponentOptionsOverride = {
+    beforeCreate?: MergedHook;
+    created?: MergedHook;
+    beforeMount?: MergedHook;
+    mounted?: MergedHook;
+    beforeUpdate?: MergedHook;
+    updated?: MergedHook;
+    activated?: MergedHook;
+    deactivated?: MergedHook;
+    /** @deprecated use `beforeUnmount` instead */
+    beforeDestroy?: MergedHook;
+    beforeUnmount?: MergedHook;
+    /** @deprecated use `unmounted` instead */
+    destroyed?: MergedHook;
+    unmounted?: MergedHook;
+    renderTracked?: MergedHook<DebuggerHook>;
+    renderTriggered?: MergedHook<DebuggerHook>;
+    errorCaptured?: MergedHook<ErrorCapturedHook>;
+};
+```
+
+
+### 创建实例
+
+我们如何创建一个vue实例喃? 我们看看入口: main.js
 
 ```js
-new <Data = object, Methods = object, Computed = object, Props = object>(options?: ThisTypedComponentOptionsWithRecordProps<V, Data, Methods, Computed, Props>): CombinedVueInstance<V, Data, Methods, Computed, Record<keyof Props, any>>;
+import { createApp } from "vue";
+import { createPinia } from "pinia";
 
+import App from "./App.vue";
+import router from "./router";
+
+const app = createApp(App);
+
+app.use(createPinia());
+app.use(router);
+
+app.mount("#app");
 ```
 
-我们看看我们main.js
 
-```js
-import Vue from 'vue'
-import App from './App.vue'
-
-// vue实例的配置
-Vue.config.productionTip = false
-
-
-// Root Vue实例, 挂载到id是app的元素上
-new Vue({
-  render: h => h(App),
-}).$mount('#app')
-```
-
-```html
-<template>
-  <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
-  </div>
-</template>
-```
-
-还有我们的Helloworld组件
-
-```html
-<template>
-  ...
-</template>
-<script>
-export default {
-  name: 'HelloWorld',
-  data() {
-    return {
-      name: '老喻'
-    }
-  },
-  props: {
-    msg: String
-  }
-}
-</script>
-```
-
-这里可以通过devTools查看到vm上的关系
-
-![](./images/vm-comsole.jpg)
-
-
-## Vue实例生命周期
+### Vue实例生命周期
 
 ![](./images/lifecycle.png)
 
