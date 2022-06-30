@@ -537,10 +537,77 @@ app.use(router);
 
 ### Vue实例生命周期
 
+上面我们使用过一个onMounted的函数:
+```js
+// 以库的形式来使用vue实例提供的API
+import { onMounted } from "vue";
+
+// 使用构造函数onMounted
+// 想到于mounted选项
+onMounted(() => {
+  // 通过getCurrentInstance获取到当前组件的vue实例
+  const _this = getCurrentInstance();
+  console.log(_this);
+});
+```
+
+每个 Vue 组件实例在创建时都需要经历一系列的初始化步骤，比如挂载实例到 DOM(onMounted)。在此过程中，它也会运行称为生命周期钩子的函数，让开发者有机会在特定阶段添加自己的代码
+
 ![](./images/lifecycle.png)
 
-然后我们扩展我们的demo为我们的vue实力添加上这些钩子
+下面我们使用组合式API来调试下这些生命周期钩子:
+```vue
+<script setup>
+// 以库的形式来使用vue实例提供的API
+import {
+  ref,
+  onBeforeMount,
+  onMounted,
+  onBeforeUpdate,
+  onUpdated,
+  onBeforeUnmount,
+  onUnmounted,
+} from "vue";
 
+// 响应式状态
+// 相当于 data里面的 name属性
+const name = ref("老喻");
+
+onBeforeMount(() => {
+  console.log("before mount");
+});
+onMounted(() => {
+  console.log("mounted");
+});
+onBeforeUpdate(() => {
+  console.log("before update");
+});
+onUpdated(() => {
+  console.log("on updated");
+});
+onBeforeUnmount(() => {
+  console.log("before unmount");
+});
+onUnmounted(() => {
+  console.log("unmounted");
+});
+</script>
+```
+
+下面是调试结果:
+```sh
+# 初始化实例
+before mount
+mounted
+# 更新实例
+before update
+on updated
+# 销毁实例
+before unmount
+unmounted
+```
+
+下面是选项式API:
 ```js
 <script>
 export default {
@@ -581,7 +648,18 @@ export default {
 </script>
 ```
 
-测试加载和修改数据
+下面是控制台的日志
+```sh
+# 当我们点到About页面时, vue实例初始化
+beforeCreate
+created
+beforeMount
+mounted
+
+# 当我们离开该页面时, vue实例销毁
+beforeDestroy
+destroyed
+```
 
 ## 模板语法
 
