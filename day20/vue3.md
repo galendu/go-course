@@ -932,6 +932,95 @@ let person = shallowReactive({
 });
 ```
 
+### ref vs reactive
+
+ref 不仅可以用于构造基础类型, 同时也支持用于构造复合类型, 比如对象和数组, 简而言之reactive能实现的 ref也能实现:
+```vue
+<script setup>
+import { ref } from "vue";
+
+let skill = ref("");
+
+// 使用ref来为基础类型 构造响应式变量
+let person = ref({
+  name: "张三",
+  profile: { city: "北京" },
+  skills: ["Golang", "Vue"],
+});
+
+let addSkile = (s) => {
+  person.value.skills.push(s);
+  person.value.profile.skill_count = person.value.skills.length;
+};
+</script>
+```
+
+那ref对象是如何兼容reactive的喃? 答案很简单，ref函数会判断传递过来的的值是 复合类型还是简单类型, 如果是复合类型, 比如对象与数组 就会通过reactive将其转化为一个深层响应式的Proxy对象
+
+由于ref可以控制到基础类型的力度, 而复合对象可以认为是基础对象的上层封装, 所以很大部分场景下 我们都可以直接使用ref 代替reactive
+
+而且由于ref控制力度细的问题, 我们可以基于它来构造一个响应式对象，比如:
+```vue
+<template>
+  <div class="about">
+    <h2 id="name">{{ person }}</h2>
+    <input v-model="person.name.value" type="text" />
+    <input v-model="skill" @keyup.enter="addSkile(skill)" type="text" />
+  </div>
+</template>
+
+<script setup>
+import { ref } from "vue";
+
+let skill = ref("");
+
+// 使用ref来构造一个对象
+let person = {
+  name: ref("张三"),
+  profile: ref({ city: "北京" }),
+  skills: ref(["Golang", "Vue"]),
+};
+
+// 等价于一个reactive初始化出来的proxy对象
+// let person = ref({
+//   name: "张三",
+//   profile: { city: "北京" },
+//   skills: ["Golang", "Vue"],
+// });
+
+let addSkile = (s) => {
+  person.skills.value.push(s);
+  person.profile.skill_count = person.skills.value.length;
+};
+</script>
+```
+
+这样构造出来的对象还是另一个好处, 它在解构赋值时, 解构后的变量依然时响应式的, 可以思考下时为啥? 
+```vue
+<script setup>
+import { ref } from "vue";
+
+let skill = ref("");
+
+// 使用ref来构造一个对象
+let person = {
+  name: ref("张三"),
+  profile: ref({ city: "北京" }),
+  skills: ref(["Golang", "Vue"]),
+};
+
+// 解构赋值
+let { name, profile, skills } = person;
+
+let addSkile = (s) => {
+  skills.value.push(s);
+  profile.skill_count = skills.value.length;
+};
+</script>
+```
+
+由于Proxy是一个对象,它的响应式是与该对象绑定, 如果对象一旦被解开了, 而对象的属性本身又不具备响应式，响应式就中断了, 而使用ref就不会
+
 ### ref 响应性语法糖
 
 上面我们提到了定义setup函数的繁琐问题, 我们接下来说说.value的繁琐问题, 并且在没有类型系统的帮助时很容易漏掉
@@ -1894,7 +1983,8 @@ export declare class ElementUIComponent extends Vue {
 
 ## 参考
 
-+ [VUE3官方文档](https://staging-cn.vuejs.org/guide/introduction.html)
++ [Vue3 官方文档](https://staging-cn.vuejs.org/guide/introduction.html)
++ [Vue3 API](https://staging-cn.vuejs.org/api/application.html)
 + [那些前端MVVM框架是如何诞生的](https://zhuanlan.zhihu.com/p/36453279)
 + [MVVM设计模式](https://zhuanlan.zhihu.com/p/36141662)
 + [vue核心之虚拟DOM(vdom)](https://www.jianshu.com/p/af0b398602bc)
