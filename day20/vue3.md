@@ -661,6 +661,142 @@ beforeDestroy
 destroyed
 ```
 
+## 响应式基础
+
+vue 实现了 view 和 model的双向绑定, 如下:
+
+![](./images/vue-mvvm.png)
+
+而响应式指的就是 model(数据)有变化时，能反馈到view上, 当然这个反馈是由view实例来帮我们完成的， 那view怎么知道 model(数据)有变化喃?
+
+### JavaScript Proxy
+
+答案是[JavaScript Proxy](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy), 其行为表现与一般对象相似。不同之处在于 Vue 能够跟踪对响应式对象 property 的访问与更改操作
+
+```js
+const monster1 = { eyeCount: 4 };
+
+const handler1 = {
+  set(obj, prop, value) {
+    if ((prop === 'eyeCount') && ((value % 2) !== 0)) {
+      console.log('Monsters must have an even number of eyes');
+    } else {
+      return Reflect.set(...arguments);
+    }
+  }
+};
+
+const proxy1 = new Proxy(monster1, handler1);
+
+proxy1.eyeCount = 1;
+// expected output: "Monsters must have an even number of eyes"
+
+console.log(proxy1.eyeCount);
+// expected output: 4
+
+proxy1.eyeCount = 2;
+console.log(proxy1.eyeCount);
+// expected output: 2
+```
+
+当我修改数据时, vue实例就会感知到, 感知到后 使用js操作dom(vdom), 完成试图的更新。
+
+那vue必须提供一个构造函数用于初始化 原声对象，这样vue才能跟踪数据变化, vue提供一个reactive函数 就是用来干这个的
+
+```js
+function reactive(obj) {
+  return new Proxy(obj, {
+    get(target, key) {
+      track(target, key)
+      return target[key]
+    },
+    set(target, key, value) {
+      trigger(target, key)
+      target[key] = value
+    }
+  })
+}
+```
+
+
+下面我们修改About例子, 并做验证
+```js
+<template>
+  <div class="about">
+    <h2>{{ person.name }}</h2>
+    <input v-model="person.name" type="text" />
+  </div>
+</template>
+
+<script setup>
+// 以库的形式来使用vue实例提供的API
+import { reactive } from "vue";
+
+// 使用reactive 构造Proxy对象, 这样vue才能跟踪对象变化
+const person = reactive({ name: "老喻" });
+</script>
+```
+
+### getter/setters
+
+Proxy仅对对象类型有效（对象、数组和 Map、Set 这样的集合类型），而对 string、number 和 boolean 这样的 原始类型 无效
+
+为了解决 reactive() 带来的限制，Vue 也提供了一个 ref() 方法来允许我们创建可以使用任何值类型的响应式 ref
+
+ref利用的是JavaScript的getter/setters 的方式劫持属性访问
+```js
+function ref(value) {
+  const refObject = {
+    get value() {
+      track(refObject, 'value')
+      return value
+    },
+    set value(newValue) {
+      trigger(refObject, 'value')
+      value = newValue
+    }
+  }
+  return refObject
+}
+```
+
+向上面我们如果不使用对象, 而是使用一个字符串，就需要使用ref来声明一个响应式变量
+
+```vue
+<template>
+  <div class="about">
+    <!-- 这里为啥没有使用 name.value来访问喃?
+    当 ref 在模板中作为顶层 property 被访问时，它们会被自动“解包”，所以不需要使用 .value -->
+    <h2>{{ name }}</h2>
+    <input v-model="name" type="text" />
+  </div>
+</template>
+
+<script setup>
+// 以库的形式来使用vue实例提供的API
+import { ref } from "vue";
+
+// 使用ref来为基础类型 构造响应式变量
+const name = ref("老喻");
+
+// 通过value来设置 基础类型的值(Setter方式)
+name.value = "张三";
+</script>
+```
+
+### ref 响应性语法糖
+
+到处使用 .value 无疑是很繁琐的，并且在没有类型系统的帮助时很容易漏掉
+
+既然模板里面ref 编译器都能处理自动补充上 value, 那么在setup的js里面编译器能不能也帮忙补充下喃?
+
+
+
+
+
+
+
+
 ## 模板语法
 
 通过template标签定义的部分都是vue的模版, 模版会被vue-template-compiler编译后渲染

@@ -1,5 +1,7 @@
 <template>
   <div class="about">
+    <!-- 这里为啥没有使用 name.value来访问喃?
+    当 ref 在模板中作为顶层 property 被访问时，它们会被自动“解包”，所以不需要使用 .value -->
     <h2>{{ name }}</h2>
     <input v-model="name" type="text" />
   </div>
@@ -7,38 +9,13 @@
 
 <script setup>
 // 以库的形式来使用vue实例提供的API
-import {
-  ref,
-  onBeforeMount,
-  onMounted,
-  onBeforeUpdate,
-  onUpdated,
-  onBeforeUnmount,
-  onUnmounted,
-} from "vue";
+import { ref } from "vue";
 
-// 响应式状态
-// 相当于 data里面的 name属性
+// 使用ref来为基础类型 构造响应式变量
 const name = ref("老喻");
 
-onBeforeMount(() => {
-  console.log("before mount");
-});
-onMounted(() => {
-  console.log("mounted");
-});
-onBeforeUpdate(() => {
-  console.log("before update");
-});
-onUpdated(() => {
-  console.log("on updated");
-});
-onBeforeUnmount(() => {
-  console.log("before unmount");
-});
-onUnmounted(() => {
-  console.log("unmounted");
-});
+// 通过value来设置 基础类型的值(Setter方式)
+name.value = "张三";
 </script>
 
 <style>
