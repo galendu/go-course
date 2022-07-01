@@ -661,7 +661,7 @@ beforeDestroy
 destroyed
 ```
 
-## 响应式基础
+## 响应式原理
 
 vue 实现了 view 和 model的双向绑定, 如下:
 
@@ -839,6 +839,99 @@ name.value = "张三";
 
 大多数 Vue 开发者在开发应用时都会基于: 单文件组件 + <script setup> 的语法的方式, 这也是我们后面常见的写法
 
+### DOM异步更新
+
+注意这是一个很重要的概念, 当你响应式数据发送变化时, DOM 也会自动更新, 但是这个更新并不是同步的，而是异步的: vue会将你的变更放到一个缓冲队列, 等待更新周期到达时, 一次性完成DOM(视图)的更新。
+
+比如下面这个例子:
+```vue
+<script setup>
+import { onMounted } from "vue";
+
+// 使用ref来为基础类型 构造响应式变量
+let name = $ref("老喻");
+
+// 只有等模版挂载好后，我门才能获取到对应的HTML元素
+onMounted(() => {
+  // 通过value来设置 基础类型的值(Setter方式)
+  name = "张三";
+  console.log(document.getElementById("name").innerText);
+});
+</script>
+```
+
+由于修改name后, 并没有立即更新DOM, 所以获取到的name依然时初始值, 那如果想要获取到当前值怎么办?
+
+vue在dom更新时 为我们提供了一个钩子: nextTick() 
+
+该钩子就是当vue实例 到达更新周期后, 更新完Dom后，留给我们操作的口子, 因此我们改造下:
+```vue
+<script setup>
+import { nextTick, onMounted } from "vue";
+
+// 使用ref来为基础类型 构造响应式变量
+let name = $ref("老喻");
+
+// 只有等模版挂载好后，我门才能获取到对应的HTML元素
+onMounted(() => {
+  // 通过value来设置 基础类型的值(Setter方式)
+  name = "张三";
+
+  // 等待vue下次更新到来后, 执行下面的操作
+  nextTick(() => {
+    console.log(document.getElementById("name").innerText);
+  });
+});
+</script>
+```
+
+一定要理解vue的异步更新机制, 因为你写的代码 并不是按照你的预期同步执行的, 这是引起很多魔幻bug的根源
+
+### 深层响应性
+
+通过上面我们知道 reactive 初始化的Proxy对象是响应式的, 那如果我这个对象里面再嵌套对象, 那嵌套的对象还是不是响应式的喃?
+
+```vue
+<template>
+  <div class="about">
+    <h2 id="name">{{ person }}</h2>
+    <input v-model="person.name" type="text" />
+    <input v-model="skill" @keyup.enter="addSkile(skill)" type="text" />
+  </div>
+</template>
+
+<script setup>
+import { reactive, ref } from "vue";
+
+let skill = ref("");
+
+// 使用ref来为基础类型 构造响应式变量
+let person = reactive({
+  name: "张三",
+  profile: { city: "北京" },
+  skills: ["Golang", "Vue"],
+});
+
+let addSkile = (s) => {
+  person.skills.push(s);
+  person.profile.skill_count = person.skills.length;
+};
+</script>
+```
+
+我们可以看到，当修改了嵌套的数组skills时, profile对象的 count和skills 都动态更新到试图上了, 因此可以看出在 Vue 中，状态都是默认深层响应式的, 这也是大多数场景下我们期望的
+
+当你一个对象很大，嵌套很复杂的时候，这种深层的响应模式 可能会引发一些性能问题, 这个时候我们可以使用vue提供的shallowReactive 创建一个浅层响应式的数据
+
+```js
+// 使用shallowReactive 构造浅层响应式数据, 当数据有变化时，不会理解反馈到界面上
+let person = shallowReactive({
+  name: "张三",
+  profile: { city: "北京" },
+  skills: ["Golang", "Vue"],
+});
+```
+
 ### ref 响应性语法糖
 
 上面我们提到了定义setup函数的繁琐问题, 我们接下来说说.value的繁琐问题, 并且在没有类型系统的帮助时很容易漏掉
@@ -883,10 +976,6 @@ export default {
 有了响应式语法糖的帮助，我们终于可以不用写.value, 该功能应该很快就会加入到正式版本, 应用写.value的确很繁琐
 ```vue
 <script setup>
-// 当启用响应性语法糖时，这些宏函数都是全局可用的、无需手动导入。但如果你想让它更明显，你也可以选择从 vue/macros 中引入它们
-// 下面这个引入可以注释掉, 这里只是为了让vsode不包语法错误
-import { $ref } from "vue/macros";
-
 // 使用ref来为基础类型 构造响应式变量
 let name = $ref("老喻");
 
