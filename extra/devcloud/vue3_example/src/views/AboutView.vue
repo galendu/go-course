@@ -8,14 +8,14 @@
 </template>
 
 <script setup>
-// 以库的形式来使用vue实例提供的API
-import { ref } from "vue";
+// 当启用响应性语法糖时，这些宏函数都是全局可用的、无需手动导入。但如果你想让它更明显，你也可以选择从 vue/macros 中引入它们
+import { $ref } from "vue/macros";
 
 // 使用ref来为基础类型 构造响应式变量
-const name = ref("老喻");
+let name = $ref("老喻");
 
 // 通过value来设置 基础类型的值(Setter方式)
-name.value = "张三";
+name = "张三";
 </script>
 
 <style>

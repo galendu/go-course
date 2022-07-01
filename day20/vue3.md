@@ -671,7 +671,7 @@ vue 实现了 view 和 model的双向绑定, 如下:
 
 ### JavaScript Proxy
 
-答案是[JavaScript Proxy](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy), 其行为表现与一般对象相似。不同之处在于 Vue 能够跟踪对响应式对象 property 的访问与更改操作
+答案之一是[JavaScript Proxy](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy), 其行为表现与一般对象相似。不同之处在于 Vue 能够跟踪对响应式对象 property 的访问与更改操作
 
 ```js
 const monster1 = { eyeCount: 4 };
@@ -718,9 +718,8 @@ function reactive(obj) {
 }
 ```
 
-
 下面我们修改About例子, 并做验证
-```js
+```vue
 <template>
   <div class="about">
     <h2>{{ person.name }}</h2>
@@ -728,12 +727,22 @@ function reactive(obj) {
   </div>
 </template>
 
-<script setup>
+<script>
 // 以库的形式来使用vue实例提供的API
 import { reactive } from "vue";
 
-// 使用reactive 构造Proxy对象, 这样vue才能跟踪对象变化
-const person = reactive({ name: "老喻" });
+export default {
+  // `setup` 是一个专门用于组合式 API 的特殊钩子
+  setup() {
+    // 使用reactive 构造Proxy对象, 这样vue才能跟踪对象变化
+    const person = reactive({ name: "老喻" });
+
+    // 暴露 person 到模板
+    return {
+      person
+    }
+  }
+}
 </script>
 ```
 
@@ -772,6 +781,50 @@ function ref(value) {
   </div>
 </template>
 
+<script>
+// 以库的形式来使用vue实例提供的API
+import { ref } from "vue";
+
+export default {
+  // `setup` 是一个专门用于组合式 API 的特殊钩子
+  setup() {
+    // 使用ref来为基础类型 构造响应式变量
+    const name = ref("老喻");
+
+    // 通过value来设置 基础类型的值(Setter方式)
+    name.value = "张三";
+
+    // 暴露 name 到模板
+    return {
+      name
+    }
+  }
+}
+</script>
+```
+
+### setup 语法
+
+在 setup() 函数中手动暴露状态和方法可能非常繁琐
+```vue
+<script>
+// 以库的形式来使用vue实例提供的API
+import { reactive } from "vue";
+
+export default {
+  // `setup` 是一个专门用于组合式 API 的特殊钩子
+  setup() {
+
+    // 暴露 数据 到模板
+    return {}
+  }
+}
+</script>
+```
+
+幸运的是, 你可以通过使用构建工具来简化该操作。当使用单文件组件（SFC）时，我们可以使用 <script setup> 来简化大量样板代码
+
+```vue
 <script setup>
 // 以库的形式来使用vue实例提供的API
 import { ref } from "vue";
@@ -784,18 +837,63 @@ name.value = "张三";
 </script>
 ```
 
+大多数 Vue 开发者在开发应用时都会基于: 单文件组件 + <script setup> 的语法的方式, 这也是我们后面常见的写法
+
 ### ref 响应性语法糖
 
-到处使用 .value 无疑是很繁琐的，并且在没有类型系统的帮助时很容易漏掉
+上面我们提到了定义setup函数的繁琐问题, 我们接下来说说.value的繁琐问题, 并且在没有类型系统的帮助时很容易漏掉
 
 既然模板里面ref 编译器都能处理自动补充上 value, 那么在setup的js里面编译器能不能也帮忙补充下喃?
+```vue
+<template>
+  <div class="about">
+    <!-- 这里为啥没有使用 name.value来访问喃?
+    当 ref 在模板中作为顶层 property 被访问时，它们会被自动“解包”，所以不需要使用 .value -->
+    <h2>{{ name }}</h2>
+    <input v-model="name" type="text" />
+  </div>
+</template>
+```
 
+Vue 的响应性语法糖为我们提供了编译时的转换过程, 在setup语法内, 我们使用$+名称来 引用编译时的宏命令, 
 
+宏命令它不是一个真实的、在运行时会调用的方法。而是用作 Vue 编译器的标记，表明最终的 count 变量需要是一个响应式变量, 编译器自动帮我们补充上.value 的语法 
 
+编译器支持的宏命令有:
++ ref -> $ref
++ computed -> $computed
++ shallowRef -> $shallowRef
++ customRef -> $customRef
++ toRef -> $toRef
 
+响应性语法糖目前是一个实验性功能，默认是禁用的，需要显式选择使用, 并且要求vue版本大于3.2.25
 
+我们通过vite配置文件开启该选项:
+```js
+// vite.config.js
+export default {
+  plugins: [
+    vue({
+      reactivityTransform: true
+    })
+  ]
+}
+```
 
+有了响应式语法糖的帮助，我们终于可以不用写.value, 该功能应该很快就会加入到正式版本, 应用写.value的确很繁琐
+```vue
+<script setup>
+// 当启用响应性语法糖时，这些宏函数都是全局可用的、无需手动导入。但如果你想让它更明显，你也可以选择从 vue/macros 中引入它们
+// 下面这个引入可以注释掉, 这里只是为了让vsode不包语法错误
+import { $ref } from "vue/macros";
 
+// 使用ref来为基础类型 构造响应式变量
+let name = $ref("老喻");
+
+// 通过value来设置 基础类型的值(Setter方式)
+name = "张三";
+</script>
+```
 
 ## 模板语法
 
