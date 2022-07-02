@@ -1694,248 +1694,112 @@ Vue.directive('focus', {
 
 ## 组件
 
-我们的demo 就是一个组件的例子, 终于开始到vue的核心了 组件
+组件允许我们将 UI 划分为独立的、可重用的部分来思考。组件在应用程序中常常被组织成层层嵌套的树状结构
 
-如下是我们的App.vue, 这个Vue 根实例中引入了一个HelloWorld的组件:
-```html
-<template>
-  <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
-  </div>
-</template>
+![](./images/components.vue.png)
 
-<script>
-import HelloWorld from './components/HelloWorld.vue'
+这和我们嵌套 HTML 元素的方式类似，Vue 实现了自己的组件数据模型，使我们可以在每个组件内封装自定义内容与逻辑
 
-export default {
-  name: 'App',
-  components: {
-    HelloWorld
-  }
-}
+### 组件基础
+
+#### 工作原理
+
+我们一般会将 Vue 组件定义在一个单独的 .vue 文件中，这被叫做单文件组件 (简称 SFC), 它是一种特殊的文件格式，使我们能够将一个 Vue 组件的模板、逻辑与样式封装在单个文件中
+```vue
+<!-- 逻辑处理部分, 有JavaScript提供该能力 -->
+<script setup>
 </script>
-```
 
-组件是可复用的 Vue 实例，所以它们与 new Vue 接收相同的选项，例如 data、computed、watch、methods 以及生命周期钩子等,仅有的例外是像 el 这样根实例特有的选项
-
-注意这里的export default语法，这是ES6的模块语法, 请参考之前的js课程
-
-这里需要注意:
-+ 每个vue组件, 只能有1个根元素, 所以你不能在模版里面写2个并排的div
-+ 组件的命名风格是首字母大写, 导出名字最好和文件名称相同，方便阅读
-+ 局部组件必须放到实例的components属性里面, 代表这个组件注册到了该实例,  只有注册后的组件才能使用
-+ 组件的使用方式和HTML标签一样, 可以认为是自定义的HTML标签, 因此最好小写使用, 比如hello-world
-
-我们调整下demo的组件使用名字
-```html
+<!-- 视图模版, 有HTML和自定义组件或者Web组件提供该能力 -->
 <template>
-  <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <hello-world msg="Welcome to Your Vue.js App"/>
-  </div>
-</template>
-```
-
-当然我们也可以再添加一个这样的组件
-```html
-<template>
-  <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <hello-world msg="Welcome to Your Vue.js App"/>
-    <hello-world msg="component2"/>
-  </div>
-</template>
-```
-
-是不是开始有味道了:
-
-![](./images/vue-components.png)
-
-到这里 应该知道为啥我们引入了element-ui后, el-table, 这些是啥了吧
-
-下面我们讲组件之间的通讯问题
-
-### 向子组件传递数据
-
-我们在组件里面定义的props, 到现在还没有用到
-```html
-<script>
-export default {
-  name: 'HelloWorld',
-  props: {
-    msg: String
-  }
-}
-</script>
-```
-
-这里props就是用于传递数据的变量, Prop 是你可以在组件上注册的一些自定义 attribute, 父组件通过绑定数据来传递消息给子组件
-
-```html
-<template>
-  <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <hello-world msg="Welcome to Your Vue.js App"/>
-  </div>
+  <p class="greeting">{{ greeting }}</p>
 </template>
 
-<script>
-import HelloWorld from './components/HelloWorld.vue'
-
-export default {
-  name: 'App',
-  components: {
-    HelloWorld
-  }
-}
-</script>
+<!-- 元素样式, 由css提供该能力 -->
+<style>
+</style>
 ```
 
-> 问题: 如果我想动态传递props怎么办?
+很显然 该文件并不是个合法的html文件, 并不能别浏览器直接加载, 它是一种特殊的文件格式, 定义该文件的语法被叫做: [SFC 语法](https://staging-cn.vuejs.org/api/sfc-spec.html)
 
-
-```html
-<template>
-  <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <hello-world :msg="msg1"/>
-  </div>
-</template>
-
-<script>
-import HelloWorld from './components/HelloWorld.vue'
-
-export default {
-  name: 'App',
-  data() {
-    return {
-      msg1: 'Welcome to Your Vue.js App'
-    }
-  },
-  components: {
-    HelloWorld
-  }
-}
-</script>
-```
-
-那如果我在子组件中修改了props的值，父组件会更新吗?
-
-我们在页面上添加显示父组件的msg
-```html
-<template>
-  <div id="app">
-    <span>父组件的msg: {{ msg1 }}</span>
-    <img alt="Vue logo" src="./assets/logo.png">
-    <hello-world :msg="msg1"/>
-  </div>
-</template>
-```
-
-接着我们在子组件中加入一个输入框修改msg属性
-```html
-<input v-model="msg" type="text" @keyup.enter="pressEnter(msg)">
-```
-
-不仅没生效，并且console还有个报错
+该语法需要被转换成标准的HTML文件才能被浏览器加载, [@vue/compiler-sfc](https://github.com/vuejs/core/tree/main/packages/compiler-sfc) 就是用于干这个事儿的, 当然它不是独立工作的, vite提供了构建功能, vue以插件的形式提供sfc语法转换逻辑(compiler-sfc), 比如下面的vite配置:
 ```js
-[Vue warn]: Avoid mutating a prop directly since the value will be overwritten whenever the parent component re-renders. Instead, use a data or computed property based on the prop's value. Prop being mutated: "msg"
+import { fileURLToPath, URL } from "url";
 
-found in
+import { defineConfig } from "vite";
+import vue from "@vitejs/plugin-vue";
 
----> <HelloWorld>
-       <App> at src/App.vue
-         <Root>
-```
-
-意思就是不要直接修改子组件的props, 因为v-bind的原因, 父组件会有变覆盖当前值
-
-
-那我们可以通知父组建, 让父组建修改就可以了
-
-### 向父组件传递数据
-
-如何向父组件传递事件, 这里需要:
-+ 子组件使用$emit发送事件, 事件名称: changeMsg
-+ 父组件使用v-on 订阅子组件的事件
-
-首先修改子组建, 重新绑定一个属性: tmpMsg, 等点击回车时发生事件给父组件
-
-```html
-<input v-model="tmpMsg" type="text" @keyup.enter="changeProps(tmpMsg)">
-
-<script>
-export default {
-  name: 'HelloWorld',
-  data() {
-    return {
-      tmpMsg: '',
-    }
+// https://vitejs.dev/config/
+export default defineConfig({
+  plugins: [
+    vue(),
+  ],
+  resolve: {
+    alias: {
+      "@": fileURLToPath(new URL("./src", import.meta.url)),
+    },
   },
-  methods: {
-    changeProps(msg) {
-      this.$emit('changeMsg', msg)
-    }
+});
+```
+
+一个编译后的 SFC 是一个标准的 JavaScript(ES) 模块，这也意味着通过适当的构建配置，你可以像导入其他 ES 模块一样导入 SFC
+```js
+import MyComponent from './MyComponent.vue'
+
+export default {
+  components: {
+    MyComponent
+  }
+}
+```
+
+当然，有些场景下使用 SFC 有些过犹不及。当不使用构建步骤时, 一个 Vue 组件以一个包含 Vue 特定选项的 JavaScript 对象来定义
+```js
+import { ref } from 'vue'
+
+export default {
+  setup() {
+    const count = ref(0)
+    return { count }
   },
-  props: {
-    msg: String
-  }
+  template: `
+    <button @click="count++">
+      You clicked me {{ count }} times.
+    </button>`
+  // 或者 `template: '#my-template-element'`
 }
-</script>
 ```
 
-父组件修改
-```html
-<hello-world :msg="msg1" @changeMsg="msgChanged" />
+当然由于跳过的构建，没有编译器的支撑 很多编译器提供的功能,比如$ref,defineProps等 我们就不能使用了, 这会是语法比较繁琐, 一般不这样用
 
-<script>
-import HelloWorld from './components/HelloWorld.vue'
+#### 定义组件
 
-export default {
-  name: 'App',
-  methods: {
-    msgChanged(event) {
-      this.msg1 = event
-    }
-  }
-}
-</script>
-```
 
-### 使用 v-model
+#### 使用组件
 
-如此费力的使用 v-bind 和 v-on 完成了数据的双向绑定, 你有啥感想?
 
-这不就是v-model吗?
-```
-v-model <==>  v-bind:value + v-on:input
-```
+#### 组件注册
 
-将其 value attribute 绑定到一个名叫 value 的 prop 上
-在其 input 事件被触发时，将新的值通过自定义的 input 事件抛出
 
-因此我们修改我们属性, 让遵循v-model的绑定和订阅规范
 
-父组件使用 v-model进行值的双向传递:
-```html
-<hello-world v-model="msg1" />
-```
+### 组件通信
 
-子组件绑定value属性和抛出input事件
-```html
-<input :value="value" type="text" @input="$emit('input', $event.target.value)">
-<script>
-export default {
-  name: 'HelloWorld',
-  props: {
-    value: String,
-  }
-}
-</script>
-```
 
-这样就实现了数据的双向传递了， 是不是舒服了
+
+#### 传递 props
+
+
+
+#### 监听事件
+
+
+
+#### 双向绑定
+
+
+
+#### 依赖注入
+
 
 ## 插件
 
@@ -1978,7 +1842,6 @@ export declare class ElementUIComponent extends Vue {
   /** Install component into Vue */
   static install (vue: typeof Vue): void
 }
-
 ```
 
 ## 参考
