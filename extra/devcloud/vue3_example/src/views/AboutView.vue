@@ -1,13 +1,20 @@
 <template>
   <div class="about">
     <h2 id="name">{{ person }}</h2>
-    <input v-model="name.value" type="text" />
-    <input v-model="skill" @keyup.enter="addSkile(skill)" type="text" />
+    <div>
+      <input v-model="name.value" type="text" />
+      <input v-model="skill" @keyup.enter="addSkile(skill)" type="text" />
+    </div>
+    <div>
+      <!-- <ButtonCounter style="width: 220px" /> -->
+      <button-counter style="width: 220px"></button-counter>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref } from "vue";
+import ButtonCounter from "@/components/ButtonCounter.vue";
 
 let skill = ref("");
 

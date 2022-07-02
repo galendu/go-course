@@ -1774,13 +1774,57 @@ export default {
 
 #### 定义组件
 
+我们分别定义:
++ script: js逻辑
++ template: 视图模板
++ style: 样式
+
+```vue
+<script setup>
+import { ref } from "vue";
+
+const count = ref(0);
+</script>
+
+<template>
+  <button @click="count++">You clicked me {{ count }} times.</button>
+</template>
+
+<style scoped>
+</style>
+```
 
 #### 使用组件
 
++ 通过Import导入后, 通过名称直接使用
+
+```vue
+<template>
+  <div>
+    <ButtonCounter style="width: 220px" />
+  </div>
+</template>
+<script setup>
+// 通过 <script setup>，导入的组件都在模板中直接可用
+import ButtonCounter from "@/components/ButtonCounter.vue";
+</script>
+```
+
+在单文件组件中，推荐为子组件使用 PascalCase 的标签名，以此来和原生的 HTML 元素作区分。
+虽然原生 HTML 标签名是不区分大小写的，但 Vue 单文件组件是可以在编译中区分大小写的。
+我们也可以使用 /> 来关闭一个标签
 
 #### 组件注册
 
+向上面那样直接使用时局部导入
 
+你也可以全局地注册一个组件，使得它在当前应用中的任何组件上都可以使用，而不需要额外再导入
+
+```js
+import MyComponent from './App.vue'
+
+app.component('MyComponent', MyComponent)
+```
 
 ### 组件通信
 
