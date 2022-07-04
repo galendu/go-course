@@ -1826,8 +1826,18 @@ import MyComponent from './App.vue'
 app.component('MyComponent', MyComponent)
 ```
 
-### 组件通信
 
+#### 内置组建
+
+vue 内置了一些组建, 可以理解为官方提供的一些标准库, 由于内置组建是全局组册的, 因此我们不需要Import, 可以在模版中直接使用
+
++ Transition: 组建过渡动画
++ TransitionGroup: 过渡组, 控制一组组建的过渡动画
++ KeepAlive: 组建缓存, 使我们可以在动态切换多个组件时视情况缓存组件实例
+
+下面演示下组建缓存:
+
+### 组件通信
 
 
 #### 传递 props
