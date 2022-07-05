@@ -1814,6 +1814,7 @@ import ButtonCounter from "@/components/ButtonCounter.vue";
 </script>
 ```
 
+
 #### 组件注册
 
 向上面那样直接使用时局部导入
@@ -1827,6 +1828,23 @@ app.component('MyComponent', MyComponent)
 ```
 
 
+#### 动态组件
+
+有的需求会想要在两个组件间来回切换:
+
+![](./images/dyn_com.png)
+
+
+vue 提供一个component元素, 它由一个属性: is, is的值可以为:
++ 被注册的组件名
++ 导入的组件对象
+
+比如:
+```js
+<!-- currentTab 改变时组件也改变 -->
+<component :is="currentComponentName"></component>
+```
+
 #### 内置组建
 
 vue 内置了一些组建, 可以理解为官方提供的一些标准库, 由于内置组建是全局组册的, 因此我们不需要Import, 可以在模版中直接使用
@@ -1837,12 +1855,58 @@ vue 内置了一些组建, 可以理解为官方提供的一些标准库, 由于
 
 下面演示下组建缓存:
 
+
 ### 组件通信
 
+组件是vue中用于复用的最小UI单元, 你可以把它理解为后端编程里面的一个函数, 只是这个函数不仅有逻辑还有界面:
+```go
+func Component() {
+   // 定义UI 展示
+
+   // 定义数据处理逻辑
+}
+```
+
+现在我们的组建既没有参数，也获取不到组件的返回, 这使得我们的组件很难复用, 比如:
+```go
+func ComponentA() {
+    // 显示 文章A的标签
+}
+
+func ComponentB() {
+    // 显示 文章B的标签
+}
+
+// 使用参数进行统一抽象
+func Component(title, callbackFunc) {
+    // 根据传人的title参数 进行显示
+    title
+
+    // 如果用户修改了title 使用callbackFunc函数回调通知
+    callbackFunc(titile)
+}
+```
 
 #### 传递 props
 
+如果向组件传入参数, 首先组件需要定义参数: defineProps 宏就是用于干这个的
+```vue
+<script setup>
+// 使用 defineProps 来进行组件属性(参数)的定义。
+// defineProps() 是一个宏由编译器负责处理, 无需引入
+const props = defineProps({
+  title: String,
+  likes: Number
+})
 
+console.log(props.foo)
+</script>
+```
+
+最终我们可以通过组建的属性 来进行参数的传递:
+```vue
+<ComponentName title="文章A" likes=10 />
+```
 
 #### 监听事件
 
