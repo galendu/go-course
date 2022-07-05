@@ -1814,7 +1814,6 @@ import ButtonCounter from "@/components/ButtonCounter.vue";
 </script>
 ```
 
-
 #### 组件注册
 
 向上面那样直接使用时局部导入
@@ -1826,7 +1825,6 @@ import MyComponent from './App.vue'
 
 app.component('MyComponent', MyComponent)
 ```
-
 
 #### 动态组件
 
@@ -1908,8 +1906,91 @@ console.log(props.foo)
 <ComponentName title="文章A" likes=10 />
 ```
 
-#### 监听事件
+##### 属性命名规范
 
+```js
+defineProps({
+  greetingMessage: String
+})
+```
+
+一般情况下都会使用 PascalCase 作为组件标签名，因为这提高了模板的可读性，能很好地区分出 Vue 组件和原生 HTML 元素。
+然而这对于传递 prop 来说收效并不高，因此我们选择对其进行转换
+
+```vue
+<ComponentName greeting-message="文章A" />
+```
+
+##### 动态属性
+
+很多时候我们传递的属性都是和我们的响应式数据绑定的, 组件和元素HTML在属性绑定上并没有啥区别, 都是用v-bind执行来进行响应式数据绑定
+
+```vue
+<!-- 使用v-bind指令 绑定变量name -->
+<ComponentName v-bind:greeting-message="name" />
+
+<!-- v-bind可以缩写为: 缩写模式 -->
+<ComponentName :greeting-message="name" />
+```
+
+##### 属性校验
+
+定义属性时处理可以指定type以外，还可以有:
++ required: bool 是否是必须参数
++ default 属性: 集成类型默认值
++ default 函数: 对象或数组的默认值, 类似于个构造函数
++ validator函数: 属性的校验函数
+
+```js
+defineProps({
+  // 基础类型检查
+  // （给出 `null` 和 `undefined` 值则会跳过任何类型检查）
+  propA: Number,
+  // 多种可能的类型
+  propB: [String, Number],
+  // 必传，且为 String 类型
+  propC: {
+    type: String,
+    required: true
+  },
+  // Number 类型的默认值
+  propD: {
+    type: Number,
+    default: 100
+  },
+  // 对象类型的默认值
+  propE: {
+    type: Object,
+    // 对象或数组的默认值
+    // 必须从一个工厂函数返回。
+    // 该函数接收组件所接收到的原始 prop 作为参数。
+    default(rawProps) {
+      return { message: 'hello' }
+    }
+  },
+  // 自定义类型校验函数
+  propF: {
+    validator(value) {
+      // The value must match one of these strings
+      return ['success', 'warning', 'danger'].includes(value)
+    }
+  },
+  // 函数类型的默认值
+  propG: {
+    type: Function,
+    // 不像对象或数组的默认，这不是一个工厂函数。这会是一个用来作为默认值的函数
+    default() {
+      return 'Default function'
+    }
+  }
+})
+```
+
+##### 注意事项(单数据流)
+
+所有的 prop 都遵循着单向绑定原则，prop 因父组件的更新而变化，自然地将新的状态向下流往子组件，而不会逆向传递。这避免了子组件意外修改了父组件的状态，不然应用的数据流就会变得难以理解了
+
+#### 监听事件
 
 
 #### 双向绑定
