@@ -1082,75 +1082,157 @@ name = "张三";
 </template>
 ```
 
-### 文本值
+### 访问变量
 
-当我们需要访问我们的Model时，就是data 这个Object时, 我们直接使用 {{ attr }} 就可以访问, vue会根据属性是否变化, 而动态渲染模版
+#### 文本值
 
-比如 data中的 name属性
+在vue的模版中, 我们直接使用 {{ ref_name }} 的方式访问到js部分定义变量(包含响应式和非响应式)
+
+```vue
+<script setup>
+import { ref } from "vue";
+
+const count = ref(0);
+</script>
+
+<template>
+  <button @click="count++">You clicked me {{ count }} times.</button>
+</template>
+```
+
+#### 表达式
+
+除了能在模版系统中直接访问到这些变量, 可以在模版系统中 直接使用js表达式, 这对象处理简单逻辑很有用
+
 ```html
 <template>
-  <div>{{ name }}</div>
+  <div>{{ name.split('').reverse().join('') }}</div>
 </template>
-<script>
-export default {
-  name: 'HelloWorld',
-  data() {
-    return {
-      name: '老喻'
-    }
-  }
-}
+
+<script setup>
+import { ref } from "vue";
+
+const name = ref('');
 </script>
 ```
 
-### 元素属性
+### 计算属性
+
+如果model的数据并不是你要直接渲染的，需要处理再展示, 简单的方法是使用表达式，比如
+```html
+<h2>{{ name.split('').reverse().join('') }}</h2>
+```
+
+这种把数据处理逻辑嵌入的视图中，并不合适,  不易于维护, 我们可以把改成一个方法
+```html
+<h2>{{ reverseData(name.value) }}</h2>
+
+<script setup>
+import { ref } from "vue";
+
+const name = ref('');
+</script>
+```
+
+但是使用函数 每次访问该属性都需要调用该函数计算, 如果数据没有变化(vue是响应式的它知道数据有没有变化)，我们能不能把函数计算出的属性缓存起来,直接使用喃?
+
+vue把这个概念定义为计算属性，使用computed钩子定义:
+```js
+// 一个计算属性 ref
+const reverseName = computed({
+  // getter
+  get() {
+    return name.vaule.split('').reverse().join('')
+  },
+  // setter
+  set(newValue) {
+    name.value = newValue.split(' ').reverse().join('')
+  }
+})
+```
+
+我们修改为计算属性:
+
+```html
+<h2>{{ reverseName }}</h2>
+
+<script setup>
+import { ref } from "vue";
+
+const name = ref('');
+
+// 一个计算属性 ref
+const reverseName = computed({
+  // getter
+  get() {
+    return name.vaule.split('').reverse().join('')
+  },
+  // setter
+  set(newValue) {
+    name.value = newValue.split(' ').reverse().join('')
+  }
+})
+</script>
+```
+
+如果我们只有get 没有set方法 也可以简写为:
+```js
+// 一个计算属性 ref
+const reverseName = computed(() => {name.vaule.split('').reverse().join('')})
+```
+
+### 响应式绑定
+
+模版的变量只能作用于文本值部分, 并不能直接作用于HTML元素的属性, 比如下面属性:
++ id
++ class
++ style
+
 
 变量不能作用在 HTML attribute 上, 比如下面的语法就是错误的
 ```html
 <template>
-  <div id={{ name }}>{{ name }}</div>
+  <!-- html属性id 无法直接访问到变量 -->
+  <div id={{ name }}>
+    <!-- 文本值变量 语法ok -->
+    {{ name }}
+  </div>
 </template>
 ```
 
-比如buttom有个disabled属性, 用于控制当前按钮是否可以点击
-```html
-<template>
-<button disabled="true">Button</button>
-</template>
-```
+#### 元素属性
 
 针对HTML元素的属性 vue专门提供一个 v-bind指令, 这个指令就是模版引擎里面的一个函数, 他专门帮你完成HTML属性变量替换, 语法如下:
 ```
-v-bind:disabled="attr"   ==>  disabled="data.attr"
+v-bind:name="name"   ==>  name="name.value"
 ```
 
 那我们修改下
 ```html
 <template>
-<button v-bind:disabled="isButtomDisabled">Button</button>
+  <!-- html属性id 无法直接访问到变量 -->
+  <div v-bind:id="name">
+    <!-- 文本值变量 语法ok -->
+    {{ name }}
+  </div>
 </template>
-<script>
-export default {
-  name: 'HelloWorld',
-  data() {
-    return {
-      name: '老喻',
-      isButtomDisabled: false,
-    }
-  }
-}
-</script>
 ```
 
-v-binding 有个缩写:  `:`
+v-binding 有个缩写:  `:` 等价于 `v-bind:`
 
 ```html
 <template>
-<button :disabled="isButtomDisabled">Button</button>
+  <!-- html属性id 无法直接访问到变量 -->
+  <div :id="name">
+    <!-- 文本值变量 语法ok -->
+    {{ name }}
+  </div>
 </template>
 ```
 
-### 元素事件
+因此我们可以直接使用:attr 来为HTML的属性绑定变量
+
+#### 元素事件
 
 如果我要要给buttom这个元素绑定一个事件应该如何写
 
@@ -1163,7 +1245,7 @@ v-binding 有个缩写:  `:`
 
 对于vue的模版系统来说, copyText这个函数如何渲染, 他不是一个文本，而是一个函数
 
-vue针对事件专门定义了一个指令: v-on, 语法如下:
+vue针对事件专门定义了一个指令: v-on, 语法如下:
 ```
 v-on:eventName="eventHandler"
 
@@ -1171,28 +1253,16 @@ eventName: 事件的名称
 eventHandler: 处理这个事件的函数
 ```
 
-data是我们定义Model的地方, vue专门给一个属性用于定义方法: methods
-
-
+比如 下面我们为button绑定一个点击事件:
 ```html
 <template>
     <button :disabled="isButtomDisabled" v-on:click="clickButtom" >Button</button>
 </template>
-<script>
-export default {
-  name: 'HelloWorld',
-  data() {
-    return {
-      name: '老喻',
-      isButtomDisabled: false,
-    }
-  },
-  methods: {
-    clickButtom() {
-      alert("别点我")  
-    }
-  }
-}
+<script setup>
+import { ref } from "vue";
+
+const isButtomDisabled = ref(false);
+const clickButtom() => {isButtomDisabled.value = !isButtomDisabled.value}
 </script>
 ```
 
@@ -1202,6 +1272,15 @@ export default {
     <button :disabled="isButtomDisabled" @click="clickButtom" >Button</button>
 </template>
 ```
+
+#### Class 与 Style 绑定
+
+
+
+#### 表单输入绑定
+
+
+
 
 ### 骚包的指令
 
@@ -1282,25 +1361,7 @@ export default {
 <button v-on:click.exact="onClick">A</button>
 ```
 
-### JavaScript 表达式
 
-模版支持JavaScript的表达式, 可以在显示的动态的做一些处理
-
-```html
-<template>
-  <div>{{ name.split('').reverse().join('') }}</div>
-</template>
-<script>
-export default {
-  name: 'HelloWorld',
-  data() {
-    return {
-      name: '老喻'
-    }
-  }
-}
-</script>
-```
 
 ### 条件渲染
 
@@ -1455,65 +1516,6 @@ $vm._data.items.pop()
 </ul>
 <p v-else>No todos left!</p>
 ```
-
-## 计算属性
-
-如果model的数据并不是你要直接渲染的，需要处理再展示, 简单的方法是使用表达式，比如
-```html
-<h2>{{ name.split('').reverse().join('') }}</h2>
-```
-
-这种把数据处理逻辑嵌入的视图中，并不合适,  不易于维护, 我们可以把改成一个方法
-```html
-<h2>{{ reverseData(name) }}</h2>
-
-<script>
-  methods: {
-    reverseData(data) {
-      return data.split('').reverse().join('')
-    }
-  }
-</script>
-```
-
-除了函数, vue还是为我们提供了一个计算属性, 这样我们的视图可以看起来更干净, 计算属性的语法如下:
-
-```js
-computed: {
-  attrName: {
-    get() {
-      return value
-    },
-    set(value) {
-      // set value
-    }
-  }
-}
-```
-
-我们修改为计算属性:
-
-```html
-<h2>{{ reverseName }}</h2>
-<script>
-export default {
-  computed: {
-    reverseName: {
-      get() {
-        return this.name.split('').reverse().join('')
-      },
-      set(value) {
-        this.name = this.name = value.split('').reverse().join('')
-      }
-    }
-  },
-}
-</script>
-```
-
-我们可以看到reverseName这个属性已经存在再我们实例上了， 修改也能正常生效:
-
-![](./images/vue-comp.jpg)
 
 ## 侦听器
 
