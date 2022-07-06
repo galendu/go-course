@@ -1073,6 +1073,63 @@ name = "张三";
 </script>
 ```
 
+### 侦听器
+
+一个简单的需求:
+我们一个页面有多个参数, 用户可能把url copy给别人, 我们需要不同的url看到页面内容不同, 不然用户每次到这个页面都是第一个页面
+
+
+这个就需要我们监听url参数的变化, 然后视图做调整, vue-router会有个全局属性: $route, 我们可以监听它的变化
+
+
+由于没引入vue-router,那我们如何监听URL的变化 window提供一个事件回调:
+```js
+window.onhashchange = function () {
+  console.log('URL发生变化了', window.location.hash);
+  this.urlHash = window.location.hash
+};
+```
+
+我们再也没挂在完成后, 把它记录成一个本地hash 来模拟这个过程, 这个有点多余，直接通过这个回调就可以完成页面变化处理, 这里是演示watch
+
+vue 提供的属性watch语法如下:
+```
+  watch: {
+    // 如果 `urlHash` 发生改变，这个函数就会运行
+    urlHash: function (newData, oldData) {
+      this.debouncedGetAnswer()
+    }
+  },
+```
+
+我们先监听变化， 挂载后修改vue对象, 然后watch做
+```html
+<script>
+export default {
+  name: 'HelloWorld',
+  data() {
+    return {
+      urlHash: '',
+    }
+  },
+  mounted() {
+    /* 来个骚操作 */
+    let that = this
+    window.onhashchange = function () {
+      that.urlHash = window.location.hash
+    };
+  },
+  watch: {
+    urlHash: function(newURL, oldURL) {
+      console.log(newURL, oldURL)
+    }
+  }
+}
+</script>
+```
+
+更多watch用于请参考: [Vue Watch API](https://cn.vuejs.org/v2/api/#vm-watch)
+
 ## 模板语法
 
 通过template标签定义的部分都是vue的模版, 模版会被vue-template-compiler编译后渲染
@@ -1181,6 +1238,65 @@ const reverseName = computed({
 const reverseName = computed(() => {name.vaule.split('').reverse().join('')})
 ```
 
+#### 过滤器
+
+Vue.js 允许你自定义过滤器，可被用于一些常见的文本格式化, 最常见就是 时间的格式化
+
+过滤器语法:
+```js
+<!-- 在双花括号中 -->
+{{ message | capitalize }}
+```
+
+你可以把他等价于一个函数: capitalize(message)
+
+我们可以在当前组件的vue实例上定义一个过滤器:
+
+```js
+filters: {
+  capitalize: function (value) {
+    /*过滤逻辑*/
+  }
+}
+```
+
+我们先定义我们的parseTime过滤器:
+```js
+{{ ts | parseTime }}
+
+<script>
+export default {
+  name: 'HelloWorld',
+  data() {
+    return {
+      ts: Date.now()
+    }
+  },
+  filters: {
+    parseTime: function (value) {
+      let date = new Date(value)
+      return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}`
+    }
+  }
+}
+</script>
+```
+
+如果每个地方都要用这个过滤器, 我们中不至于每个组件里面抄一遍吧!
+
+vue提供全局过滤器, 再初始化vue实例的时候可以配置, 找到main.js添加
+
+```js
+// 添加全局过滤器
+Vue.filter('parseTime', function (value) {
+  let date = new Date(value)
+  return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}`
+})
+
+```
+
+这样我们就可以删除我们在局部里面定义的过滤器了
+
 ### 响应式绑定
 
 模版的变量只能作用于文本值部分, 并不能直接作用于HTML元素的属性, 比如下面属性:
@@ -1282,7 +1398,7 @@ const clickButtom() => {isButtomDisabled.value = !isButtomDisabled.value}
 
 
 
-### 骚包的指令
+#### 骚包的指令
 
 vue遇到不好解决的问题，就定义一个指令, 官方内置了一些指令:
 
@@ -1361,7 +1477,65 @@ export default {
 <button v-on:click.exact="onClick">A</button>
 ```
 
+#### 自定义指令
 
+除了核心功能默认内置的指令 (v-model 和 v-show)，Vue 也允许注册自定义指令, 别问， 问就是你需要
+
+比如用户进入页面让输入框自动聚焦, 方便快速输入, 比如登陆页面, 快速聚焦到 username输入框
+
+如果是HTML元素聚焦, 我们找到元素, 调用focus就可以了, 如下:
+```js
+let inputE = document.getElementsByTagName('input')
+inputE[0].focus()
+```
+
+添加到mounted中进行测试:
+```js
+mounted() {
+  let inputE = document.getElementsByTagName('input')
+  inputE[0].focus()
+  }
+```
+
+如何将这个功能做成一个vue的指令喃? 比如 v-focus
+
+我们先注册一个局部指令, 在本组件中使用
+```js
+export default {
+  name: 'HelloWorld',
+  directives: {
+    focus: {
+      // 指令的定义
+      inserted: function (el) {
+        el.focus()
+      }
+    }
+  },
+}
+</script>
+```
+
+这里我们注册的指令名字叫focus, 所有的指令在模版要加一个v前缀, 因此我们的指令就是v-focus
+
+注释掉之前的测试代码, 然后使用我们注册的指令来实现:
+```html
+<input v-focus v-model="name" type="text" @keyup.enter="pressEnter(name)">
+```
+
+怎么好用的功能，怎么可能局部使用，当然要全局注册, 找到main.js 配置自定义指令
+
+```js
+// 注册一个全局自定义指令 `v-focus`
+Vue.directive('focus', {
+  // 当被绑定的元素插入到 DOM 中时
+  inserted: function (el) {
+    // 聚焦元素
+    el.focus()
+  }
+})
+```
+
+删除局部指令测试
 
 ### 条件渲染
 
@@ -1516,183 +1690,6 @@ $vm._data.items.pop()
 </ul>
 <p v-else>No todos left!</p>
 ```
-
-## 侦听器
-
-一个简单的需求:
-我们一个页面有多个参数, 用户可能把url copy给别人, 我们需要不同的url看到页面内容不同, 不然用户每次到这个页面都是第一个页面
-
-
-这个就需要我们监听url参数的变化, 然后视图做调整, vue-router会有个全局属性: $route, 我们可以监听它的变化
-
-
-由于没引入vue-router,那我们如何监听URL的变化 window提供一个事件回调:
-```js
-window.onhashchange = function () {
-  console.log('URL发生变化了', window.location.hash);
-  this.urlHash = window.location.hash
-};
-```
-
-我们再也没挂在完成后, 把它记录成一个本地hash 来模拟这个过程, 这个有点多余，直接通过这个回调就可以完成页面变化处理, 这里是演示watch
-
-vue 提供的属性watch语法如下:
-```
-  watch: {
-    // 如果 `urlHash` 发生改变，这个函数就会运行
-    urlHash: function (newData, oldData) {
-      this.debouncedGetAnswer()
-    }
-  },
-```
-
-我们先监听变化， 挂载后修改vue对象, 然后watch做
-```html
-<script>
-export default {
-  name: 'HelloWorld',
-  data() {
-    return {
-      urlHash: '',
-    }
-  },
-  mounted() {
-    /* 来个骚操作 */
-    let that = this
-    window.onhashchange = function () {
-      that.urlHash = window.location.hash
-    };
-  },
-  watch: {
-    urlHash: function(newURL, oldURL) {
-      console.log(newURL, oldURL)
-    }
-  }
-}
-</script>
-```
-
-更多watch用于请参考: [Vue Watch API](https://cn.vuejs.org/v2/api/#vm-watch)
-
-
-## 过滤器
-
-Vue.js 允许你自定义过滤器，可被用于一些常见的文本格式化, 最常见就是 时间的格式化
-
-过滤器语法:
-```js
-<!-- 在双花括号中 -->
-{{ message | capitalize }}
-```
-
-你可以把他等价于一个函数: capitalize(message)
-
-我们可以在当前组件的vue实例上定义一个过滤器:
-
-```js
-filters: {
-  capitalize: function (value) {
-    /*过滤逻辑*/
-  }
-}
-```
-
-我们先定义我们的parseTime过滤器:
-```js
-{{ ts | parseTime }}
-
-<script>
-export default {
-  name: 'HelloWorld',
-  data() {
-    return {
-      ts: Date.now()
-    }
-  },
-  filters: {
-    parseTime: function (value) {
-      let date = new Date(value)
-      return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}`
-    }
-  }
-}
-</script>
-```
-
-如果每个地方都要用这个过滤器, 我们中不至于每个组件里面抄一遍吧!
-
-vue提供全局过滤器, 再初始化vue实例的时候可以配置, 找到main.js添加
-
-```js
-// 添加全局过滤器
-Vue.filter('parseTime', function (value) {
-  let date = new Date(value)
-  return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}`
-})
-
-```
-
-这样我们就可以删除我们在局部里面定义的过滤器了
-
-## 自定义指令
-
-除了核心功能默认内置的指令 (v-model 和 v-show)，Vue 也允许注册自定义指令, 别问， 问就是你需要
-
-比如用户进入页面让输入框自动聚焦, 方便快速输入, 比如登陆页面, 快速聚焦到 username输入框
-
-如果是HTML元素聚焦, 我们找到元素, 调用focus就可以了, 如下:
-```js
-let inputE = document.getElementsByTagName('input')
-inputE[0].focus()
-```
-
-添加到mounted中进行测试:
-```js
-mounted() {
-  let inputE = document.getElementsByTagName('input')
-  inputE[0].focus()
-  }
-```
-
-如何将这个功能做成一个vue的指令喃? 比如 v-focus
-
-我们先注册一个局部指令, 在本组件中使用
-```js
-export default {
-  name: 'HelloWorld',
-  directives: {
-    focus: {
-      // 指令的定义
-      inserted: function (el) {
-        el.focus()
-      }
-    }
-  },
-}
-</script>
-```
-
-这里我们注册的指令名字叫focus, 所有的指令在模版要加一个v前缀, 因此我们的指令就是v-focus
-
-注释掉之前的测试代码, 然后使用我们注册的指令来实现:
-```html
-<input v-focus v-model="name" type="text" @keyup.enter="pressEnter(name)">
-```
-
-怎么好用的功能，怎么可能局部使用，当然要全局注册, 找到main.js 配置自定义指令
-
-```js
-// 注册一个全局自定义指令 `v-focus`
-Vue.directive('focus', {
-  // 当被绑定的元素插入到 DOM 中时
-  inserted: function (el) {
-    // 聚焦元素
-    el.focus()
-  }
-})
-```
-
-删除局部指令测试
 
 ## 组件
 
