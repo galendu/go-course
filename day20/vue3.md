@@ -2225,6 +2225,150 @@ const doClick = () => {
 
 依然注入约等于共享内存，因此灵活度很高
 
+#### 组合式函数
+
+上面的方式 必须像通过上下文 来传递变量, 变编程中 有一种更常用的 贡献内存通信的方式: 全局变量
+
+我们可以定义一个全局变量, 在需要的地方直接导入，然后访问该变量的状态
+
+在vue中, 我们很少直接定义这种全局变量, 它提供了一种 通过定义一个函数来 访问该全局变量的状态的方式: 组合式函数
+
+“组合式函数”是一个利用 Vue 组合式 API 来封装和复用有状态逻辑的函数, 
+
+##### 定义组合式函数
+
+鼠标跟踪器示例: 获取当前鼠标的位置坐标:
+
+我们通过编写一个js的模块, 导出一个函数给外部使用(工具函数), 该函数维护这2个响应式变量(x, y), 分别代码光标的 x,y位置
+```js
+// mouse.js
+import { ref, onMounted, onUnmounted } from 'vue'
+
+// 按照惯例，组合式函数名以“use”开头
+export function useMouse() {
+  // 被组合式函数封装和管理的状态
+  const x = ref(0)
+  const y = ref(0)
+
+  // 组合式函数可以随时更改其状态。
+  function update(event) {
+    x.value = event.pageX
+    y.value = event.pageY
+  }
+
+  // 一个组合式函数也可以挂靠在所属组件的生命周期上
+  // 来启动和卸载副作用
+  onMounted(() => window.addEventListener('mousemove', update))
+  onUnmounted(() => window.removeEventListener('mousemove', update))
+
+  // 通过返回值暴露所管理的状态
+  return { x, y }
+}
+```
+
+##### 使用组合式函数
+
+组合式函数就是一个带有响应式数据的普通函数, 并没有特殊之处, 我们按照js模块引入规范，导入使用即可:
+
+```vue
+<script setup>
+import { useMouse } from './mouse.js'
+
+const { x, y } = useMouse()
+</script>
+
+<template>Mouse position is at: {{ x }}, {{ y }}</template>
+```
+
+##### VueUse库
+
+像上面的函数 功能很通用, 可以做成通用库(就像go语言标准库一样)给第三方使用, 你能想到的这个的时候，一般别人都已经做出来了: [vueuse](https://vueuse.org/)
+
+首先我们安装上这个库:
+```sh
+npm i @vueuse/core
+```
+
+然后倒入我们需要的函数使用
+```js
+import { useMouse } from '@vueuse/core'
+
+const { x, y, sourceType } = useMouse()
+```
+
+由于VueUse的出现, vue3终于可以比肩并(react Hooks)且有超越react的趋势
+
+在VueUse的中有个这样的库: useLocalStorage, 他可以把浏览器的Localstorage 包装成一个响应式对象
+
+```js
+import { useLocalStorage } from "@vueuse/core";
+// 第一个参数是key, 第二个参数是vulue
+const count = useLocalStorage("count", 0);
+```
+
+我们修改Button组件:
+```vue
+<script setup>
+import { useLocalStorage } from "@vueuse/core";
+// 第一个参数是key, 第二个参数是vulue
+const count = useLocalStorage("count", 0);
+
+const doClick = () => {
+  count.value++;
+};
+</script>
+
+<template>
+  <button @click="doClick">You clicked me {{ count }} times.</button>
+</template>
+```
+
+我们在其他组件中也因人该变量count:
+```js
+// 如果的变量可以是响应式的
+import { useLocalStorage } from "@vueuse/core";
+const count = useLocalStorage("count", 0);
+```
+
+我们需要注意该count并不是持久化的
+
+##### 结合依赖注入
+
+修改App.vue:
+```js
+import { provide } from "vue";
+// 如果的变量可以是响应式的
+import { useLocalStorage } from "@vueuse/core";
+const count = useLocalStorage("count", 0);
+provide(/* 注入名 */ "count", /* 值 */ count);
+```
+
+button组件修改count变量
+```vue
+<script setup>
+import { inject } from "vue";
+
+// 这里也可以获取默认值: inject(<变量名称>, <变量默认值>), 如果获取不到变量 就使用默认值
+const count = inject("count");
+
+const doClick = () => {
+  count.value++;
+};
+</script>
+
+<template>
+  <button @click="doClick">You clicked me {{ count }} times.</button>
+</template>
+```
+
+然后在其他组件中访问该变量:
+```js
+// 这里也可以获取默认值: inject(<变量名称>, <变量默认值>), 如果获取不到变量 就使用默认值
+const count = inject("count");
+```
+
+到此我们就实现了 基于组件的 通信并且是持久话的 
+
 ## 插件
 
 插件通常用来为 Vue 添加全局功能。插件的功能范围没有严格的限制——一般有下面几种：
@@ -2406,3 +2550,4 @@ const onCollapse = (val: String, type: String) => {
 + [那些前端MVVM框架是如何诞生的](https://zhuanlan.zhihu.com/p/36453279)
 + [MVVM设计模式](https://zhuanlan.zhihu.com/p/36141662)
 + [vue核心之虚拟DOM(vdom)](https://www.jianshu.com/p/af0b398602bc)
++ [浅谈VueUse设计与实现](https://zhuanlan.zhihu.com/p/480313279)
