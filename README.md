@@ -141,6 +141,7 @@
 
 ### Day23: Vue 入门
   * [Vue入门基础](./day20/vue3.md)
+  * [Vue组件](./day20/vue3-componet.md)
   * [Vue路由](./day20/vue-router.md)
   * [Vue状态管理](./day20/vue-store.md)
   * [项目前端框架](./day21/devcloud-base.md)
