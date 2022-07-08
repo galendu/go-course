@@ -2047,9 +2047,183 @@ const doClick = () => {
 
 #### 双向绑定
 
+```
+父组件 --属性传递--> 子组件
+父组件 <--触发事件-- 子组件
+```
+通过上面我们已经可以组件实现数据的双向绑定了:
+
+##### 传递与监听实现
+1. 首先子组件 定义属性, 当属性有变化是, 通过事件传递给父组件
+```vue
+<script setup>
+// defineProps() 是一个宏由编译器负责处理, 无需引入
+const props = defineProps({
+  count: Number,
+});
+
+// 其中事件的名称可以使用数组来进行定义
+const emit = defineEmits(["update_count"]);
+
+const doClick = () => {
+  // 把修改的值传递给父组件, 由父组件来更新count props
+  emit("update_count", props.count + 1);
+};
+</script>
+
+<template>
+  <button @click="doClick">You clicked me {{ count }} times.</button>
+</template>
+```
+
+2. 父组件监听事件, 并更新props:
+```vue
+<template>
+  <div class="about">
+      <button-counter
+        @update_count="updateCountEventHandler"
+        :count="count"
+        style="width: 220px"
+      ></button-counter>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref } from "vue";
+import ButtonCounter from "@/components/ButtonCounter.vue";
+
+// 通过 v-bind 绑定动态属性
+// 通过 v-on 监听来自于子组件的update_count事件
+const count = ref(0);
+const updateCountEventHandler = (e) => {
+  count.value = e;
+};
+</script>
+```
+
+##### v-model实现
+
+很显然上面的写法很累赘, 我们事件处理函数的处理逻辑也很单调, 仅仅是赋值, 像元素的HTML元素 都可以直接使用v-model来实现双向绑定, 比如:
+```vue
+<input v-model="searchText" />
+```
+
+那能不能把组件也通过这个语法直接变成双向绑定的喃?
+```vue
+<ButtonCounter v-model="count" />
+```
+
+为了使组件能像这样工作，组件必须：
++ 定义一个modelValue的属性
++ 定义update:modelValue的事件, 并且负责更新
+
+```vue
+<script setup>
+// defineProps() 是一个宏由编译器负责处理, 无需引入
+const props = defineProps({
+  modelValue: Number,
+});
+
+// 其中事件的名称可以使用数组来进行定义
+const emit = defineEmits(["update:modelValue"]);
+
+const doClick = () => {
+  // 把修改的值传递给父组件, 由父组件来更新count props
+  emit("update:modelValue", props.modelValue + 1);
+};
+</script>
+
+<template>
+  <button @click="doClick">You clicked me {{ modelValue }} times.</button>
+</template>
+```
+
+这样我们的父组件就能完成双向通行了
+```vue
+<ButtonCounter v-model="count" />
+```
+
+有上面可以看出 v-model作用与自定义组件时, 相当于固定了modelValue属性和update:modelValue方法
+
+##### v-model:props实现
+
+由于直接使用v-model 就等于直接绑定了modelValue属性和update:modelValue事件, 而且还只针对一个属性, 如果有多个自定义属性怎么办?
+
+v-model提供了一个参数: v-model:propsName, 比如如果要绑定的属性名称为 count, 则:
+```vue
+<!-- 如果有多个属性需要绑定就写多个v-model:attr就可以了 -->
+<ButtonCounter v-model:count="count" />
+```
+
+因此修改自组件的属性和事件命名:
+```vue
+<script setup>
+// defineProps() 是一个宏由编译器负责处理, 无需引入
+const props = defineProps({
+  count: Number,
+});
+
+// 其中事件的名称可以使用数组来进行定义
+const emit = defineEmits(["update:count"]);
+
+const doClick = () => {
+  // 把修改的值传递给父组件, 由父组件来更新count props
+  emit("update:count", props.count + 1);
+};
+</script>
+
+<template>
+  <button @click="doClick">You clicked me {{ count }} times.</button>
+</template>
+```
 
 #### 依赖注入
 
+上面讲到的都是父子组件的通讯, 如果组件并不是父子关系, 二是多层的关系，比如这样, 难道我们需要把props一层一层的往下传递?:
+
+![](./images/prop-drilling.png)
+
+注入到父组件的变量, 所有的后面的子组件才能获取到, 就像golang里面的ctx
+
+##### 注入依赖
+
+要为组件后代供给数据，需要使用到 provide() 函数, 由于组件本身就是树状结构, 只要我们注入到根组件，那么后续所有组件都能访问到
+
+修改App.vue
+```vue
+<script setup>
+import { RouterLink, RouterView } from "vue-router";
+import HelloWorld from "@/components/HelloWorld.vue";
+
+import { ref, provide } from "vue";
+// 如果的变量可以是响应式的
+const count = ref(0);
+provide(/* 注入名 */ "count", /* 值 */ count);
+</script>
+```
+
+##### 获取依赖
+
+通过inject获取父组件注入的变量:
+```vue
+<script setup>
+import { inject } from "vue";
+
+// 这里也可以获取默认值: inject(<变量名称>, <变量默认值>), 如果获取不到变量 就使用默认值
+const count = inject("count");
+
+const doClick = () => {
+  count.value++;
+};
+</script>
+
+<template>
+  <button @click="doClick">You clicked me {{ count }} times.</button>
+</template>
+```
+
+依然注入约等于共享内存，因此灵活度很高
 
 ## 插件
 

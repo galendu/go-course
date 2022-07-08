@@ -1,14 +1,10 @@
 <script setup>
-import { ref } from "vue";
+import { inject } from "vue";
 
-const count = ref(0);
-
-// 其中事件的名称可以使用数组来进行定义
-const emit = defineEmits(["inFocus", "submit"]);
+const count = inject("count");
 
 const doClick = () => {
   count.value++;
-  emit("submit", count.value);
 };
 </script>
 

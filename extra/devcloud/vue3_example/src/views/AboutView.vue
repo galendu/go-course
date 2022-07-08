@@ -6,11 +6,7 @@
       <input v-model="skill" @keyup.enter="addSkile(skill)" type="text" />
     </div>
     <div>
-      <!-- <ButtonCounter style="width: 220px" /> -->
-      <button-counter
-        @submit="submitEventHandler"
-        style="width: 220px"
-      ></button-counter>
+      <ButtonCounter v-model:count="count" style="width: 220px"></ButtonCounter>
     </div>
   </div>
 </template>
@@ -21,9 +17,7 @@ import ButtonCounter from "@/components/ButtonCounter.vue";
 
 let skill = ref("");
 
-const submitEventHandler = (e) => {
-  console.log(e);
-};
+const count = ref(0);
 
 // 使用ref来构造一个对象
 let person = {
