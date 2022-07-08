@@ -2007,7 +2007,7 @@ defineProps({
 <父组件> <--- <子组件>
 ```
 
-##### 触发事件
+##### 定义并触发事件
 
 组件要触发的事件可以显式地通过 defineEmits() 宏来声明
 
@@ -2018,8 +2018,32 @@ const emit = defineEmits(['inFocus', 'submit'])
 </script>
 ```
 
-##### 监听事件
+然后我们调用声明来进行事件的触发, 触发时 可以携带任何类型的数据
+```js
+// 把当前的值通知给父组件
+const doClick = () => {
+  count.value++;
+  emit("submit", count.value);
+};
+```
 
+##### 监听并处理事件
+
+和其他正常的组件一样我们使用v-on(@)+事件名称 来监听具体的事件(当然是父组件来监听):
+```vue
+<template>
+  <!-- 定义一个事件处理函数来处理 submit 事件 -->
+  <button-counter
+    @submit="submitEventHandler"
+    style="width: 220px"
+  ></button-counter>
+</template>
+<script setup>
+  const submitEventHandler = (e) => {
+  console.log(e);
+};
+</script>
+```
 
 #### 双向绑定
 

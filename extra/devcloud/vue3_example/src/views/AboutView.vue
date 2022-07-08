@@ -7,7 +7,10 @@
     </div>
     <div>
       <!-- <ButtonCounter style="width: 220px" /> -->
-      <button-counter style="width: 220px"></button-counter>
+      <button-counter
+        @submit="submitEventHandler"
+        style="width: 220px"
+      ></button-counter>
     </div>
   </div>
 </template>
@@ -17,6 +20,10 @@ import { ref } from "vue";
 import ButtonCounter from "@/components/ButtonCounter.vue";
 
 let skill = ref("");
+
+const submitEventHandler = (e) => {
+  console.log(e);
+};
 
 // 使用ref来构造一个对象
 let person = {
