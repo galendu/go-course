@@ -15,10 +15,8 @@
 import { ref } from "vue";
 import ButtonCounter from "@/components/ButtonCounter.vue";
 
-import { inject } from "vue";
+import { store } from "@/stores/global";
 
-// 这里也可以获取默认值: inject(<变量名称>, <变量默认值>), 如果获取不到变量 就使用默认值
-const count = inject("count");
 
 let skill = ref("");
 
@@ -35,7 +33,7 @@ let { name, profile, skills } = person;
 let addSkile = (s) => {
   skills.value.push(s);
   profile.skill_count = skills.value.length;
-  console.log(count.value);
+  console.log(store.count);
 };
 </script>
 

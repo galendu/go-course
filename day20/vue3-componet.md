@@ -587,9 +587,43 @@ const { x, y } = useMouse()
 <template>Mouse position is at: {{ x }}, {{ y }}</template>
 ```
 
-#### VueUse库
+#### 状态共享
 
-像上面的函数 功能很通用, 可以做成通用库(就像go语言标准库一样)给第三方使用, 你能想到的这个的时候，一般别人都已经做出来了: [vueuse](https://vueuse.org/)
+定义一个保护响应式数据的公共模块
+```js
+// store/global.js
+import { reactive } from "vue";
+
+export const store = reactive({
+  count: 0,
+});
+```
+
+button组件引入并使用:
+```vue
+<script setup>
+import { store } from "@/stores/global";
+
+const doClick = () => {
+  store.count++;
+};
+</script>
+
+<template>
+  <button @click="doClick">You clicked me {{ store.count }} times.</button>
+</template>
+```
+
+其他组件也可以引入并使用:
+```js
+import { store } from "@/stores/global";
+// 访问strore
+store.count
+```
+
+但是显然我们基于stroe进行数据共享，但是我们store并没有持久化, 页面一刷新就没了, 有没有一种能持久化 并且是响应式的数据源工具喃? 这就不得不讲到 vue的 公共库: [vueuse](https://vueuse.org/)
+
+#### VueUse库
 
 首先我们安装上这个库:
 ```sh
@@ -612,69 +646,6 @@ import { useLocalStorage } from "@vueuse/core";
 // 第一个参数是key, 第二个参数是vulue
 const count = useLocalStorage("count", 0);
 ```
-
-我们修改Button组件:
-```vue
-<script setup>
-import { useLocalStorage } from "@vueuse/core";
-// 第一个参数是key, 第二个参数是vulue
-const count = useLocalStorage("count", 0);
-
-const doClick = () => {
-  count.value++;
-};
-</script>
-
-<template>
-  <button @click="doClick">You clicked me {{ count }} times.</button>
-</template>
-```
-
-我们在其他组件中也因人该变量count:
-```js
-// 如果的变量可以是响应式的
-import { useLocalStorage } from "@vueuse/core";
-const count = useLocalStorage("count", 0);
-```
-
-我们需要注意该count并不是持久化的
-
-#### 结合依赖注入
-
-修改App.vue:
-```js
-import { provide } from "vue";
-// 如果的变量可以是响应式的
-import { useLocalStorage } from "@vueuse/core";
-const count = useLocalStorage("count", 0);
-provide(/* 注入名 */ "count", /* 值 */ count);
-```
-
-button组件修改count变量
-```vue
-<script setup>
-import { inject } from "vue";
-
-// 这里也可以获取默认值: inject(<变量名称>, <变量默认值>), 如果获取不到变量 就使用默认值
-const count = inject("count");
-
-const doClick = () => {
-  count.value++;
-};
-</script>
-
-<template>
-  <button @click="doClick">You clicked me {{ count }} times.</button>
-</template>
-```
-
-然后在其他组件中访问该变量:
-```js
-// 这里也可以获取默认值: inject(<变量名称>, <变量默认值>), 如果获取不到变量 就使用默认值
-const count = inject("count");
-```
-
-到此我们就实现了 基于组件的 通信并且是持久话的 
 
 ## 插件
 
