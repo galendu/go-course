@@ -639,12 +639,12 @@ const { x, y, sourceType } = useMouse()
 
 由于VueUse的出现, vue3终于可以比肩并(react Hooks)且有超越react的趋势
 
-在VueUse的中有个这样的库: useLocalStorage, 他可以把浏览器的Localstorage 包装成一个响应式对象
+在VueUse的中有个这样的库: useStorage, 他可以把浏览器的Localstorage 包装成一个响应式对象
 
 ```js
-import { useLocalStorage } from "@vueuse/core";
+import { useStorage } from "@vueuse/core";
 // 第一个参数是key, 第二个参数是vulue
-const count = useLocalStorage("count", 0);
+const count = useStorage("count", 0);
 ```
 
 ## 插件
