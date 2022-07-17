@@ -109,6 +109,40 @@ Kafka 是 Apache 的子项目，是一个高性能跨语言的分布式发布/�
 
 ![](./images/kafka.png)
 
+
+
+### Topic与Partition
+
+一个Topic可以认为是一类消息，每个topic将被分成多个partition(区)，每个partition在存储层面是append log文件。任何发布到此partition的消息都会被直接追加到log文件的尾部，每条消息在文件中的位置称为offset（偏移量），offset为一个long型数字，它是唯一标记一条消息。它唯一的标记一条消息。kafka并没有提供其他额外的索引机制来存储offset，因为在kafka中几乎不允许对消息进行“随机读写”
+
+kafka高性能的一个重要原因也在于此, 因为append log是顺序IO
+
+### 数据冗余方案
+
+一个Topic的多个partitions，被分布在kafka集群中的多个server上；每个server(kafka实例)负责partitions中消息的读写操作；此外kafka还可以配置partitions需要备份的个数(replicas)，每个partition将会被备份到多台机器上，以提高可用性。
+
+基于replicated方案，那么就意味着需要对多个备份进行调度, 整个集群中只有1个leader节点负责人写, follower节点负责同步(leader和follower基于zk实现)
+
+
+### 消费组
+
+![](./images/con_group.png)
+
+### 如何保证消息的顺序性
+
+为了保证消息的有序性,kafka新增了一个概念: partition, partition中的数据一定是有序的。
+
+生产者在写的时候 ，可以指定一个key，比如指定订单id作为key，这个订单相关数据一定会被分发到一个partition中去。消费者从partition中取出数据的时候也一定是有序的，把每个数据放入对应的一个内存队列，一个partition中有几条相关数据就用几个内存队列，消费者开启多个线程，每个线程处理一个内存队列
+
+
+### 集群状态维护
+
+比如一个consumer 在处理到1000条消息的时候突然挂了, 如果保证该consumer再次上线时, 能继续从之前下线的位置继续处理. 
+
+因此我们需要保存consumer当前的一个消息处理状态, 但kafka集群几乎不需要维护任何consumer和producer状态信息，这些信息由zookeeper保存；
+
+因此producer和consumer的客户端实现非常轻量级，它们可以随意离开，而不会对集群造成额外的影响
+
 ### 环境准备
 
 这里环境采用Docker composej安装:
