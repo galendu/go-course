@@ -2,9 +2,10 @@
 import { RouterLink, RouterView } from "vue-router";
 import HelloWorld from "@/components/HelloWorld.vue";
 
-import { ref, provide } from "vue";
+import { provide } from "vue";
 // 如果的变量可以是响应式的
-const count = ref(0);
+import { useLocalStorage } from "@vueuse/core";
+const count = useLocalStorage("count", 0);
 provide(/* 注入名 */ "count", /* 值 */ count);
 </script>
 

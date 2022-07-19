@@ -2,11 +2,11 @@
   <div class="about">
     <h2 id="name">{{ person }}</h2>
     <div>
-      <input v-model="name.value" type="text" />
+      <input v-model="name" type="text" />
       <input v-model="skill" @keyup.enter="addSkile(skill)" type="text" />
     </div>
     <div>
-      <ButtonCounter v-model:count="count" style="width: 220px"></ButtonCounter>
+      <ButtonCounter style="width: 220px" />
     </div>
   </div>
 </template>
@@ -15,9 +15,10 @@
 import { ref } from "vue";
 import ButtonCounter from "@/components/ButtonCounter.vue";
 
-let skill = ref("");
+import { store } from "@/stores/global";
 
-const count = ref(0);
+
+let skill = ref("");
 
 // 使用ref来构造一个对象
 let person = {
@@ -32,6 +33,7 @@ let { name, profile, skills } = person;
 let addSkile = (s) => {
   skills.value.push(s);
   profile.skill_count = skills.value.length;
+  console.log(store.count);
 };
 </script>
 

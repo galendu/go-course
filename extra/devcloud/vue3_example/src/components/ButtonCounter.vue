@@ -1,15 +1,13 @@
 <script setup>
-import { inject } from "vue";
-
-const count = inject("count");
+import { store } from "@/stores/global";
 
 const doClick = () => {
-  count.value++;
+  store.count++;
 };
 </script>
 
 <template>
-  <button @click="doClick">You clicked me {{ count }} times.</button>
+  <button @click="doClick">You clicked me {{ store.count }} times.</button>
 </template>
 
 <style scoped></style>
