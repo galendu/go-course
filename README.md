@@ -94,13 +94,18 @@
 
 ### 项目工程Demo简化版(-)
   * [Demo后端开发](./day14/demo-api.md)
+
 ### Web 入门
   * [JavaScript基础](./day19/javascript.md)
   * [Web入门基础-HTLM](./day19/html.md)
   * [Web入门基础-CSS](./day19/css.md)
   * [Web入门基础-浏览器](./day19/browser.md)
+
 ### Vue 入门
   * [Vue入门基础](./day20/vue3.md)
+  * [Vue组件](./day20/vue3-componet.md)
+
+### 项目前端
   * [Vue路由](./day20/vue-router.md)
   * [Vue状态管理](./day20/vue-store.md)
   * [项目前端框架](./day21/devcloud-base.md)
@@ -134,24 +139,6 @@
   * [权限判定](./day18/permission.md)
   * [消息队列技术与Kafka](./day18/permission.md)
   * [审计中心](./day18/permission.md)
-
-## 项目前端
-
-### Day22: Web 入门
-  * [JavaScript基础](./day19/javascript.md)
-  * [Web入门基础-HTLM](./day19/html.md)
-  * [Web入门基础-CSS](./day19/css.md)
-  * [Web入门基础-浏览器](./day19/browser.md)
-
-### Day23: Vue 入门
-  * [Vue入门基础](./day20/vue3.md)
-  * [Vue组件](./day20/vue3-componet.md)
-  * [Vue路由](./day20/vue-router.md)
-  * [Vue状态管理](./day20/vue-store.md)
-  * [项目前端框架](./day21/devcloud-base.md)
-  * [登录页面](./day22/devcloud-new-login.md)
-  * [项目404页面](./day21/devcloud-404.md)
-  * [项目导航页面](./day21/devcloud-nav.md)
 
 ### Day24: 项目前端
   * [主机列表页面](./day22/cmdb-host.md)
