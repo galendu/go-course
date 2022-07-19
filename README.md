@@ -90,56 +90,16 @@
   * [HTTP 协议](./day13/http.md)
 
 
-## 项目准备
+## Web开发
 
-### Day13: 文件中转站
-  * [简易版工具开发](./day08/simple_tool.md)
-  * [以系统方式开发](./day08/design.md)
-
-### Day14: 项目工程Demo简化版(-)
+### 项目工程Demo简化版(-)
   * [Demo后端开发](./day14/demo-api.md)
-
-### Day15: 项目工程DemoIoc版(二)
-  * [Demo后端开发](./day14/demo-api.md)
-
-### Day16: RPC入门
-  * [RPC入门](./day15/rpc.md)
-  * [Protobuf编解码](./day15/protobuf.md)
-  * [proto3语法入门](./day15/proto3_synx.md)
-
-### Day17: GRPC入门
-  * [GRPC入门](./day15/grpc.md)
-  * [框架支持GRPC](./day15/framework.md)
-
-## 项目后端
-
-### Day18: CMDB API (一)
-  * [云资源Provider](./day16/cmdb-provider.md)
-
-### Day19: CMDB API (二)
-  * [云凭证管理](./day16/cmdb-secret.md)
-  * [云资源同步API](./day16/cmdb-sync.md)
-
-### Day20: 用户中心 (一)
-  * [开发基础](./day17/user.md)
-
-### Day20: 用户中心 (二)
-  * [登录认证](./day17/auth.md)
-  * [权限判定](./day18/permission.md)
-
-### Day21: 审计中心
-  * [消息队列技术与Kafka](./day18/permission.md)
-  * [审计中心](./day18/permission.md)
-
-## 项目前端
-
-### Day22: Web 入门
+### Web 入门
   * [JavaScript基础](./day19/javascript.md)
   * [Web入门基础-HTLM](./day19/html.md)
   * [Web入门基础-CSS](./day19/css.md)
   * [Web入门基础-浏览器](./day19/browser.md)
-
-### Day23: Vue 入门
+### Vue 入门
   * [Vue入门基础](./day20/vue3.md)
   * [Vue路由](./day20/vue-router.md)
   * [Vue状态管理](./day20/vue-store.md)
@@ -147,6 +107,33 @@
   * [登录页面](./day22/devcloud-new-login.md)
   * [项目404页面](./day21/devcloud-404.md)
   * [项目导航页面](./day21/devcloud-nav.md)
+  
+## 微服务开发
+
+### RPC入门
+  * [RPC入门](./day15/rpc.md)
+  * [Protobuf编解码](./day15/protobuf.md)
+  * [proto3语法入门](./day15/proto3_synx.md)
+
+### GRPC入门
+  * [GRPC入门](./day15/grpc.md)
+  * [框架支持GRPC](./day15/framework.md)
+
+### CMDB API (一)
+  * [云资源Provider](./day16/cmdb-provider.md)
+
+### CMDB API (二)
+  * [云凭证管理](./day16/cmdb-secret.md)
+  * [云资源同步API](./day16/cmdb-sync.md)
+
+### 用户中心 (一)
+  * [开发基础](./day17/user.md)
+  * [登录认证](./day17/auth.md)
+
+###  审计中心 (一)
+  * [权限判定](./day18/permission.md)
+  * [消息队列技术与Kafka](./day18/permission.md)
+  * [审计中心](./day18/permission.md)
 
 ### Day24: 项目前端
   * [主机列表页面](./day22/cmdb-host.md)
@@ -170,6 +157,11 @@
 
 ### Day27: 总结与回顾
   * [课程回顾](./day26/summary.md)
+
+
+## 录播: 文件中转站
+  * [简易版工具开发](./day08/simple_tool.md)
+  * [以系统方式开发](./day08/design.md)
 
 ## 录播: Workflow项目
 
