@@ -92,7 +92,7 @@
 
 ## Web开发
 
-### 项目工程Demo简化版(-)
+### 项目工程后端
   * [Demo后端开发](./day14/demo-api.md)
 
 ### Web 入门
@@ -140,7 +140,7 @@
   * [消息队列技术与Kafka](./day18/permission.md)
   * [审计中心](./day18/permission.md)
 
-### Day24: 项目前端
+### 项目前端
   * [主机列表页面](./day22/cmdb-host.md)
   * [CMDB主机页面](./day23/cmdb-host.md)
   * [CMDB搜索页面](./day23/cmdb-search.md)
@@ -148,19 +148,19 @@
 
 ## 经典项目二开
   
-### Day25: Prometheus二次开发
+### Prometheus二次开发
   * [Prometheus 概念介绍](./extra/prometheus/exporter.md)
   * [Exporter 开发](./extra/prometheus/exporter.md)
   * [服务发现与CMDB对接](./extra/prometheus/exporter.md)
 
-### Day26: Kubernetes二次开发
+###  Kubernetes二次开发
   * [Kubernetes 简介与client-go使用](./day25/pipeline-scheduler.md)
   * [基于client-go 的多集群管理平台](./day25/pipeline-scheduler.md)
   * [Kubernetes Operator 开发](./extra/kubernetes/operator.md)
 
 ## 项目结束
 
-### Day27: 总结与回顾
+###  总结与回顾
   * [课程回顾](./day26/summary.md)
 
 
