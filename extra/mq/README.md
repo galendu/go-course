@@ -189,6 +189,36 @@ kafka是Java写的, 官方并没有Go SDK, 但是社区有3款还不错的SDK可
 
 这里选择kafka-go最为与Kafka交互的SDK
 
+#### 创建Topic
+
+为了让后面消费者做负载均衡测试时有效果, 提前创建一个有多个Partitions的topic
+```go
+func TestCreateTopic(t *testing.T) {
+	conn, err := kafka.Dial("tcp", "localhost:9092")
+	if err != nil {
+		panic(err.Error())
+	}
+	defer conn.Close()
+
+	controller, err := conn.Controller()
+	if err != nil {
+		panic(err.Error())
+	}
+	var controllerConn *kafka.Conn
+	controllerConn, err = kafka.Dial("tcp", net.JoinHostPort(controller.Host, strconv.Itoa(controller.Port)))
+	if err != nil {
+		panic(err.Error())
+	}
+	defer controllerConn.Close()
+
+	err = controllerConn.CreateTopics(kafka.TopicConfig{Topic: "topic-A", NumPartitions: 6, ReplicationFactor: 1})
+
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+```
+
 #### 生产者(Producer)
 
 kafka-go封装了Writer来发送消息，非常简单易用，也非常Go:
@@ -260,9 +290,9 @@ for {
     fmt.Printf("message at topic/partition/offset %v/%v/%v: %s = %s\n", m.Topic, m.Partition, m.Offset, string(m.Key), string(m.Value))
 
     // 处理完消息后需要提交该消息已经消费完成, 消费者挂掉后保存消息消费的状态
-    if err := r.CommitMessages(ctx, m); err != nil {
-        log.Fatal("failed to commit messages:", err)
-    }
+    // if err := r.CommitMessages(ctx, m); err != nil {
+    //     log.Fatal("failed to commit messages:", err)
+    // }
 }
 
 if err := r.Close(); err != nil {

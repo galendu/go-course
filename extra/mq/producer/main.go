@@ -12,7 +12,7 @@ func main() {
 	w := &kafka.Writer{
 		Addr: kafka.TCP("localhost:9092"),
 		// NOTE: When Topic is not defined here, each Message must define it instead.
-		Topic:    "topic-A",
+		Topic:    "topic-B",
 		Balancer: &kafka.LeastBytes{},
 		// The topic will be created if it is missing.
 		AllowAutoTopicCreation: true,
@@ -39,6 +39,10 @@ func main() {
 		kafka.Message{
 			Key:   []byte("Key-C"),
 			Value: []byte("Two!"),
+		},
+		kafka.Message{
+			Key:   []byte("Key-D"),
+			Value: []byte("Thr!"),
 		},
 	)
 	if err != nil {
