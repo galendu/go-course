@@ -179,6 +179,143 @@ services:
 docker-compose up -d
 ```
 
+### Go SDK
+
+kafka是Java写的, 官方并没有Go SDK, 但是社区有3款还不错的SDK可供选择
+
++ [confluent-kafka-go](https://github.com/confluentinc/confluent-kafka-go): 基于c库[librdkafka](https://github.com/edenhill/librdkafka)的封装, 文档不错, 但是不支持Go Context
++ [sarama](https://github.com/Shopify/sarama): 迄今为止最流行的一个库, 纯Go实现, 但是暴露的API偏低层(Kafka protocol), 使用手感欠佳, 也不支持Go Context
++ [kafka-go](https://github.com/segmentio/kafka-go): 新贵,借鉴了sarama,并且兼容Sarama, 纯Go实现, 代码质量也比之前2个库好, API的封装非常友好, 非常符合Go的编程习惯, 比如Context, Reader, Writer等
+
+这里选择kafka-go最为与Kafka交互的SDK
+
+#### 生产者(Producer)
+
+kafka-go封装了Writer来发送消息，非常简单易用，也非常Go:
+```go
+// make a writer that produces to topic-A, using the least-bytes distribution
+w := &kafka.Writer{
+	Addr:     kafka.TCP("localhost:9092"),
+  // NOTE: When Topic is not defined here, each Message must define it instead.
+	Topic:   "topic-A",
+	Balancer: &kafka.LeastBytes{},
+  // The topic will be created if it is missing.
+  AllowAutoTopicCreation: true,
+  // 支持消息压缩
+  // Compression: kafka.Snappy,
+  // 支持TLS
+  // Transport: &kafka.Transport{
+  //     TLS: &tls.Config{},
+  // }
+}
+
+err := w.WriteMessages(context.Background(),
+	kafka.Message{
+    // 支持 Writing to multiple topics
+    //  NOTE: Each Message has Topic defined, otherwise an error is returned.
+    // Topic: "topic-A",
+		Key:   []byte("Key-A"),
+		Value: []byte("Hello World!"),
+	},
+	kafka.Message{
+		Key:   []byte("Key-B"),
+		Value: []byte("One!"),
+	},
+	kafka.Message{
+		Key:   []byte("Key-C"),
+		Value: []byte("Two!"),
+	},
+)
+
+if err != nil {
+    log.Fatal("failed to write messages:", err)
+}
+
+if err := w.Close(); err != nil {
+    log.Fatal("failed to close writer:", err)
+}
+```
+
+
+#### 消费者(Consumer)
+
+```go
+// make a new reader that consumes from topic-A
+r := kafka.NewReader(kafka.ReaderConfig{
+    Brokers:   []string{"localhost:9092"},
+    // Consumer Groups, 不指定就是普通的一个Consumer
+    GroupID:   "consumer-group-id",
+    // 可以指定Partition消费消息
+    // Partition: 0,
+    Topic:     "topic-A",
+    MinBytes:  10e3, // 10KB
+    MaxBytes:  10e6, // 10MB
+})
+
+for {
+    m, err := r.ReadMessage(context.Background())
+    if err != nil {
+        break
+    }
+    fmt.Printf("message at topic/partition/offset %v/%v/%v: %s = %s\n", m.Topic, m.Partition, m.Offset, string(m.Key), string(m.Value))
+
+    // 处理完消息后需要提交该消息已经消费完成, 消费者挂掉后保存消息消费的状态
+    if err := r.CommitMessages(ctx, m); err != nil {
+        log.Fatal("failed to commit messages:", err)
+    }
+}
+
+if err := r.Close(); err != nil {
+    log.Fatal("failed to close reader:", err)
+}
+```
+
+#### 认证
+
+企业中kafka一般都需要使用SAML进行认证
+
+1. Producer
+```go
+mechanism, err := scram.Mechanism(scram.SHA512, "username", "password")
+if err != nil {
+    panic(err)
+}
+
+// Transports are responsible for managing connection pools and other resources,
+// it's generally best to create a few of these and share them across your
+// application.
+sharedTransport := &kafka.Transport{
+    SASL: mechanism,
+}
+
+w := kafka.Writer{
+	Addr:      kafka.TCP("localhost:9092"),
+	Topic:     "topic-A",
+	Balancer:  &kafka.Hash{},
+	Transport: sharedTransport,
+}
+```
+
+2. Reader
+```go
+mechanism, err := scram.Mechanism(scram.SHA512, "username", "password")
+if err != nil {
+    panic(err)
+}
+
+dialer := &kafka.Dialer{
+    Timeout:       10 * time.Second,
+    DualStack:     true,
+    SASLMechanism: mechanism,
+}
+
+r := kafka.NewReader(kafka.ReaderConfig{
+    Brokers:        []string{"localhost:9093"},
+    GroupID:        "consumer-group-id",
+    Topic:          "topic-A",
+    Dialer:         dialer,
+})
+```
 
 ## 参考
 
