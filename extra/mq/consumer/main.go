@@ -23,16 +23,21 @@ func main() {
 	})
 
 	for {
+		// 读取消息后会自动提交
 		m, err := r.ReadMessage(context.Background())
 		if err != nil {
 			break
 		}
 		fmt.Printf("message at topic/partition/offset %v/%v/%v: %s = %s\n", m.Topic, m.Partition, m.Offset, string(m.Key), string(m.Value))
 
-		// 处理完消息后需要提交该消息已经消费完成, 消费者挂掉后保存消息消费的状态
-		if err := r.CommitMessages(context.Background(), m); err != nil {
-			log.Fatal("failed to commit messages:", err)
-		}
+		// 当然我们也可以手动处理消息的处理状态, 这在处理长耗时任务的时候非常有用
+		// m, err = r.FetchMessage(context.Background())
+		// if err != nil {
+		// 	break
+		// }
+		// if err := r.CommitMessages(context.Background(), m); err != nil {
+		// 	log.Fatal("failed to commit messages:", err)
+		// }
 	}
 
 	if err := r.Close(); err != nil {
