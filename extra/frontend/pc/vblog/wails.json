@@ -1,0 +1,10 @@
+{
+  "name": "vblog",
+  "outputfilename": "vblog",
+  "frontend:install": "npm install",
+  "frontend:build": "npm run build",
+  "author": {
+    "name": "yumaojun03",
+    "email": "18108053819@163.com"
+  }
+}
