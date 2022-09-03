@@ -8,51 +8,79 @@
 
 ## 共享内存
 
-第一种方式最直接: 共享内存, 直接开辟一个变量，全局都能访问到就可以了, 你和定义一个全局map一样简单
+第一种方式最直接: 共享内存, 直接开辟一个变量，全局都能访问到就可以了, 类似于后端的全局变量:
 
-比如我在root 实例上 添加一个data, 其他子实例 通过$root.$data来访问数据
+前面我们在讲组建通信的时候就使用过:
++ 注入依赖
++ 组合式函数
 
+### 全局注入
+
+使用到 provide() 函数注入到根实例, 从而提供全局变量功能
+```vue
+<script setup>
+import { RouterLink, RouterView } from "vue-router";
+import HelloWorld from "@/components/HelloWorld.vue";
+
+import { ref, provide } from "vue";
+// 如果的变量可以是响应式的
+const count = ref(0);
+provide(/* 注入名 */ "count", /* 值 */ count);
+</script>
+```
+
+通过inject获取父组件注入的变量:
+```vue
+<script setup>
+import { inject } from "vue";
+
+// 这里也可以获取默认值: inject(<变量名称>, <变量默认值>), 如果获取不到变量 就使用默认值
+const count = inject("count");
+
+const doClick = () => {
+  count.value++;
+};
+</script>
+
+<template>
+  <button @click="doClick">You clicked me {{ count }} times.</button>
+</template>
+```
+
+### 组合式函数
+
+声明一个响应式模块，导出后，提供给所有组件使用
 ```js
-// Root Vue实例
-new Vue({
-  render: h => h(App),
-  data: {a: 1},
-}).$mount('#app')
+// store/global.js
+import { reactive } from "vue";
+
+export const store = reactive({
+  count: 0,
+});
 ```
 
-我们在父节点添加一个b属性
+其他组件通过js的导入语法直接使用，妥妥的全局变量
+```vue
+<script setup>
+import { store } from "@/stores/global";
 
-```html
-<script>
-import HelloWorld from './components/HelloWorld.vue'
-
-export default {
-  name: 'App',
-  created() {
-    this.$root.$data.b = 2
-  },
-}
+const doClick = () => {
+  store.count++;
+};
 </script>
+
+<template>
+  <button @click="doClick">You clicked me {{ store.count }} times.</button>
+</template>
 ```
 
-然后在子节点上读取
+### 总结
 
-```html
-<script>
-export default {
-  name: 'HelloWorld',
-  mounted() {
-    console.log(this.$root.$data.b)
-  },
-}
-</script>
-```
-
-这种其实就是一个简单粗暴的 通过共享内存进行通信的方式, 好在其简单易懂，也许你会喜欢
+这种其实就是一个简单粗暴的 通过共享内存进行通信的方式, 好在其简单易懂，也许你会喜欢, 但是也有它的缺陷
 
 因为这种方式使用的是内存, 所以页面关闭或者刷新就都没有, 想要就状态持久化 还需要存储
 
-## 本地存储
+## 浏览器本地存储
 
 这种方式就需要使用到浏览器的存储功能了, 它可供我们存储客户端临时信息 简称 Web Storage
 
@@ -134,7 +162,6 @@ sessionStorage.removeItem('key1')
 sessionStorage.clear()
 ```
 
-
 ### localStorage
 
 localStorage生命周期是永久, 除非主动删除数据，否则数据是永远不会过期的
@@ -171,166 +198,199 @@ localStorage.removeItem('key1')
 localStorage.clear()
 ```
 
+### Vueuse与本地存储
+
+作为vue3的标准库, vueuse提供了很多实用的工具来实现了状态管理, 其他就有保护浏览器存储的组合式API函数:
+[Vueuse State相关工具](https://vueuse.org/functions.html#category=State)
+
+在vueuse中有一个高频使用的函数: useStorage, 就默认就是使用的LocalStorage, 该函数已经讲LocalStroage包装成了响应式了, 
+因此你可以把他理解为一个带有持久化机制的响应式对象
+
+下面是useStorage的基础用法:
+```js
+import { useStorage } from '@vueuse/core'
+
+// bind object
+const state = useStorage('my-store', { hello: 'hi', greeting: 'Hello' })
+
+// bind boolean
+const flag = useStorage('my-flag', true) // returns Ref<boolean>
+
+// bind number
+const count = useStorage('my-count', 0) // returns Ref<number>
+
+// bind string with SessionStorage
+const id = useStorage('my-id', 'some-string-id', sessionStorage) // returns Ref<string>
+
+// delete data from storage
+state.value = null
+```
+
+我们集合前面讲到共享内存的通信方式, 把他们改造成, 结合本地存储基础, 从而避免刷新页面是状态丢失:
++ 注入依赖
++ 组合式函数
+
+#### 注入依赖持久化
+
+直接使用useStorage构造一个响应式持久化变量:
+```vue
+<script setup>
+import { RouterLink, RouterView } from "vue-router";
+import { useStorage } from '@vueuse/core'
+import HelloWorld from "@/components/HelloWorld.vue";
+
+import { provide } from "vue";
+// 如果的变量可以是响应式的
+const count = useStorage('count', 0);
+provide(/* 注入名 */ "count", /* 值 */ count);
+
+
+// 这里也可以获取默认值: inject(<变量名称>, <变量默认值>), 如果获取不到变量 就使用默认值
+// const count = inject("count");
+</script>
+```
+
+#### 全局变量持久化
+
+声明一个响应式模块，导出后，提供给所有组件使用
+```js
+// store/global.js
+import { useStorage } from '@vueuse/core'
+
+export const store = useStorage('count', 0);
+
+// 通过 state.value 可以访问到该全局变量
+```
+
 ### pinia
 
-vuex是一种更高级的抽象, 所以使用上需要先理解他的理念，不像我们直接使用store那么简单
+虽然我们的手动状态管理解决方案在简单的场景中已经足够了，但是在大规模的生产应用中还有很多其他事项需要考虑：
 
-+ state，驱动应用的数据源；
-+ actions，响应在 view 上的用户输入导致的状态变化
-+ mutation, 用于直接修改数据的方法
++ 更强的团队协作约定
++ 与 Vue DevTools 集成，包括时间轴、组件内部审查和时间旅行调试
++ 模块热更新 (HMR)
++ 服务端渲染支持
 
-读取数据: 组件通过store的getter方法 从中取数据
-修改数据: 组件通过store提供的dispatch方法触发一个action, 有action提交mutation来修改数据
+Pinia 就是一个实现了上述需求的状态管理库，由 Vue 核心团队维护，对 Vue 2 和 Vue 3 都可用
 
-![](./images/vuex.png)
+![](./images/pinia.png)
 
+#### vuex与pinia
 
-### 安装
+Pinia 最初正是为了探索 Vuex 的下一个版本而开发的，
+因此整合了核心团队关于 Vuex 5 的许多想法。最终，我们意识到 Pinia 已经实现了我们想要在 Vuex 5 中提供的大部分内容，因此决定将其作为新的官方推荐
+
+相比于 Vuex，Pinia 提供了更简洁直接的 API，并提供了组合式风格的 API，最重要的是，在使用 TypeScript 时它提供了更完善的类型推导
+
+下面是使用组合式API定义的一个store
+```js
+import { defineStore } from 'pinia'
+
+// You can name the return value of `defineStore()` anything you want, but it's best to use the name of the store and surround it with `use` and `Store` (e.g. `useUserStore`, `useCartStore`, `useProductStore`)
+// the first argument is a unique id of the store across your application
+export const useStore = defineStore('main', {
+  // other options...
+})
+```
+
+#### 基本概念
+
+pinia遵循“单向数据流”这一概念, 流程如下:
+
+![](./images/state-flow.png)
+
++ 状态：驱动整个应用的数据源；
++ 视图：对状态的一种声明式映射, 视图层获取状态；
++ 交互：状态根据用户在视图中的输入而作出相应变更的可能方式, 通过actons来修改状态。
+
+通过defineStore来声明一个状态管理模块, 从中也可以看出这3个核心概念:
+```js
+export const useCounterStore = defineStore('counter', {
+  // 状态数据
+  state: () => ({ count: 0, name: 'Eduardo' }),
+  // 获取状态数据
+  getters: {
+    doubleCount: (state) => state.count * 2,
+  },
+  // 修改状态的数据
+  actions: {
+    increment() {
+      this.count++
+    },
+  },
+})
+```
+
+#### 安装
 
 当然你也可以选择手动安装:
 ```sh
-npm install vuex --save
+yarn add pinia
+# or with npm
+npm install pinia
 ```
 
 然后在项目中引入
 ```js
-import Vue from 'vue'
-import Vuex from 'vuex'
+import { createApp } from 'vue'
+import { createPinia } from 'pinia'
+import App from './App.vue'
 
-Vue.use(Vuex)
+const pinia = createPinia()
+const app = createApp(App)
+
+app.use(pinia)
+app.mount('#app')
 ```
 
 当然更加简单的方法是 使用 cli安装, 还能给我们生成实例
 ```sh
-vue add vuex
+vue add pinia
 ```
 
-### 起步
+#### 定义Store
 
-我们看看cli生成的样例, 是入口main.js
-```js
-import Vue from 'vue'
-import App from './App.vue'
-import store from './store'
 
-Vue.config.productionTip = false
 
-new Vue({
-  store,
-  render: h => h(App)
-}).$mount('#app')
-```
 
-看到store模块提供了store实例, 直接看store如何实例化的: store/index.js
-```js
-import Vue from 'vue'
-import Vuex from 'vuex'
+#### 使用Store
 
-Vue.use(Vuex)
 
-export default new Vuex.Store({
-  state: {
-  },
-  mutations: {
-  },
-  actions: {
-  },
-  modules: {
-  }
-})
-```
 
-我们举个简单的例子: 用户设置了分页大小, 我希望每个页面都能生效, 我们定义一个状态: pageSize
-```js
-export default new Vuex.Store({
-  state: {
-    /* 添加pageSize状态变量 */
-    pageSize: 20
-  },
-  getters: {
-    /* 设置获取方法 */
-    pageSize: state => {
-      return state.pageSize
-    } 
-  },
-  mutations: {
-    /* 定义修改pageSize的函数 */
-    setPageSize(state, ps) {
-      state.pageSize = ps
-    }
-  },
-  actions: {
-    /* 一个动作可以由可以提交多个mutation */
-    /* { commit, state } 这个是一个解构赋值, 正在的参数是context, 我们从中解出我们需要的变量*/
-    setPageSize({ commit }, ps) {
-      /* 使用commit 提交修改操作 */
-      commit('setPageSize', ps)
-    }
-  },
-  modules: {
-  }
-})
-
-```
-
-现在我们的store定义完成了, 在一个足迹中使用, 然后尝试在另一个组件中读取
-
-子组建中修改状态, 我们采用store提供的dispatch方法来进行修改: Test.vue
-```js
-<input v-model="pageSize" type="text">
-
-computed: {
-  pageSize: {
-    get() {
-      return this.$store.getters.pageSize
-    },
-    set(value) {
-      this.$store.dispatch('setPageSize', value)
-    }
-  }
-},
-```
 
 > 测试下 看看devtools中 vuex是否正常, 看看刷新后如何
 
-### vuex-persist
+#### 持久化存储
 
-上面的测试应该已经知道 vuex的状态存储并不能持久化，存储在 Vuex 中的 store 里的数据，只要一刷新页面，数据就丢失了
+上面的测试应该已经知道 pinia的状态存储并不能持久化，存储在 Vuex 中的 store 里的数据，只要一刷新页面，数据就丢失了
 
-那我们能不能叫vuex的存储修改为localstorage喃? 答案是可以的, 有个插件就完成了这个事儿: vuex-persist,具体使用说明请参考: [vuex-persist Github](https://github.com/championswimmer/vuex-persist)
+那我们能不能叫pinia的存储修改为localstorage喃? 答案是可以的, 有个插件就完成了这个事儿: pinia-plugin-persist,具体使用说明请参考: [Pinia Plugin Persist](https://seb-l.github.io/pinia-plugin-persist/basic-usage.html)
+
+
+
+##### 安装插件
 
 ```js
-// vuex-persist@3.1.3
-npm install --save vuex-persist
+npm i pinia-plugin-persist --save
 ```
 
 安装好了后我们配置vuex使用该插件： store/index.js
 ```js
 // 1. 引入依赖
-import VuexPersistence from 'vuex-persist'
+import piniaPersist from 'pinia-plugin-persist'
 
-// 2. 实例化一个插件对象, 我们使用localStorage作为存储
-const vuexLocal = new VuexPersistence({
-  storage: window.localStorage
-})
-
-// 3.配置store实例使用localStorage插件
-export default new Vuex.Store({
-  // ...
-  plugins: [vuexLocal.plugin],
-})
+// 2.配置store实例使用piniaPersist插件
+const pinia = createPinia()
+pinia.use(piniaPersist)
 ```
 
-我们通过console确认下是否已经存入localstorage:
+##### 使用插件
 
-![](./images/vuex-local.jpg)
 
-可以发现vuex-persist, 使用vuex做一个key, 把所有数据都存储在这个字段里面, 所有还是不要使用vuex存储太多数据，不然有性能问题
 
 ## 参考
 
-+ [Vue Router文档](https://next.router.vuejs.org/zh/introduction.html)
-+ [Vuex 文档](https://vuex.vuejs.org/zh/)
++ [Pinia Plugin Persist](https://seb-l.github.io/pinia-plugin-persist/basic-usage.html)
 + [cookies、sessionStorage和localStorage解释及区别](https://www.cnblogs.com/pengc/p/8714475.html)
 + [JavaScript Cookie](https://www.runoob.com/js/js-cookies.html)
 + [JavaScript创建、读取和删除cookie](https://www.jb51.net/article/169117.htm)

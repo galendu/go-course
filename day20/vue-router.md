@@ -62,7 +62,6 @@ Vue Router 是 Vue.js (opens new window)官方的路由管理器。它和 Vue.js
 第一个我们需要安装依赖, 当前项目下
 ```js
 npm install vue-router
-// vue-router@3.5.2
 ```
 
 vue-router是vue的插件, 我们按照插件的方式引入到vue中
@@ -198,7 +197,7 @@ router.push(location, onComplete?, onAbort?)
 > console中 尝试下吧? 注意 console router在vm的实例上面哦: $vm.$router
 
 
-我们调整下我们App.vue, 使用a标签
+我们调整下我们App.vue, 使用a标签, 因为我们在 setup 里面没有访问 this，所以我们不能再直接访问 this.$router 或 this.$route。作为替代，我们使用vue router提供的 vue3组合式 API函数 useRouter 
 ```html
 <div id="nav">
   <a @click="jumpToHome">Home</a> |
@@ -207,22 +206,19 @@ router.push(location, onComplete?, onAbort?)
 </div>
 <script>
 export default {
-  name: 'App',
-  data() {
-    return {
+  setup() {
+    const router = useRouter()
+
+    const jumpToHome = () => {
+      router.push('/')
     }
-  },
-  methods: {
-    jumpToHome() {
-      this.$router.push('/')
-    },
-    jumpToAbout() {
-      this.$router.push('/about')
-    },
-    jumpToTest() {
-      this.$router.push('/test')
+    const jumpToAbout = () => {
+      router.push('about')
     }
-  },
+    const jumpToTest = () => {
+      router.push('/test')
+    }
+  }
 }
 </script>
 ```
@@ -622,6 +618,7 @@ import './styles/index.css'
 
 ## 参考
 
++ [Vue Router 和 组合式 API](https://router.vuejs.org/zh/guide/advanced/composition-api.html)
 + [Vue Router文档](https://next.router.vuejs.org/zh/introduction.html)
 + [Vuex 文档](https://vuex.vuejs.org/zh/)
 + [cookies、sessionStorage和localStorage解释及区别](https://www.cnblogs.com/pengc/p/8714475.html)
