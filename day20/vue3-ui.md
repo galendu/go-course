@@ -1,4 +1,4 @@
-# UI组件调研
+# UI组件
 
 我调研市面上对vue3支持的ui插件:
 + [Element Plus](https://element-plus.org/zh-CN/guide/design.html): Element开源UI库
@@ -9,31 +9,85 @@
 
 ## Element Plus
 
-通过插件的方式安装UI组件: plugins/elementPlus.ts
-```ts
-import ElementPlus from 'element-plus'
-
-export default defineNuxtPlugin(nuxtApp => {
-    nuxtApp.vueApp.use(ElementPlus)
-})
+### 安装插件
+```sh
+npm install element-plus --save
 ```
 
 修改Nuxt配置, 添加全局样式表
 
-nuxt.config.ts
-```ts
-import { defineNuxtConfig } from 'nuxt'
+全局引入:
+```js
+// main.ts
+import { createApp } from 'vue'
+import ElementPlus from 'element-plus'
+import 'element-plus/dist/index.css'
+import App from './App.vue'
 
-// https://v3.nuxtjs.org/api/configuration/nuxt.config
-export default defineNuxtConfig({
-    // css
-    css: ['~/assets/style/index.css'],
-})
+const app = createApp(App)
+
+app.use(ElementPlus)
+app.mount('#app')
+```
+
+### 使用插件
+
+```vue
+<template>
+  <el-row class="mb-4">
+    <el-button>Default</el-button>
+    <el-button type="primary">Primary</el-button>
+    <el-button type="success">Success</el-button>
+    <el-button type="info">Info</el-button>
+    <el-button type="warning">Warning</el-button>
+    <el-button type="danger">Danger</el-button>
+  </el-row>
+
+  <el-row class="mb-4">
+    <el-button plain>Plain</el-button>
+    <el-button type="primary" plain>Primary</el-button>
+    <el-button type="success" plain>Success</el-button>
+    <el-button type="info" plain>Info</el-button>
+    <el-button type="warning" plain>Warning</el-button>
+    <el-button type="danger" plain>Danger</el-button>
+  </el-row>
+
+  <el-row class="mb-4">
+    <el-button round>Round</el-button>
+    <el-button type="primary" round>Primary</el-button>
+    <el-button type="success" round>Success</el-button>
+    <el-button type="info" round>Info</el-button>
+    <el-button type="warning" round>Warning</el-button>
+    <el-button type="danger" round>Danger</el-button>
+  </el-row>
+
+  <el-row>
+    <el-button :icon="Search" circle />
+    <el-button type="primary" :icon="Edit" circle />
+    <el-button type="success" :icon="Check" circle />
+    <el-button type="info" :icon="Message" circle />
+    <el-button type="warning" :icon="Star" circle />
+    <el-button type="danger" :icon="Delete" circle />
+  </el-row>
+</template>
+
+<script lang="ts" setup>
+import {
+  Check,
+  Delete,
+  Edit,
+  Message,
+  Search,
+  Star,
+} from '@element-plus/icons-vue'
+</script>
 ```
 
 ## Arco Design
 
-1. 安装UI库
+
+### 安装插件
+
 ```sh
 # npm
 npm install --save-dev @arco-design/web-vue
@@ -41,91 +95,29 @@ npm install --save-dev @arco-design/web-vue
 yarn add --dev @arco-design/web-vue
 ```
 
-2. vue加载UI库
-修改: nuxt.config.ts, 依赖compute-scroll-into-view，需要使用Babel处理下
-```ts
-// https://v3.nuxtjs.org/api/configuration/nuxt.config
-export default defineNuxtConfig({
-    build: {
-        transpile: ['compute-scroll-into-view'],
-    },
-})
+完整引入:
+```js
+import { createApp } from 'vue'
+import ArcoVue from '@arco-design/web-vue';
+import App from './App.vue';
+import '@arco-design/web-vue/dist/arco.css';
+
+const app = createApp(App);
+app.use(ArcoVue);
+app.mount('#app');
 ```
 
-通过插件的方式安装UI组件: plugins/arcoDesign.ts
-```ts
-// 引入组件库
-import ArcoVue from "@arco-design/web-vue";
-// Arco图标是一个独立的库，需要额外引入并注册使用
-import ArcoVueIcon from '@arco-design/web-vue/es/icon';
-// 加载样式
-import "@arco-design/web-vue/dist/arco.css";
+### 使用插件
 
-export default defineNuxtPlugin(nuxtApp => {
-  // Doing something with nuxtApp
-  nuxtApp.vueApp.use(ArcoVue)
-  nuxtApp.vueApp.use(ArcoVueIcon)
-})
-```
-
-3. 引入一个Menu组件进行测试, 修改pages/app.vue:
 ```vue
 <template>
-  <div class="menu-demo">
-    <a-menu
-      :style="{ width: '200px', height: '100%' }"
-      :default-open-keys="['0']"
-      :default-selected-keys="['0_2']"
-      show-collapse-button
-      breakpoint="xl"
-      @collapse="onCollapse"
-    >
-      <a-sub-menu key="0">
-        <template #icon><icon-apps></icon-apps></template>
-        <template #title>Navigation 1</template>
-        <a-menu-item key="0_0">Menu 1</a-menu-item>
-        <a-menu-item key="0_1">Menu 2</a-menu-item>
-        <a-menu-item key="0_2">Menu 3</a-menu-item>
-        <a-menu-item key="0_3">Menu 4</a-menu-item>
-      </a-sub-menu>
-      <a-sub-menu key="1">
-        <template #icon><icon-bug></icon-bug></template>
-        <template #title>Navigation 2</template>
-        <a-menu-item key="1_0">Menu 1</a-menu-item>
-        <a-menu-item key="1_1">Menu 2</a-menu-item>
-        <a-menu-item key="1_2">Menu 3</a-menu-item>
-      </a-sub-menu>
-      <a-sub-menu key="2">
-        <template #icon><icon-bulb></icon-bulb></template>
-        <template #title>Navigation 3</template>
-        <a-menu-item key="2_0">Menu 1</a-menu-item>
-        <a-menu-item key="2_1">Menu 2</a-menu-item>
-        <a-sub-menu key="2_2" title="Navigation 4">
-          <a-menu-item key="2_2_0">Menu 1</a-menu-item>
-          <a-menu-item key="2_2_1">Menu 2</a-menu-item>
-        </a-sub-menu>
-      </a-sub-menu>
-    </a-menu>
-  </div>
+  <a-space>
+    <a-button type="primary">Primary</a-button>
+    <a-button>Secondary</a-button>
+    <a-button type="dashed">Dashed</a-button>
+    <a-button type="outline">Outline</a-button>
+    <a-button type="text">Text</a-button>
+  </a-space>
 </template>
-<script lang="ts" setup>
-import { Message } from '@arco-design/web-vue';
 
-const onCollapse = (val: String, type: String) => {
-  const content = type === 'responsive' ? '触发响应式收缩' : '点击触发收缩';
-  Message.info({
-    content,
-    duration: 2000,
-  });
-}
-</script>
-<style scoped>
-.menu-demo {
-  box-sizing: border-box;
-  width: 100%;
-  height: 600px;
-  padding: 40px;
-  background-color: var(--color-neutral-2);
-}
-</style>
 ```
