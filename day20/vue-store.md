@@ -403,8 +403,6 @@ export default {
 }
 ```
 
-
-
 > 测试下 看看devtools中 vuex是否正常, 看看刷新后如何
 
 ### 持久化存储
