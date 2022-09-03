@@ -198,7 +198,7 @@ localStorage.removeItem('key1')
 localStorage.clear()
 ```
 
-### Vueuse与本地存储
+## Vueuse与本地存储
 
 作为vue3的标准库, vueuse提供了很多实用的工具来实现了状态管理, 其他就有保护浏览器存储的组合式API函数:
 [Vueuse State相关工具](https://vueuse.org/functions.html#category=State)
@@ -230,7 +230,7 @@ state.value = null
 + 注入依赖
 + 组合式函数
 
-#### 注入依赖持久化
+### 注入依赖持久化
 
 直接使用useStorage构造一个响应式持久化变量:
 ```vue
@@ -250,7 +250,7 @@ provide(/* 注入名 */ "count", /* 值 */ count);
 </script>
 ```
 
-#### 全局变量持久化
+### 全局变量持久化
 
 声明一个响应式模块，导出后，提供给所有组件使用
 ```js
@@ -262,7 +262,7 @@ export const store = useStorage('count', 0);
 // 通过 state.value 可以访问到该全局变量
 ```
 
-### pinia
+## pinia
 
 虽然我们的手动状态管理解决方案在简单的场景中已经足够了，但是在大规模的生产应用中还有很多其他事项需要考虑：
 
@@ -275,7 +275,7 @@ Pinia 就是一个实现了上述需求的状态管理库，由 Vue 核心团队
 
 ![](./images/pinia.png)
 
-#### vuex与pinia
+### vuex与pinia
 
 Pinia 最初正是为了探索 Vuex 的下一个版本而开发的，
 因此整合了核心团队关于 Vuex 5 的许多想法。最终，我们意识到 Pinia 已经实现了我们想要在 Vuex 5 中提供的大部分内容，因此决定将其作为新的官方推荐
@@ -293,7 +293,7 @@ export const useStore = defineStore('main', {
 })
 ```
 
-#### 基本概念
+### 基本概念
 
 pinia遵循“单向数据流”这一概念, 流程如下:
 
@@ -321,7 +321,7 @@ export const useCounterStore = defineStore('counter', {
 })
 ```
 
-#### 安装
+### 安装
 
 当然你也可以选择手动安装:
 ```sh
@@ -348,19 +348,19 @@ app.mount('#app')
 vue add pinia
 ```
 
-#### 定义Store
+### 定义Store
 
 
 
 
-#### 使用Store
+### 使用Store
 
 
 
 
 > 测试下 看看devtools中 vuex是否正常, 看看刷新后如何
 
-#### 持久化存储
+### 持久化存储
 
 上面的测试应该已经知道 pinia的状态存储并不能持久化，存储在 Vuex 中的 store 里的数据，只要一刷新页面，数据就丢失了
 
@@ -368,7 +368,7 @@ vue add pinia
 
 
 
-##### 安装插件
+#### 安装插件
 
 ```js
 npm i pinia-plugin-persist --save
@@ -384,7 +384,7 @@ const pinia = createPinia()
 pinia.use(piniaPersist)
 ```
 
-##### 使用插件
+#### 使用插件
 
 
 
