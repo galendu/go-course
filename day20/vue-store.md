@@ -350,11 +350,58 @@ vue add pinia
 
 ### 定义Store
 
+选项式风格:
+```js
+export const useCounterStore = defineStore('counter', {
+  state: () => ({ count: 0, name: 'Eduardo' }),
+  getters: {
+    doubleCount: (state) => state.count * 2,
+  },
+  actions: {
+    increment() {
+      this.count++
+    },
+  },
+})
+```
 
+pinia 很友好为我们提供了Setup风格, 这样整体代码可以保证统一的风格:
+```js
+export const useCounterStore = defineStore('counter', () => {
+  const count = ref(0)
+  const name = ref('Eduardo')
+  const doubleCount = computed(() => count.value * 2)
+  function increment() {
+    count.value++
+  }
+
+  return { count, name, doubleCount, increment }
+})
+```
+
+In Setup Stores:
++ ref()s become state properties
++ computed()s become getters
++ function()s become actions
 
 
 ### 使用Store
 
+通过组合式函数方式直接使用
+```js
+import { useCounterStore } from '@/stores/counter'
+
+export default {
+  setup() {
+    const store = useCounterStore()
+
+    return {
+      // you can return the whole store instance to use it in the template
+      store,
+    }
+  },
+}
+```
 
 
 
@@ -384,9 +431,56 @@ const pinia = createPinia()
 pinia.use(piniaPersist)
 ```
 
+这样我们持久化的插件就安装上了, 但是默认我们的state并没有持久化, 可以测试下
+
 #### 使用插件
 
+要开启state的持久化，在定义store的时候，传递一个参数:
 
+```js
+import { defineStore } from 'pinia'
+
+export const useUserStore = defineStore('storeUser', {
+  state: () => {
+    return {
+      firstName: 'S',
+      lastName: 'L',
+      accessToken: 'xxxxxxxxxxxxx'
+    }
+  },
+  actions: {
+    setToken (value: string) {
+      this.accessToken = value
+    }
+  },
+  persist: {
+    enabled: true , // 这个配置代表存储生效，而且是整个store都存储
+  }
+})
+```
+
+注意插件默认使用的是: sessionStorage, 当然我们也可以自定义存储策略
+
+#### 存储策略
+
+```js
+// store/use-user-store.ts
+export const useUserStore = defineStore('storeUser', {
+  state () {
+    return {
+      firstName: 'S',
+      lastName: 'L',
+      accessToken: 'xxxxxxxxxxxxx',
+    }
+  },
+  persist: {
+    enabled: true,
+    strategies: [
+      { storage: sessionStorage, paths: ['firstName', 'lastName'] }, // firstName 和 lastName字段用sessionStorage存储
+      { storage: localStorage, paths: ['accessToken'] }, // accessToken字段用 localstorage存储
+    ],
+  },
+```
 
 ## 参考
 
