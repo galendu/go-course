@@ -1,6 +1,10 @@
 <template>
   <div class="content">
-    <a-result class="result" status="404" :subtitle="'你访问的页面不存在'">
+    <a-result
+      class="result"
+      status="403"
+      :subtitle="'你无权限访问该页面, 请登陆后重试'"
+    >
       <template #extra>
         <a-button key="back" type="primary" @click="back"> 返回主页 </a-button>
       </template>

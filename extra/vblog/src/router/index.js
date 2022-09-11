@@ -10,8 +10,13 @@ const router = createRouter({
       component: HomeView,
     },
     {
+      path: "/errors/403",
+      name: "PermissionDeny",
+      component: () => import("@/views/errors/PermissionDeny.vue"),
+    },
+    {
       path: "/:pathMatch(.*)*",
-      name: "notFound",
+      name: "NotFound",
       component: () => import("@/views/errors/NotFound.vue"),
     },
   ],

@@ -159,17 +159,25 @@ app.mount('#app');
 </template>
 ```
 
-## 404页面
+## 错误页面
 
-我们使用[HTTP状态码 404](https://arco.design/vue/component/result)组件进行封装: errors/NotFound.vue
+这里我们需要补充2种异常页面:
++ 404页面: 当用户输入的URL并没有匹配页面时
++ 403页面: 当用户未登陆就访问管理页面时
 
+我们使用[HTTP状态码 404](https://arco.design/vue/component/result)组件进行封装
+
+### 404页面
+
+errors/NotFound.vue:
 ```vue
 <template>
   <div class="content">
-    <a-result class="result" status="404" :subtitle="'not found'"> </a-result>
-    <div class="operation-row">
-      <a-button key="back" type="primary" @click="back"> back </a-button>
-    </div>
+    <a-result class="result" status="404" :subtitle="'not found'">
+      <template #extra>
+        <a-button key="back" type="primary" @click="back"> 返回主页 </a-button>
+      </template>
+    </a-result>
   </div>
 </template>
 
@@ -185,7 +193,6 @@ const back = () => {
 
 <style scoped lang="less">
 .content {
-  // padding-top: 100px;
   position: absolute;
   top: 50%;
   left: 50%;
@@ -220,7 +227,84 @@ const router = createRouter({
 });
 ```
 
+### 403页面
+
+添加页面: errors/PermissionDeny.vue
+```vue
+<template>
+  <div class="content">
+    <a-result
+      class="result"
+      status="403"
+      :subtitle="'你无权限访问该页面, 请登陆后重试'"
+    >
+      <template #extra>
+        <a-button key="back" type="primary" @click="back"> 返回主页 </a-button>
+      </template>
+    </a-result>
+  </div>
+</template>
+
+<script setup>
+import { useRouter } from "vue-router";
+
+const router = useRouter();
+const back = () => {
+  // warning： Go to the node that has the permission
+  router.push({ name: "home" });
+};
+</script>
+
+<style scoped lang="less">
+.content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin-left: -95px;
+  margin-top: -121px;
+  text-align: center;
+}
+</style>
+```
+
+补充路由:
+```js
+const router = createRouter({
+  history: createWebHistory(import.meta.env.BASE_URL),
+  routes: [
+    {
+      path: "/",
+      name: "home",
+      component: HomeView,
+    },
+    {
+      path: "/errors/403",
+      name: "PermissionDeny",
+      component: () => import("@/views/errors/PermissionDeny.vue"),
+    },
+    {
+      path: "/:pathMatch(.*)*",
+      name: "NotFound",
+      component: () => import("@/views/errors/NotFound.vue"),
+    },
+  ],
+});
+```
+
 ## Layout布局
+
+界面分为前台和管理后台
+
+博客前台:
+
+![](./images/vblog_frontend.png)
+
+博客管理后台:
+
+![](./images/vblog_backend.png)
+
+
+
 
 
 ## 参考 
