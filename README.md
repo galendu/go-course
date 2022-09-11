@@ -114,8 +114,6 @@
 ### 项目前端
   * [项目前端框架](./day21/devcloud-base.md)
   * [登录页面](./day22/devcloud-new-login.md)
-  * [项目404页面](./day21/devcloud-404.md)
-  * [项目导航页面](./day21/devcloud-nav.md)
 
 ## 微服务开发
 
