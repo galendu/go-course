@@ -1,5 +1,9 @@
 import { createRouter, createWebHistory } from "vue-router";
-import HomeView from "../views/HomeView.vue";
+import FrontendLayout from "../layout/FrontendLayout.vue";
+import BackendLayout from "../layout/BackendLayout.vue";
+import BlogView from "../views/frontend/BlogView.vue";
+import BlogList from "../views/backend/BlogList.vue";
+import TagList from "../views/backend/TagList.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -7,7 +11,41 @@ const router = createRouter({
     {
       path: "/",
       name: "home",
-      component: HomeView,
+      redirect: "/frontend",
+    },
+    {
+      path: "/frontend",
+      name: "frontend",
+      component: FrontendLayout,
+      children: [
+        {
+          path: "",
+          name: "frontend",
+          component: BlogView,
+        },
+      ],
+    },
+    {
+      path: "/backend",
+      name: "backend",
+      component: BackendLayout,
+      children: [
+        {
+          path: "blogs",
+          name: "BlogList",
+          component: BlogList,
+        },
+        {
+          path: "tags",
+          name: "TagList",
+          component: TagList,
+        },
+      ],
+    },
+    {
+      path: "/login",
+      name: "LoginPage",
+      component: () => import("@/views/login/LoginPage.vue"),
     },
     {
       path: "/errors/403",

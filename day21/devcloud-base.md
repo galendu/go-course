@@ -303,6 +303,267 @@ const router = createRouter({
 
 ![](./images/vblog_backend.png)
 
+### 博客前台
+
+因为前台与后台布局样式不一样, 因此分别使用独立布局模版.
+
+#### Layout
+
+前台布局模版: FrontendLayout.vue
+```vue
+<script setup>
+import { RouterView } from "vue-router";
+</script>
+
+<template>
+  <div>
+    <!-- 顶部导航 -->
+    <div class="header">
+      <div class="logo">我的博客</div>
+      <div class="right-header">
+        <div>
+          <!-- 登录后台进行博客管理 -->
+          <a-button size="mini" type="text">登录</a-button>
+        </div>
+      </div>
+    </div>
+    <!-- 显示博客列表 -->
+    <div class="content">
+      <RouterView />
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.header {
+  display: flex;
+  align-content: center;
+  justify-content: flex-start;
+  align-items: center;
+  border-bottom: 1px solid rgb(229, 230, 235);
+  height: 45px;
+}
+
+.logo {
+  margin-left: 8px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.right-header {
+  margin-left: auto;
+}
+
+.content {
+  margin: 20px;
+  display: flex;
+  align-content: center;
+  justify-content: center;
+  align-items: center;
+}
+</style>
+```
+
+#### blog站位页
+
+补充一个前台展位页面: frontend/BlogView.vue
+```vue
+<script setup></script>
+
+<template>
+  <main>
+    博客页面
+  </main>
+</template>
+```
+
+#### Blog路由
+
+```js
+    {
+      path: "/",
+      name: "home",
+      redirect: "/frontend",
+    },
+    {
+      path: "/frontend",
+      name: "frontend",
+      component: FrontendLayout,
+      children: [
+        {
+          path: "",
+          name: "frontend",
+          component: BlogView,
+        },
+      ],
+    },
+```
+
+
+### 博客后台
+
+#### Loayout
+
+博客后台使用的布局模版: BackendLayout.vue
+
+这里我们需要使用到侧边栏导航:[Arco Design菜单 Menu](https://arco.design/vue/component/menu)
+
+```vue
+<script setup>
+import { RouterView, useRouter } from "vue-router";
+
+const router = useRouter();
+const clickMenu = (key) => {
+  router.push(key);
+};
+</script>
+
+<template>
+  <div>
+    <div class="header">
+      <div class="logo">我的博客</div>
+      <div class="right-header">
+        <div>
+          <a-button size="mini" type="text">前台</a-button>
+        </div>
+      </div>
+    </div>
+    <div class="main">
+      <div class="sidebar">
+        <a-menu
+          :style="{ width: '200px', height: '100%' }"
+          :default-open-keys="['0']"
+          :default-selected-keys="['0_0']"
+          show-collapse-button
+          breakpoint="xl"
+          @menu-item-click="clickMenu"
+        >
+          <a-sub-menu key="0">
+            <template #icon><icon-apps></icon-apps></template>
+            <template #title>文章管理</template>
+            <a-menu-item key="/backend/blogs">文章列表</a-menu-item>
+            <a-menu-item key="/backend/tags">标签管理</a-menu-item>
+          </a-sub-menu>
+        </a-menu>
+      </div>
+      <div class="content">
+        <RouterView />
+      </div>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.header {
+  display: flex;
+  align-content: center;
+  justify-content: flex-start;
+  align-items: center;
+  border-bottom: 1px solid rgb(229, 230, 235);
+  height: 45px;
+}
+
+.logo {
+  margin-left: 8px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.right-header {
+  margin-left: auto;
+}
+
+.main {
+  display: flex;
+  align-content: center;
+  justify-content: flex-start;
+  align-items: flex-start;
+  height: calc(100vh - 45px);
+}
+
+.sidebar {
+  height: 100%;
+  border-right: 1px solid rgb(229, 230, 235);
+}
+
+.content {
+  margin: 8px;
+}
+</style>
+```
+
+#### blog占位页
+
+添加 backend/BlogList.vue
+
+```vue
+<script setup></script>
+
+<template>
+  <main>博客列表</main>
+</template>
+```
+
+添加 backend/TagList.vue
+
+```vue
+<script setup></script>
+
+<template>
+  <main>标签列表</main>
+</template>
+```
+
+#### blog路由
+
+```js
+    {
+      path: "/backend",
+      name: "backend",
+      component: BackendLayout,
+      children: [
+        {
+          path: "blogs",
+          name: "BlogList",
+          component: BlogList,
+        },
+        {
+          path: "tags",
+          name: "TagList",
+          component: TagList,
+        },
+      ],
+    },
+```
+
+#### 切换到前台
+
+无效任务 后台可以直接切换到前台:
+
+layout/BackendLayout.vue
+```js
+const jumpToFrontend = () => {
+  router.push("/frontend");
+};
+```
+
+### 切换到后台
+
+但是前台切换到后台，是需要认证的, 因此需要先做登录页面
+
+#### 登录页面
+
+
+
+
+#### 切换到后台
+
+
+
+
+
+ 
+
 
 
 
