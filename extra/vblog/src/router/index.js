@@ -2,8 +2,10 @@ import { createRouter, createWebHistory } from "vue-router";
 import FrontendLayout from "../layout/FrontendLayout.vue";
 import BackendLayout from "../layout/BackendLayout.vue";
 import BlogView from "../views/frontend/BlogView.vue";
+import BlogDetail from "../views/frontend/BlogDetail.vue";
 import BlogList from "../views/backend/BlogList.vue";
 import TagList from "../views/backend/TagList.vue";
+
 import { beforeEachHandler, afterEachHandler } from "./permession";
 
 const router = createRouter({
@@ -23,6 +25,11 @@ const router = createRouter({
           path: "",
           name: "frontend",
           component: BlogView,
+        },
+        {
+          path: "blogs/:id",
+          name: "BlogDetail",
+          component: BlogDetail,
         },
       ],
     },

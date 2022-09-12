@@ -112,8 +112,8 @@
   * [Vue UI](./day20/vue3-ui.md)
 
 ### 项目前端
-  * [项目前端框架](./day21/devcloud-base.md)
-  * [登录页面](./day22/devcloud-new-login.md)
+  * [前端框架](./day21/vblog-base.md)
+  * [博客前台](./day22/blog-frontend.md)
 
 ## 微服务开发
 
