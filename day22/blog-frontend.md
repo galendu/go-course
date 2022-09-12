@@ -115,6 +115,8 @@ import BlogItem from "./BlogItem.vue";
 
 由于博客是Markdown的, 所以我们需要选择一个支持Markdown编辑与展示的vue3的库: 这里选择使用[md-editor-v3](https://www.npmjs.com/package/md-editor-v3)
 
+![](./images/vblog-detail-page.png)
+
 ### md-editor-v3库介绍
 
 安装md-editor-v3: 
@@ -170,7 +172,11 @@ import "md-editor-v3/lib/style.css";
 const title = "测试";
 const publishAt = 10000;
 const author = "测试";
-const text = ref("# Hello Editor");
+const text = ref(`## 参考
+
++ [博客样式参考](http://www.arccode.net/)
++ [md-editor-v3 官方页面](https://imzbf.github.io/md-editor-v3/index)
++ [md-editor-v3 Github](https://github.com/imzbf/md-editor-v3)`);
 </script>
 
 <style lang="less" scoped>
