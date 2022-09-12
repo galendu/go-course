@@ -1,5 +1,24 @@
 <script setup>
-import { RouterView } from "vue-router";
+import { RouterView, useRouter } from "vue-router";
+
+const router = useRouter();
+
+const jumpToBackend = () => {
+  const username = localStorage.getItem("username");
+  const password = localStorage.getItem("password");
+  if (
+    username !== null &&
+    password !== null &&
+    username !== "" &&
+    password !== ""
+  ) {
+    // 直接跳转后台管理页面
+    router.push("/backend/blogs");
+  } else {
+    // 跳转去登录页面
+    router.push("/login");
+  }
+};
 </script>
 
 <template>
@@ -10,7 +29,9 @@ import { RouterView } from "vue-router";
       <div class="right-header">
         <div>
           <!-- 登录后台进行博客管理 -->
-          <a-button size="mini" type="text">登录</a-button>
+          <a-button @click="jumpToBackend" size="mini" type="text"
+            >后台管理</a-button
+          >
         </div>
       </div>
     </div>

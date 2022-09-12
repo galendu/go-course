@@ -107,6 +107,11 @@ body {
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;
 }
+
+#app {
+  width: 100%;
+  height: 100%;
+}
 ```
 
 main.css 只保留基础样式
@@ -323,7 +328,7 @@ import { RouterView } from "vue-router";
       <div class="right-header">
         <div>
           <!-- 登录后台进行博客管理 -->
-          <a-button size="mini" type="text">登录</a-button>
+          <a-button size="mini" type="text">后台管理</a-button>
         </div>
       </div>
     </div>
@@ -364,7 +369,7 @@ import { RouterView } from "vue-router";
 </style>
 ```
 
-#### blog站位页
+#### blog占位页
 
 补充一个前台展位页面: frontend/BlogView.vue
 ```vue
@@ -536,7 +541,7 @@ const clickMenu = (key) => {
     },
 ```
 
-#### 切换到前台
+### 切换到前台
 
 无效任务 后台可以直接切换到前台:
 
@@ -553,12 +558,146 @@ const jumpToFrontend = () => {
 
 #### 登录页面
 
+这里我们将要使用到: [表单 Form](https://arco.design/vue/component/form)
 
+```vue
+<template>
+  <div class="login-form">
+    <a-form
+      ref="loginForm"
+      :model="form"
+      :style="{ width: '400px', height: '100%', justifyContent: 'center' }"
+      @submit="handleSubmit"
+    >
+      <a-form-item>
+        <div class="title">登录博客管理后台</div>
+      </a-form-item>
+      <a-form-item
+        field="username"
+        label=""
+        :rules="[{ required: true, message: '请输入用户名' }]"
+        hide-asterisk
+      >
+        <a-input v-model="form.username" placeholder="请输入用户名">
+          <template #prefix>
+            <icon-user />
+          </template>
+        </a-input>
+      </a-form-item>
+      <a-form-item
+        field="password"
+        label=""
+        :rules="[{ required: true, message: '请输入密码' }]"
+        hide-asterisk
+      >
+        <a-input
+          type="password"
+          v-model="form.password"
+          placeholder="请输入密码"
+        >
+          <template #prefix>
+            <icon-lock />
+          </template>
+        </a-input>
+      </a-form-item>
+      <a-form-item field="remember">
+        <a-checkbox v-model="form.remember"> 记住密码 </a-checkbox>
+      </a-form-item>
+      <a-form-item>
+        <a-button style="width: 100%" type="primary" html-type="submit"
+          >登录</a-button
+        >
+      </a-form-item>
+    </a-form>
+  </div>
+</template>
 
+<script setup>
+import { reactive } from "vue";
+import { Message } from "@arco-design/web-vue";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
+
+const form = reactive({
+  username: "",
+  password: "",
+  remember: false,
+});
+const handleSubmit = (data) => {
+  if (data.errors === undefined) {
+    let form = data.values;
+    if (form.username === "admin" && form.password === "123456") {
+      // 记住密码
+      if (form.remember) {
+        localStorage.setItem("username", form.username);
+        localStorage.setItem("password", form.password);
+      }
+      // 登录成功直接跳转到后台页面
+      router.push("/backend/blogs");
+    } else {
+      Message.error("用户名或者密码不正确");
+    }
+  }
+};
+</script>
+
+<style scoped>
+.login-form {
+  height: 100%;
+  display: flex;
+  align-content: center;
+  justify-content: center;
+  align-items: center;
+}
+
+.title {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  align-content: center;
+  width: 100%;
+  font-weight: 500;
+}
+</style>
+```
+
+添加路由:
+```js
+    {
+      path: "/login",
+      name: "LoginPage",
+      component: () => import("@/views/login/LoginPage.vue"),
+    },
+```
 
 #### 切换到后台
 
+前台页面添加登录跳转: fronend/FrontendLayout.vue:
+```vue
+<script setup>
+import { RouterView, useRouter } from "vue-router";
 
+const router = useRouter();
+
+const jumpToBackend = () => {
+  const username = localStorage.getItem("username");
+  const password = localStorage.getItem("password");
+  if (
+    username !== null &&
+    password !== null &&
+    username !== "" &&
+    password !== ""
+  ) {
+    // 直接跳转后台管理页面
+    router.push("/backend/blogs");
+  } else {
+    // 跳转去登录页面
+    router.push("/login");
+  }
+};
+</script>
+```
 
 
 
