@@ -10,6 +10,12 @@ const clickMenu = (key) => {
 const jumpToFrontend = () => {
   router.push("/frontend");
 };
+
+const logout = () => {
+  localStorage.removeItem("username");
+  localStorage.removeItem("password");
+  router.push("/login");
+};
 </script>
 
 <template>
@@ -21,6 +27,7 @@ const jumpToFrontend = () => {
           <a-button @click="jumpToFrontend" size="mini" type="text"
             >前台</a-button
           >
+          <a-button @click="logout" size="mini" type="text">注销</a-button>
         </div>
       </div>
     </div>
@@ -29,9 +36,9 @@ const jumpToFrontend = () => {
         <a-menu
           :style="{ width: '200px', height: '100%' }"
           :default-open-keys="['0']"
-          :default-selected-keys="['0_0']"
-          show-collapse-button
+          :default-selected-keys="['/backend/blogs']"
           breakpoint="xl"
+          show-collapse-button
           @menu-item-click="clickMenu"
         >
           <a-sub-menu key="0">

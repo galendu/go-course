@@ -4,6 +4,7 @@ import BackendLayout from "../layout/BackendLayout.vue";
 import BlogView from "../views/frontend/BlogView.vue";
 import BlogList from "../views/backend/BlogList.vue";
 import TagList from "../views/backend/TagList.vue";
+import { beforeEachHandler, afterEachHandler } from "./permession";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -59,5 +60,9 @@ const router = createRouter({
     },
   ],
 });
+
+// 补充导航守卫
+router.beforeEach(beforeEachHandler);
+router.afterEach(afterEachHandler);
 
 export default router;

@@ -438,7 +438,7 @@ const clickMenu = (key) => {
         <a-menu
           :style="{ width: '200px', height: '100%' }"
           :default-open-keys="['0']"
-          :default-selected-keys="['0_0']"
+          :default-selected-keys="['/backend/blogs']"
           show-collapse-button
           breakpoint="xl"
           @menu-item-click="clickMenu"
@@ -600,9 +600,6 @@ const jumpToFrontend = () => {
           </template>
         </a-input>
       </a-form-item>
-      <a-form-item field="remember">
-        <a-checkbox v-model="form.remember"> 记住密码 </a-checkbox>
-      </a-form-item>
       <a-form-item>
         <a-button style="width: 100%" type="primary" html-type="submit"
           >登录</a-button
@@ -621,20 +618,24 @@ const router = useRouter();
 
 const form = reactive({
   username: "",
-  password: "",
-  remember: false,
+  password: ""
 });
 const handleSubmit = (data) => {
   if (data.errors === undefined) {
     let form = data.values;
     if (form.username === "admin" && form.password === "123456") {
-      // 记住密码
-      if (form.remember) {
-        localStorage.setItem("username", form.username);
-        localStorage.setItem("password", form.password);
-      }
-      // 登录成功直接跳转到后台页面
-      router.push("/backend/blogs");
+      // 保存登录状态
+      localStorage.setItem("username", form.username);
+      localStorage.setItem("password", form.password);
+
+      // 登录成功直接跳转到后台页, 如果URL页面带有重定向参数, 则直接路由到重定向的页面
+      const { redirect, ...othersQuery } = router.currentRoute.value.query;
+      router.push({
+        name: redirect || "BlogList",
+        query: {
+          ...othersQuery,
+        },
+      });
     } else {
       Message.error("用户名或者密码不正确");
     }
@@ -699,12 +700,105 @@ const jumpToBackend = () => {
 </script>
 ```
 
+#### 退出登录
 
+有了登录我们也需要支持退出登录, 我们是通过localStorage来保持状态的, 因此删除对于数据就可以退出了
 
- 
+补充注销按钮: layout/BackendLayout.vue 
+```vue
+ <a-button @click="logout" size="mini" type="text">注销</a-button>
+```
 
+补充注销逻辑: 注销成功后 跳转到登录页面:
+```js
+const logout = () => {
+  localStorage.removeItem("username");
+  localStorage.removeItem("password");
+  router.push("/login");
+};
+```
 
+ ## 导航守卫
 
+之前的流程 用户通过前台 跳转到后台管理时, 补充了认证, 但是如果用户直接通过URL访问后台管理页面喃?
+
+这时候我们就需要做一个全局的导航守卫, 保护所有的backend的页面, 凡事访问到backend的页面 都需要检查登录状态, 避免用户直接绕开访问
+
+关于[导航守卫](https://router.vuejs.org/zh/guide/advanced/navigation-guards.html)
+
+### 后台页面守卫
+
+单独起一个模块: router/permession.js 来定义导航守卫钩子函数
+```js
+// 定义导航守卫
+
+export async function beforeEachHandler(to, from, next) {
+  if (to.fullPath.indexOf("/backend") === 0) {
+    // 如果未登陆 重定向到登录页面, 并且把目标页面作为重定向参数传递下去
+    const username = localStorage.getItem("username");
+    const password = localStorage.getItem("password");
+    if (
+      username === null ||
+      password === null ||
+      username === "" ||
+      password === ""
+    ) {
+      console.log("not login");
+      next({
+        path: "/login",
+        query: {
+          redirect: to.name,
+          ...to.query,
+        },
+      });
+    } else {
+      // 已经登录的用户直接放行
+      next();
+    }
+  } else {
+    // 不属于/backend的页面 直接放开
+    next();
+  }
+}
+
+export function afterEachHandler(to, from) {
+  console.log(to, from);
+}
+```
+
+然后在router/index.js中 添加该Hook到router实例上
+```js
+import { beforeEachHandler, afterEachHandler } from "./permession";
+
+// 补充导航守卫
+router.beforeEach(beforeEachHandler);
+router.afterEach(afterEachHandler);
+
+export default router;
+```
+
+### 页面加载进度条
+
+安装process bar库
+```sh
+npm install --save nprogress
+```
+
+进入页面前 开启进度条, 离开后结束进度条
+```js
+import NProgress from "nprogress"; // progress bar
+import "nprogress/nprogress.css"; // progress bar style
+
+export async function beforeEachHandler(to, from, next) {
+  NProgress.start();
+  ...
+}
+
+export function afterEachHandler(to, from) {
+  NProgress.done();
+  console.log(to, from);
+}
+```
 
 
 ## 参考 

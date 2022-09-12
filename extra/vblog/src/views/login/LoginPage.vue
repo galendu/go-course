@@ -37,9 +37,6 @@
           </template>
         </a-input>
       </a-form-item>
-      <a-form-item field="remember">
-        <a-checkbox v-model="form.remember"> 记住密码 </a-checkbox>
-      </a-form-item>
       <a-form-item>
         <a-button style="width: 100%" type="primary" html-type="submit"
           >登录</a-button
@@ -59,19 +56,23 @@ const router = useRouter();
 const form = reactive({
   username: "",
   password: "",
-  remember: false,
 });
 const handleSubmit = (data) => {
   if (data.errors === undefined) {
     let form = data.values;
     if (form.username === "admin" && form.password === "123456") {
-      // 记住密码
-      if (form.remember) {
-        localStorage.setItem("username", form.username);
-        localStorage.setItem("password", form.password);
-      }
-      // 登录成功直接跳转到后台页面
-      router.push("/backend/blogs");
+      // 保存登录状态
+      localStorage.setItem("username", form.username);
+      localStorage.setItem("password", form.password);
+
+      // 登录成功直接跳转到后台页
+      const { redirect, ...othersQuery } = router.currentRoute.value.query;
+      router.push({
+        name: redirect || "BlogList",
+        query: {
+          ...othersQuery,
+        },
+      });
     } else {
       Message.error("用户名或者密码不正确");
     }
