@@ -1,3 +1,19 @@
+# 博客后台
+
+![](./images/backend-blog-list.png)
+
+## 博客列表页
+
+### 列表页
+
+列表页由3部分组成:
++ 页头
++ 表格操作区
++ 表格
+
+博客列表主要使用表格组件: [表格 Table](https://arco.design/vue/component/table)
+
+```vue
 <template>
   <div>
     <!-- 页头 -->
@@ -122,3 +138,16 @@ const data = reactive([
   width: 100%;
 }
 </style>
+```
+
+
+### 跳转到详情页
+
+
+
+### 编辑页
+
+
+
+### 发布与删除
+

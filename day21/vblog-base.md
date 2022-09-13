@@ -493,6 +493,8 @@ const clickMenu = (key) => {
 
 .content {
   margin: 8px;
+  width: 100%;
+  height: 100%;
 }
 </style>
 ```
