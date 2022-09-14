@@ -127,21 +127,19 @@
   * [GRPC入门](./day15/grpc.md)
   * [框架支持GRPC](./day15/framework.md)
 
-### CMDB API (一)
-  * [云资源Provider](./day16/cmdb-provider.md)
-
-### CMDB API (二)
-  * [云凭证管理](./day16/cmdb-secret.md)
-  * [云资源同步API](./day16/cmdb-sync.md)
-
-### 用户中心 (一)
+### 用户中心 
   * [开发基础](./day17/user.md)
   * [登录认证](./day17/auth.md)
-
-###  审计中心 (一)
   * [权限判定](./day18/permission.md)
+
+###  审计中心 
   * [消息队列技术与Kafka](./day18/permission.md)
   * [审计中心](./day18/permission.md)
+
+### CMDB
+  * [云资源Provider](./day16/cmdb-provider.md)
+  * [云凭证管理](./day16/cmdb-secret.md)
+  * [云资源同步API](./day16/cmdb-sync.md)
 
 ### 项目前端
   * [主机列表页面](./day22/cmdb-host.md)
